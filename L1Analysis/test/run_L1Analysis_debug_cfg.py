@@ -12,10 +12,12 @@ options = VarParsing.VarParsing ('analysis')
 options.register ('sample', 'data',    VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string,  "The Sample type: data or mc")
 options.register ('input',  '',        VarParsing.VarParsing.multiplicity.list,      VarParsing.VarParsing.varType.string,  "The input files")
 options.register ('max',    '',        VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.int,     "The maximum number of events to process")
+options.register ('verbose', '',       VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.bool,    "Verbose")
 
-options.sample = "mc"
-options.input  = '/store/data/Run2015D/ZeroBias/RAW/v1/000/260/627/00000/00A76FFA-0C82-E511-B441-02163E01450F.root'
-options.max    = 1000
+options.sample  = "mc"
+options.input   = '/store/data/Run2015D/ZeroBias/RAW/v1/000/260/627/00000/00A76FFA-0C82-E511-B441-02163E01450F.root'
+options.max     = 100
+options.verbose = False
 
 options.parseArguments()
 
@@ -51,11 +53,13 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.max)
 ### Analysis
 ################################################################
 process.tauAnalysis = cms.EDAnalyzer('TauAnalysis',
-    egToken      = cms.untracked.InputTag ("simCaloStage2Digis"),
-    tauTokens    = cms.untracked.VInputTag("simCaloStage2Digis"),
-    jetToken     = cms.untracked.InputTag ("simCaloStage2Digis"),
-    muonToken    = cms.untracked.InputTag ("simGmtStage2Digis"),
-    sumToken     = cms.untracked.InputTag ("simCaloStage2Digis","")
+  verbose            = cms.untracked.bool    (options.verbose),
+  input_L1TEra       = cms.untracked.string  ("stage2"),
+  inputTag_L1TEGamma = cms.untracked.InputTag("simCaloStage2Digis"),
+  inputTag_L1TMuon   = cms.untracked.InputTag("simGmtStage2Digis"),
+  inputTag_L1TTau    = cms.untracked.InputTag("simCaloStage2Digis"),
+  inputTag_L1TJet    = cms.untracked.InputTag("simCaloStage2Digis"),
+  inputTag_L1TSum    = cms.untracked.InputTag("simCaloStage2Digis","")
 )
 
 process.analysis = cms.Path(
