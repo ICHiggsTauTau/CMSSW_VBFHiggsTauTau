@@ -1,9 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
-from Configuration.StandardSequences.Eras import eras
+
 import os
 import sys
 import commands
+
+process = cms.Process('Analysis')
 
 options = VarParsing.VarParsing ('analysis')
 
@@ -20,22 +22,11 @@ options.parseArguments()
 
 print "sample = ",options.sample
 
-if (options.era == 'stage1'):
-    print "INFO: runnings L1T Stage-1 (2015) Re-Emulation"
-    process = cms.Process("AnalysisDecays", eras.Run2_25ns)
-elif (options.era == 'stage2'):
-    print "INFO: runnings L1T Stage-2 (2016) Re-Emulation"    
-    process = cms.Process("AnalysisDecays", eras.Run2_2016)
-else:
-    print "ERROR: unknown era:  ", options.era, "\n"
-    exit(0)
-
-
 ################################################################
 ### Messages
 ################################################################
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
 
 ################################################################
@@ -45,64 +36,11 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
 process.load('Configuration.StandardSequences.Services_cff')
 
 # PostLS1 geometry used
-process.load('Configuration.Geometry.GeometryExtended2015Reco_cff')
-process.load('Configuration.Geometry.GeometryExtended2015_cff')
-############################
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
-from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-
-#   For stage-1, we are re-emulating L1T based on the conditions in the GT, so
-#   best for now to use MC GT, even when running over a data file, and just
-#   ignore the main DT TP emulator warnings...  (In future we'll override only
-#   L1T emulator related conditions, so you can use a data GT)
-if (eras.stage1L1Trigger.isChosen()):
-  
-  if options.sample=="mc":
-    process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
-
-  elif options.sample=="data":
-    process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
-
-# Note:  For stage-2, all conditions are overriden by local config file.  Use data tag: 
-
-if (eras.stage2L1Trigger.isChosen()):
-
-  if options.sample=="mc":
-    process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '') 
-
-  elif options.sample=="data":
-    process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
-
-
-  process.GlobalTag.toGet = cms.VPSet(
-        cms.PSet(record = cms.string("DTCCBConfigRcd"),
-                 tag = cms.string("DTCCBConfig_NOSingleL_V05_mc"),
-                 connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS")
-                 ),
-#        cms.PSet(record = cms.string("DTKeyedConfigListRcd"),
-#                 tag = cms.string("DTKeyedConfigContainer_NOSingleL_V05_mc"),
-#                 connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS")
-#                 ),
-        cms.PSet(record = cms.string("DTT0Rcd"),
-                 tag = cms.string("DTt0_STARTUP_V02_mc"),
-                 connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS")
-                 ),
-        cms.PSet(record = cms.string("DTTPGParametersRcd"),
-                 tag = cms.string("DTTPGParameters_V01_mc"),
-                 connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS")
-                 ),
-        )
-
-#### Sim L1 Emulator Sequence:
-process.load('Configuration.StandardSequences.RawToDigi_cff')
-#process.load('Configuration.StandardSequences.SimL1Emulator_cff')
-process.load('L1Trigger.Configuration.L1TReEmulateFromRAW_cff')
-
-
-
-
-
-
+#process.load('Configuration.Geometry.GeometryExtended2015Reco_cff')
+#process.load('Configuration.Geometry.GeometryExtended2015_cff')
+#############################
+#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
+#from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
 
 
 process.source = cms.Source("PoolSource",
@@ -173,9 +111,7 @@ process.output = cms.OutputModule("PoolOutputModule",
     'keep *_simGmtStage2Digis_*_*',
     'drop l1tCaloClusterBXVector_simCaloStage2Digis_*_*',
     'drop l1tCaloTowerBXVector_simCaloStage2Digis_*_*',
-    'keep *_decayAnalyzer_HiggsDecayMode_*',
-    'keep *_decayAnalyzer_HiggsDecayTau1_*',
-    'keep *_decayAnalyzer_HiggsDecayTau2_*',
+    'keep *_decayAnalyzer_*_*'
   )
 )
 
@@ -183,64 +119,13 @@ process.output = cms.OutputModule("PoolOutputModule",
 ### Sequence
 ################################################################
 process.analysis = cms.Path(
-  process.RawToDigi*        
-  process.L1TReEmulateFromRAW*  
+  #process.RawToDigi*        
+  #process.L1TReEmulateFromRAW*  
   process.decayAnalyzer
 )
 process.output_step = cms.EndPath(process.output)
 
 # Re-emulating, so don't unpack L1T output, might not even exist...
 # Also, remove uneeded unpackers for speed.
-if (eras.stage2L1Trigger.isChosen()):
-    process.analysis.remove(process.gmtStage2Digis)
-    process.analysis.remove(process.caloStage2Digis)
-    process.analysis.remove(process.gtStage2Digis)
-    process.analysis.remove(process.siPixelDigis)
-    process.analysis.remove(process.siStripDigis)
-    process.analysis.remove(process.castorDigis)
-    process.analysis.remove(process.scalersRawToDigi)
-    process.analysis.remove(process.tcdsDigis)
-if (eras.stage1L1Trigger.isChosen()):
-    process.analysis.remove(process.caloStage1Digis)
-    process.analysis.remove(process.caloStage1FinalDigis)
-    process.analysis.remove(process.gtDigis)
-    process.analysis.remove(process.siPixelDigis)
-    process.analysis.remove(process.siStripDigis)
-    process.analysis.remove(process.castorDigis)
-    process.analysis.remove(process.scalersRawToDigi)
-    process.analysis.remove(process.tcdsDigis)
 
-
-
-
-
-
-
-# enable debug message logging for our modules
-#process.MessageLogger.categories.append('L1TCaloEvents')
-#process.MessageLogger.categories.append('L1TGlobalEvents')
-#process.MessageLogger.categories.append('l1t|Global')
-#process.MessageLogger.suppressInfo = cms.untracked.vstring('Geometry', 'AfterSource')
-
-
-
-                               
-#)
-
-# Stage-1 Ntuple will not contain muons, and might (investigating) miss some Taus.  (Work underway)
-#process.l1UpgradeTree = cms.EDAnalyzer("L1UpgradeTreeProducer")
-#if (eras.stage1L1Trigger.isChosen()):
-    #process.l1UpgradeTree.egToken      = cms.untracked.InputTag ("simCaloStage1FinalDigis")
-    #process.l1UpgradeTree.tauTokens    = cms.untracked.VInputTag("simCaloStage1FinalDigis:rlxTaus","simCaloStage1FinalDigis:isoTaus")
-    #process.l1UpgradeTree.jetToken     = cms.untracked.InputTag ("simCaloStage1FinalDigis")
-    #process.l1UpgradeTree.muonToken    = cms.untracked.InputTag ("None")
-    #process.l1UpgradeTree.sumToken     = cms.untracked.InputTag ("simCaloStage1FinalDigis","")
-    #process.l1UpgradeTree.maxL1Upgrade = cms.uint32(60)
-#if (eras.stage2L1Trigger.isChosen()):
-    #process.l1UpgradeTree.egToken      = cms.untracked.InputTag ("simCaloStage2Digis")
-    #process.l1UpgradeTree.tauTokens    = cms.untracked.VInputTag("simCaloStage2Digis")
-    #process.l1UpgradeTree.jetToken     = cms.untracked.InputTag ("simCaloStage2Digis")
-    #process.l1UpgradeTree.muonToken    = cms.untracked.InputTag ("simGmtStage2Digis")
-    #process.l1UpgradeTree.sumToken     = cms.untracked.InputTag ("simCaloStage2Digis","")
-    #process.l1UpgradeTree.maxL1Upgrade = cms.uint32(60)
 
