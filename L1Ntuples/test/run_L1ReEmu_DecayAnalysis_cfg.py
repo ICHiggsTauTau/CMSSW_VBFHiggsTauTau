@@ -166,9 +166,7 @@ process.output = cms.OutputModule("PoolOutputModule",
     'keep *_simGmtStage2Digis_*_*',
     'drop l1tCaloClusterBXVector_simCaloStage2Digis_*_*',
     'drop l1tCaloTowerBXVector_simCaloStage2Digis_*_*',
-    'keep *_decayAnalyzer_HiggsDecayMode_*',
-    'keep *_decayAnalyzer_HiggsDecayTau1_*',
-    'keep *_decayAnalyzer_HiggsDecayTau2_*',
+    'keep *_decayAnalyzer_*_*'
   )
 )
 
