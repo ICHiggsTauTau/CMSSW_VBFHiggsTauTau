@@ -52,8 +52,10 @@ private:
   void analyze(const edm::Event&, const edm::EventSetup&);
   
   void                     getEventContent(const edm::Event& iEvent);
-  vector<const l1t::Jet*>* getL1TJetCollection_EtSorted(int bx);
-  vector<const l1t::Tau*>* getL1TTauCollection_EtSorted(int bx);
+  vector<const l1t::EGamma*>* getL1TEGammaCollection_EtSorted(int bx);
+  vector<const l1t::Muon*>*   getL1TMuonCollection_EtSorted  (int bx);
+  vector<const l1t::Jet*>*    getL1TJetCollection_EtSorted   (int bx);
+  vector<const l1t::Tau*>*    getL1TTauCollection_EtSorted   (int bx);
   
   
   // ----------member data ---------------------------
@@ -68,7 +70,7 @@ private:
   edm::EDGetTokenT<std::string>                 m_EDToken_HiggsDecayMode;
   edm::EDGetTokenT<reco::GenParticleCollection> m_EDToken_HiggsDecayTau1;
   edm::EDGetTokenT<reco::GenParticleCollection> m_EDToken_HiggsDecayTau2;
-  edm::EDGetTokenT<l1t::EGammaBxCollection>     m_EDToken_L1TEG;
+  edm::EDGetTokenT<l1t::EGammaBxCollection>     m_EDToken_L1TEGamma;
   edm::EDGetTokenT<l1t::MuonBxCollection>       m_EDToken_L1TMuon;
   edm::EDGetTokenT<l1t::TauBxCollection>        m_EDToken_L1TTau;
   edm::EDGetTokenT<l1t::TauBxCollection>        m_EDToken_L1TTauIso;
@@ -79,7 +81,7 @@ private:
   edm::Handle<string>                      decayMode;
   edm::Handle<reco::GenParticleCollection> decayTau1;
   edm::Handle<reco::GenParticleCollection> decayTau2;
-  edm::Handle<l1t::EGammaBxCollection>     m_Handle_L1TEG;
+  edm::Handle<l1t::EGammaBxCollection>     m_Handle_L1TEGamma;
   edm::Handle<l1t::MuonBxCollection>       m_Handle_L1TMuon;
   edm::Handle<l1t::TauBxCollection>        m_Handle_L1TTau;
   edm::Handle<l1t::TauBxCollection>        m_Handle_L1TTauIso;
@@ -88,6 +90,7 @@ private:
   
   std::vector<string> m_channels;
   
+  // Output file and plots
   TFile *fOut;
   TH1D  *m_EventCount;
   TH1D  *m_HiggsDecay;
@@ -99,6 +102,7 @@ private:
   
   std::map<string,TH1D*> m_L1Tau1_Et;
   std::map<string,TH1D*> m_L1Tau2_Et;
+  std::map<string,TH1D*> m_L1Object_InvMass;
   
   TH1D  *m_L1Jet_N;
   TH1D  *m_L1Jet_Et;
@@ -108,7 +112,12 @@ private:
   std::map<string,TH1D*> m_L1Jet1_Et;
   std::map<string,TH1D*> m_L1Jet2_Et;
   
-  
+  std::map<string,TH1D*> m_L1Tau1_ResolutionEt;
+  std::map<string,TH1D*> m_L1Tau2_ResolutionEt;
+  std::map<string,TH1D*> m_L1Tau1_ResolutionEta;
+  std::map<string,TH1D*> m_L1Tau2_ResolutionEta;
+  std::map<string,TH1D*> m_L1Tau1_ResolutionPhi;
+  std::map<string,TH1D*> m_L1Tau2_ResolutionPhi;
   
 };
 
