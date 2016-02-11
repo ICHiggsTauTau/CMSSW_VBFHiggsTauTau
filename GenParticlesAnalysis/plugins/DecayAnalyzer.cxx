@@ -25,9 +25,9 @@ using namespace edm;
 using namespace std;
 
 DecayAnalyzer::DecayAnalyzer(const edm::ParameterSet& pset){
-
+  
   ps = pset;
-    
+  
   edm::InputTag inputTag_HepMCProduct          = pset.getUntrackedParameter<edm::InputTag>("inputTag_HepMCProduct",         edm::InputTag("generator"));
   edm::InputTag inputTag_GenJetCollection      = pset.getUntrackedParameter<edm::InputTag>("inputTag_GenJetCollection",     edm::InputTag("ak4GenJetsNoNu"));  
   edm::InputTag inputTag_GenParticleCollection = pset.getUntrackedParameter<edm::InputTag>("inputTag_GenParticleCollection",edm::InputTag("genParticles")); 
@@ -35,6 +35,9 @@ DecayAnalyzer::DecayAnalyzer(const edm::ParameterSet& pset){
   produces< string >                     ("HiggsDecayMode");
   produces< reco::GenParticleCollection >("HiggsDecayTau1");
   produces< reco::GenParticleCollection >("HiggsDecayTau2");
+  
+  produces< reco::GenParticleCollection >("HiggsDecayTau1Stable");
+  produces< reco::GenParticleCollection >("HiggsDecayTau2Stable");
   
   m_InputTag_HepMCProduct          = consumes<edm::HepMCProduct>          (inputTag_HepMCProduct);
   m_inputTag_GenJetCollection      = consumes<reco::GenJetCollection>     (inputTag_GenJetCollection);
@@ -66,9 +69,12 @@ void DecayAnalyzer::produce(edm::Event& iEvent,const edm::EventSetup& iSetup){
   
   Handle<reco::GenParticleCollection> genParticles;
   iEvent.getByToken(m_inputTag_GenParticleCollection, genParticles);
-
+  
   auto_ptr<reco::GenParticleCollection> vHiggsDecayTau1(new reco::GenParticleCollection);
   auto_ptr<reco::GenParticleCollection> vHiggsDecayTau2(new reco::GenParticleCollection);
+  
+  auto_ptr<reco::GenParticleCollection> vHiggsDecayTau1Stable(new reco::GenParticleCollection);
+  auto_ptr<reco::GenParticleCollection> vHiggsDecayTau2Stable(new reco::GenParticleCollection);
   
   vector<const reco::GenParticle*> myTaus;
   int nTau     = 0;
@@ -80,30 +86,30 @@ void DecayAnalyzer::produce(edm::Event& iEvent,const edm::EventSetup& iSetup){
     const reco::GenParticle & p = (*genParticles)[i];
     
     if(fabs(p.pdgId())==15){
-//       cout << "Found a tau..." << endl;
+      //       cout << "Found a tau..." << endl;
       
       if(p.mother()->pdgId() == 25){
-//         cout << "and it comes from a Higgs!" << endl;
-        
-        myTaus.push_back(&(*genParticles)[i]);
+        //         cout << "and it comes from a Higgs!" << endl;
         
         bool decayEle = 0;
         bool decayMu  = 0;
         bool decayHad = 1;
+        
+        if     (nTau==0){vHiggsDecayTau1->push_back(p);}
+        else if(nTau==1){vHiggsDecayTau2->push_back(p);}
         
         unsigned n = p.numberOfDaughters();
         for(size_t j = 0; j < n; ++ j) {
           
           const reco::GenParticle *d = (reco::GenParticle*) p.daughter( j );
           
-          if     (nTau==0){vHiggsDecayTau1->push_back(*d);}
-          else if(nTau==1){vHiggsDecayTau2->push_back(*d);}
+          if     (nTau==0){vHiggsDecayTau1Stable->push_back(*d);}
+          else if(nTau==1){vHiggsDecayTau2Stable->push_back(*d);}
           
-//           cout << "Particle tau son id=" << d->pdgId() << endl;
+          //cout << "Particle tau son id=" << d->pdgId() << endl;
           
           if(fabs(d->pdgId()) == 11){decayEle=1;decayHad=0;}
-          if(fabs(d->pdgId()) == 13){decayMu =1;decayHad=0;}        
-          
+          if(fabs(d->pdgId()) == 13){decayMu =1;decayHad=0;}
         }
         
         if(decayEle){TauToEle++;}
@@ -112,11 +118,53 @@ void DecayAnalyzer::produce(edm::Event& iEvent,const edm::EventSetup& iSetup){
         nTau++;
       }
     }
-
+    
   }
-
-//   cout << "Number of decay particles Tau #1" << vHiggsDecayTau1->size() << endl;
-//   cout << "Number of decay particles Tau #2" << vHiggsDecayTau2->size() << endl;
+  
+  bool done  = false;
+  while(!done){
+    done=true;
+    
+    for(unsigned i=0; i<vHiggsDecayTau1Stable->size(); i++){
+      const reco::GenParticle & p = (*vHiggsDecayTau1Stable)[i];
+      
+      if(p.status()!=1){
+        
+        for(size_t j = 0; j < p.numberOfDaughters(); ++ j) {
+          const reco::GenParticle *d = (reco::GenParticle*) p.daughter( j );  
+          vHiggsDecayTau1Stable->push_back(*d);
+        }
+        vHiggsDecayTau1Stable->erase(vHiggsDecayTau1Stable->begin()+i);
+        done=false;
+        break;
+      }
+    }
+  }
+  
+  done  = false;
+  while(!done){
+    done=true;
+    
+    for(unsigned i=0; i<vHiggsDecayTau2Stable->size(); i++){
+      const reco::GenParticle & p = (*vHiggsDecayTau2Stable)[i];
+      
+      if(p.status()!=1){
+        
+        for(size_t j = 0; j < p.numberOfDaughters(); ++ j) {
+          const reco::GenParticle *d = (reco::GenParticle*) p.daughter( j );  
+          vHiggsDecayTau2Stable->push_back(*d);
+        }
+        vHiggsDecayTau2Stable->erase(vHiggsDecayTau2Stable->begin()+i);
+        done=false;
+        break;
+      }
+    }
+  }
+  
+  
+  
+  //   cout << "Number of decay particles Tau #1" << vHiggsDecayTau1->size() << endl;
+  //   cout << "Number of decay particles Tau #2" << vHiggsDecayTau2->size() << endl;
   
   auto_ptr< string > decayMode(new string);
   if     (TauToHad==2 && TauToEle==0 && TauToMuo==0){(*decayMode)="HadHad";}
@@ -126,15 +174,17 @@ void DecayAnalyzer::produce(edm::Event& iEvent,const edm::EventSetup& iSetup){
   else if(TauToHad==0 && TauToEle==1 && TauToMuo==1){(*decayMode)="EleMuo";}
   else if(TauToHad==0 && TauToEle==0 && TauToMuo==2){(*decayMode)="MuoMuo";}
   else                                              {(*decayMode)="Error"; }
-
-  m_Tau_N->Fill(myTaus.size());
+  
+  m_Tau_N->Fill(nTau+1);
   
   // and save the vectors
-  iEvent.put(decayMode,      "HiggsDecayMode");
-  iEvent.put(vHiggsDecayTau1,"HiggsDecayTau1");
-  iEvent.put(vHiggsDecayTau2,"HiggsDecayTau2");
+  iEvent.put(decayMode,            "HiggsDecayMode");
+  iEvent.put(vHiggsDecayTau1,      "HiggsDecayTau1");
+  iEvent.put(vHiggsDecayTau2,      "HiggsDecayTau2");
+  iEvent.put(vHiggsDecayTau1Stable,"HiggsDecayTau1Stable");
+  iEvent.put(vHiggsDecayTau2Stable,"HiggsDecayTau2Stable");
   
 }
- 
+
 //define this as a plug-in
 DEFINE_FWK_MODULE(DecayAnalyzer);
