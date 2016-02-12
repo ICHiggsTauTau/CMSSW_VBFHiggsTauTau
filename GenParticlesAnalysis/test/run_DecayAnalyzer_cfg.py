@@ -9,10 +9,10 @@ process = cms.Process('Analysis')
 
 options = VarParsing.VarParsing ('analysis')
 
-options.register ('era',    'stage2',  VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string,  "The data taking Era: stage1 or stage2")
-options.register ('sample', 'data',    VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string,  "The Sample type: data or mc")
-options.register ('output', 'DEFAULT', VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string,  "The output file name")
-options.register ('max',    '',        VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.int,     "The maximum number of events to process")
+options.register ('era',    'stage2',          VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string,  "The data taking Era: stage1 or stage2")
+options.register ('sample', 'data',            VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string,  "The Sample type: data or mc")
+options.register ('output', 'GenAnalysis.root',VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string,  "The output file name")
+options.register ('max',    '',                VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.int,     "The maximum number of events to process")
 
 ## options.input = '/store/data/Run2015D/ZeroBias/RAW/v1/000/260/627/00000/00A76FFA-0C82-E511-B441-02163E01450F.root'
 options.max    = -1
@@ -26,8 +26,11 @@ print "sample = ",options.sample
 ### Messages
 ################################################################
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 1
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
+
+process.load("CommonTools.UtilAlgos.TFileService_cfi")
+process.TFileService.fileName = cms.string(options.output)
 
 ################################################################
 ### Aligment and condition
@@ -41,6 +44,30 @@ process.load('Configuration.StandardSequences.Services_cff')
 #############################
 #process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 #from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
+
+#import das_client
+
+
+## query DAS
+#myQuery =  'file dataset=' + dataset 
+#dasClientCommand = 'das_client.py --limit=0 --format=plain --query='+'"'+myQuery+'"'
+#data = os.popen(dasClientCommand)
+#filePaths = data.readlines()
+        
+   
+#print '\n   das_client using the query'
+#print '      ', myQuery
+#print '   retrieved the following files\n'
+    
+#for line in filePaths :
+    #print '      ', line
+       
+#readFiles.extend(filePaths);
+    
+    
+## nothing added to secondary files by DAS 
+#secFiles.extend([
+        #])
 
 
 process.source = cms.Source("PoolSource",
@@ -99,7 +126,11 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.max)
 ################################################################
 ### Analysis
 ################################################################
-process.decayAnalyzer = cms.EDProducer('DecayAnalyzer')
+process.decayAnalyzer = cms.EDProducer('DecayAnalyzer',
+    verbose       = cms.untracked.bool(False),
+    output_edm    = cms.untracked.bool(False),
+    output_ntuple = cms.untracked.bool(True)
+ )
 
 # Output definition
 
@@ -119,11 +150,9 @@ process.output = cms.OutputModule("PoolOutputModule",
 ### Sequence
 ################################################################
 process.analysis = cms.Path(
-  #process.RawToDigi*        
-  #process.L1TReEmulateFromRAW*  
   process.decayAnalyzer
 )
-process.output_step = cms.EndPath(process.output)
+#process.output_step = cms.EndPath(process.output)
 
 # Re-emulating, so don't unpack L1T output, might not even exist...
 # Also, remove uneeded unpackers for speed.
