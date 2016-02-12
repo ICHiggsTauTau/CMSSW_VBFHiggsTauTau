@@ -20,5 +20,7 @@
 <use name="TrackingTools/GeomPropagators"/>
 <use name="DataFormats/HepMCCandidate"/>
 <use name="DataFormats/JetReco"/>
-<flags EDM_PLUGIN="1"/>
+<library file="*.cxx" name="VBFHiggsToTauTauGenAnalysisPlugins">
+  <flags EDM_PLUGIN="1"/>
+</library>
 <flags CXXFLAGS="-g"/>
