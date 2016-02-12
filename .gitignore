@@ -32,3 +32,5 @@
 
 # Compiled Python 
 **/*.pyc
+
+**/*.root
