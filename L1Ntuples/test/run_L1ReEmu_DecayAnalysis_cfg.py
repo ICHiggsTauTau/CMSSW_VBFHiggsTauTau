@@ -154,21 +154,25 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.max)
 ################################################################
 ### Analysis
 ################################################################
-process.decayAnalyzer = cms.EDProducer('DecayAnalyzer')
+process.decayAnalyzer = cms.EDProducer('DecayAnalyzer',
+    verbose       = cms.untracked.bool(False),
+    output_edm    = cms.untracked.bool(False),
+    output_ntuple = cms.untracked.bool(True)
+)
 
 # Output definition
 
-process.output = cms.OutputModule("PoolOutputModule",
-  fileName = cms.untracked.string('file:DecayAnalyzer_edm.root'),
-  outputCommands = cms.untracked.vstring(
-    'drop *', 
-    'keep *_simCaloStage2Digis_*_*',    
-    'keep *_simGmtStage2Digis_*_*',
-    'drop l1tCaloClusterBXVector_simCaloStage2Digis_*_*',
-    'drop l1tCaloTowerBXVector_simCaloStage2Digis_*_*',
-    'keep *_decayAnalyzer_*_*'
-  )
-)
+#process.output = cms.OutputModule("PoolOutputModule",
+  #fileName = cms.untracked.string('file:DecayAnalyzer_edm.root'),
+  #outputCommands = cms.untracked.vstring(
+    #'drop *', 
+    #'keep *_simCaloStage2Digis_*_*',    
+    #'keep *_simGmtStage2Digis_*_*',
+    #'drop l1tCaloClusterBXVector_simCaloStage2Digis_*_*',
+    #'drop l1tCaloTowerBXVector_simCaloStage2Digis_*_*',
+    #'keep *_decayAnalyzer_*_*'
+  #)
+#)
 
 ################################################################
 ### Sequence
