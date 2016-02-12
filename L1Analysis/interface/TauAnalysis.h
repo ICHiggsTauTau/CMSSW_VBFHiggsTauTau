@@ -51,7 +51,8 @@ private:
   
   void analyze(const edm::Event&, const edm::EventSetup&);
   
-  void                     getEventContent(const edm::Event& iEvent);
+  void getEventContent(const edm::Event& iEvent);
+
   vector<const l1t::EGamma*>* getL1TEGammaCollection_EtSorted(int bx);
   vector<const l1t::Muon*>*   getL1TMuonCollection_EtSorted  (int bx);
   vector<const l1t::Jet*>*    getL1TJetCollection_EtSorted   (int bx);
@@ -60,11 +61,10 @@ private:
   
   // ----------member data ---------------------------
   
-  bool m_verbose;
-
   edm::ParameterSet ps;
-  std::string m_L1TEra;
   
+  bool m_verbose;
+  std::string m_L1TEra;
   
   // EDM Product Tokens
   edm::EDGetTokenT<std::string>                 m_EDToken_HiggsDecayMode;

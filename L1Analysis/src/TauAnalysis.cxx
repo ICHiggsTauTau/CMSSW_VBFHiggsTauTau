@@ -19,8 +19,8 @@ TauAnalysis::TauAnalysis(const edm::ParameterSet& pset){
   
   ps = pset;
   
-  m_verbose = pset.getUntrackedParameter<bool>("verbose",false);
-
+  m_verbose = pset.getUntrackedParameter<bool>("verbose",      false);
+  
   edm::InputTag inputTag_HiggsDecayMode = pset.getUntrackedParameter<edm::InputTag>("inputTag_HiggsDecayMode",      edm::InputTag("decayAnalyzer","HiggsDecayMode"));
   edm::InputTag inputTag_HiggsDecayTau1 = pset.getUntrackedParameter<edm::InputTag>("inputTag_HiggsDecayTau1Stable",edm::InputTag("decayAnalyzer","HiggsDecayTau1Stable"));
   edm::InputTag inputTag_HiggsDecayTau2 = pset.getUntrackedParameter<edm::InputTag>("inputTag_HiggsDecayTau2Stable",edm::InputTag("decayAnalyzer","HiggsDecayTau2Stable"));
@@ -248,7 +248,7 @@ void TauAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       if(m_verbose){printf(" - Invisible\n");}
       continue;
     }
-    vecTau1Vis += it->p4();
+    vecTau1Vis += it->p4(); 
     if(m_verbose){printf(" - Visible\n");}
   }
   if(m_verbose){cout << endl;}
