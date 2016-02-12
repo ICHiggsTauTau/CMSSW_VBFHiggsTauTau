@@ -7,6 +7,7 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
@@ -15,7 +16,11 @@
 
 // ROOT includes
 #include "TFile.h"
+#include "TTree.h"
 #include "TH1D.h"
+
+// VBFHiggsToTauTau includes
+#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsToTauTauGenAnalysisDataFormat.h"
 
 // C++ include files
 #include <memory>
@@ -40,8 +45,17 @@ private:
 private:
   
   edm::ParameterSet ps;
+
+  bool m_verbose;
+  bool m_output_edm;
+  bool m_output_ntuple;
   
-  // Output file
+  // Ntuple output handles
+  edm::Service<TFileService>              m_fs;               // Output file
+  TTree                                   *m_tree;            // Output tree
+  VBFHiggsToTauTau::GenAnalysisDataFormat *m_genAnalysisData; // Data for tree
+  
+  // ROOT output handles
   TFile* fOut;
   
   // Input tags
@@ -49,15 +63,13 @@ private:
   edm::EDGetTokenT< reco::GenJetCollection >      m_inputTag_GenJetCollection;
   edm::EDGetTokenT< reco::GenParticleCollection > m_inputTag_GenParticleCollection;
   
-  
+  // Histograms
   TH1D *m_EventCount;
   
   TH1D *m_Parton_N;
   TH1D *m_Parton_Type;
   
   TH1D *m_Tau_N;
-  
-  
 
 };
 
