@@ -13,8 +13,46 @@
 #include "TH1F.h"
 #include "TH1D.h"
 
+#include <string>
 #include <vector>
 #include <map>
+
+class PlotsSingleObjects{
+public:
+  
+  PlotsSingleObjects();
+  ~PlotsSingleObjects();
+  void create(TDirectory *dir);
+
+  TH1D *m_L1TEGamma_N;
+  TH1D *m_L1TEGamma_Et;
+  TH1D *m_L1TEGamma_Eta;
+  TH1D *m_L1TEGamma_Phi;
+  
+  TH1D *m_L1TMuon_N;
+  TH1D *m_L1TMuon_Et;
+  TH1D *m_L1TMuon_Eta;
+  TH1D *m_L1TMuon_Phi;
+  
+  TH1D *m_L1TTau_N;
+  TH1D *m_L1TTau_Et;
+  TH1D *m_L1TTau_Eta;
+  TH1D *m_L1TTau_Phi;
+  
+  TH1D *m_L1TTau1_Et; 
+  TH1D *m_L1TTau1_Eta;
+  TH1D *m_L1TTau1_Phi;
+  
+  TH1D *m_L1TTau2_Et;
+  TH1D *m_L1TTau2_Eta;
+  TH1D *m_L1TTau2_Phi;
+  
+  TH1D *m_L1TJet_N;
+  TH1D *m_L1TJet_Et;
+  TH1D *m_L1TJet_Eta;
+  TH1D *m_L1TJet_Phi;
+};
+
 
 class L1TAlgoAnalysis {
 public:
@@ -28,6 +66,7 @@ public:
   ~L1TAlgoAnalysis();
   
   void init();
+  void initPlots();
   void resetEvent();
   
   void setVerbose (bool value);
@@ -38,7 +77,13 @@ public:
   void setL1TTauCollection   (ic::L1TTauCollection    *objects);
   void setL1TJetCollection   (ic::L1TJetCollection    *objects);
   
+  void setDoSingleObjectsAnalysis(bool value);
+  
   void processEvent();
+  
+private:
+  
+  void doSingleObjectsAnalysis();
   
 private:
   
@@ -51,29 +96,15 @@ private:
   ic::L1TTauCollection    *m_l1tTauCollection;
   ic::L1TJetCollection    *m_l1tJetCollection;
   
-  TFile *m_fileOut;
+  TFile       *m_fileOut;
+  std::string  m_fileOutName;
   
   std::vector<TH1*> m_h;
-  TH1D  *m_EventCount;
-  TH1D  *m_HiggsDecay;
+  TH1D *m_EventCount;
+  TH1D *m_HiggsDecay;
   
-  TH1D  *m_L1TTau_N;
-  TH1D  *m_L1TTau_Et;
-  TH1D  *m_L1TTau_Eta;
-  TH1D  *m_L1TTau_Phi;
-  
-  TH1D  *m_L1TTau1_Et; 
-  TH1D  *m_L1TTau1_Eta;
-  TH1D  *m_L1TTau1_Phi;
-  
-  TH1D  *m_L1TTau2_Et;
-  TH1D  *m_L1TTau2_Eta;
-  TH1D  *m_L1TTau2_Phi;
-  
-  TH1D  *m_L1TJet_N;
-  TH1D  *m_L1TJet_Et;
-  TH1D  *m_L1TJet_Eta;
-  TH1D  *m_L1TJet_Phi;
+  bool               m_doSingleObjectsAnalysis;
+  PlotsSingleObjects m_plotsSingleObjects;
   
 };
 
