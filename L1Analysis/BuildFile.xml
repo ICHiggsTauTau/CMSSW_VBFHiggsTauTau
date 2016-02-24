@@ -1,4 +1,6 @@
+<use name=""/>
 <use name="root"/>
+<use name="rootrflx"/>
 <use name="boost"/>
 <use name="clhep"/>
 <use name="heppdt"/>
@@ -20,5 +22,8 @@
 <use name="TrackingTools/GeomPropagators"/>
 <use name="DataFormats/HepMCCandidate"/>
 <use name="DataFormats/JetReco"/>
-<flags EDM_PLUGIN="1"/>
+<use name="UserCode/ICHiggsTauTau"/>
+<export>
+  <lib name="1"/>
+</export>
 <flags CXXFLAGS="-g"/>
