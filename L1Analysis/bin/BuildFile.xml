@@ -1,0 +1,6 @@
+<use name="root"/>
+<use name="rootgraphics"/>
+<use name="CMSSW_VBFHiggsTauTau/GenParticlesAnalysis"/>
+<use name="CMSSW_VBFHiggsTauTau/L1Analysis"/>
+<bin name="vbftautau_runTriggerAnalysis" file="runTriggerAnalysis.cxx"/>
+<flags CXXFLAGS="-g"/> 
