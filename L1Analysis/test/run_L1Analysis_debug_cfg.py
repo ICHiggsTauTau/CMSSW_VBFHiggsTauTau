@@ -9,10 +9,10 @@ process = cms.Process('L1Analysis')
 
 options = VarParsing.VarParsing ('analysis')
 
-options.register ('sample', 'data',    VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string,  "The Sample type: data or mc")
-options.register ('input',  '',        VarParsing.VarParsing.multiplicity.list,      VarParsing.VarParsing.varType.string,  "The input files")
-options.register ('max',    '',        VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.int,     "The maximum number of events to process")
-options.register ('verbose', '',       VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.bool,    "Verbose")
+options.register ('sample', 'data',VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string,  "The Sample type: data or mc")
+options.register ('input',  '',    VarParsing.VarParsing.multiplicity.list,      VarParsing.VarParsing.varType.string,  "The input files")
+options.register ('max',    '',    VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.int,     "The maximum number of events to process")
+options.register ('verbose', '',   VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.bool,    "Verbose")
 
 options.sample  = "mc"
 options.input   = '/store/data/Run2015D/ZeroBias/RAW/v1/000/260/627/00000/00A76FFA-0C82-E511-B441-02163E01450F.root'
@@ -37,8 +37,6 @@ if options.sample=="mc":
 
 elif options.sample=="data":
   process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
-    
- 
 
 ################################################################
 ### Input files
