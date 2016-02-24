@@ -146,6 +146,8 @@ int main(int argc, char* argv[]){
   
   L1TAlgoAnalysis myAnalysis;
   myAnalysis.setVerbose(options.verbose);
+  myAnalysis.setDoSingleObjectsAnalysis(true);
+  myAnalysis.initPlots();
   
   // Stuff
   TFile *fOut         = new TFile(options.outputFilename.c_str(),"RECREATE");
@@ -193,6 +195,8 @@ int main(int argc, char* argv[]){
   cout << "Number of entries: " << entries_VBFHiggsToTauTau << endl;
   cout << endl;
   
+  // If maxEvents if -1 this means run over all events
+  if(options.maxEvents==-1){options.maxEvents=entries_VBFHiggsToTauTau;}
   
   for(Long64_t ev=0; ev<entries_VBFHiggsToTauTau && ev<options.maxEvents; ev++){
     
