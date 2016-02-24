@@ -226,6 +226,9 @@ process.analysis = cms.Path(
 )
 #process.output_step = cms.EndPath(process.output)
 
+if options.sample=="data":
+  process.analysis.remove(process.decayAnalyzer)
+
 # Re-emulating, so don't unpack L1T output, might not even exist...
 # Also, remove uneeded unpackers for speed.
 if (eras.stage2L1Trigger.isChosen()):
