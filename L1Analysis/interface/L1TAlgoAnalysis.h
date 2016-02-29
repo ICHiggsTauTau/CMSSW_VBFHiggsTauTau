@@ -8,6 +8,9 @@
 #include "UserCode/ICHiggsTauTau/interface/L1TTau.hh"
 #include "UserCode/ICHiggsTauTau/interface/L1TJet.hh"
 
+// This algos
+#include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/L1TAlgo.h"
+
 #include "TMath.h"
 #include "TFile.h"
 #include "TH1F.h"
@@ -39,20 +42,11 @@ public:
   TH1D *m_L1TTau_Eta;
   TH1D *m_L1TTau_Phi;
   
-  TH1D *m_L1TTau1_Et; 
-  TH1D *m_L1TTau1_Eta;
-  TH1D *m_L1TTau1_Phi;
-  
-  TH1D *m_L1TTau2_Et;
-  TH1D *m_L1TTau2_Eta;
-  TH1D *m_L1TTau2_Phi;
-  
   TH1D *m_L1TJet_N;
   TH1D *m_L1TJet_Et;
   TH1D *m_L1TJet_Eta;
   TH1D *m_L1TJet_Phi;
 };
-
 
 class L1TAlgoAnalysis {
 public:
@@ -72,29 +66,19 @@ public:
   void setVerbose (bool value);
   void setDataType(L1TAlgoAnalysis::DataType type);
   
-  void setL1TEGammaCollection(ic::L1TEGammaCollection *objects);
-  void setL1TMuonCollection  (ic::L1TMuonCollection   *objects);
-  void setL1TTauCollection   (ic::L1TTauCollection    *objects);
-  void setL1TJetCollection   (ic::L1TJetCollection    *objects);
-  
   void setDoSingleObjectsAnalysis(bool value);
   
-  void processEvent();
+  void processEvent(icTrg::Event &iEvent);
   
 private:
   
-  void doSingleObjectsAnalysis();
+  void doSingleObjectsAnalysis(icTrg::Event &iEvent);
   
 private:
   
   bool m_verbose;
   
   DataType m_dataType;
-  
-  ic::L1TEGammaCollection *m_l1tEGammaCollection;
-  ic::L1TMuonCollection   *m_l1tMuonCollection;
-  ic::L1TTauCollection    *m_l1tTauCollection;
-  ic::L1TJetCollection    *m_l1tJetCollection;
   
   TFile       *m_fileOut;
   std::string  m_fileOutName;
@@ -105,6 +89,8 @@ private:
   
   bool               m_doSingleObjectsAnalysis;
   PlotsSingleObjects m_plotsSingleObjects;
+  
+  std::vector<L1TAlgo*> m_algos;
   
 };
 
