@@ -5,6 +5,7 @@
 // CMSSW_VBFHiggsTauTau includes
 #include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsToTauTauGenAnalysisDataFormat.h"
 #include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/MicroGenParticle.h"
+#include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/Event.h"
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/L1TAlgoAnalysis.h"
 
 // ICHiggsTauTau Objects
@@ -35,6 +36,7 @@
 #include <cstdio>
 #include <map>
 #include <vector>
+#include <functional>
 
 using namespace std;
 
@@ -198,7 +200,12 @@ int main(int argc, char* argv[]){
   // If maxEvents if -1 this means run over all events
   if(options.maxEvents==-1){options.maxEvents=entries_VBFHiggsToTauTau;}
   
+  
   for(Long64_t ev=0; ev<entries_VBFHiggsToTauTau && ev<options.maxEvents; ev++){
+    
+    if(options.verbose){
+      printf("[main] Processing event #%lli\n",ev);
+    }
     
     m_EventCount->Fill(1);   // Counting the current event
     
@@ -213,7 +220,8 @@ int main(int argc, char* argv[]){
     treeGenAnalysis.LoadTree(ev);
     treeGenAnalysis.GetEntry(ev);
     
-    vector<ic::L1TEGamma> myL1TEGamma;
+    icTrg::Event myEvent;
+    
     unsigned short int nL1TEGamma = productL1Upgrade->nEGs;
     for(unsigned i=0; i<nL1TEGamma; i++){
       
@@ -223,10 +231,9 @@ int main(int argc, char* argv[]){
       thisEG.set_pt (productL1Upgrade->egEt [i]);
       thisEG.set_eta(productL1Upgrade->egEta[i]);
       thisEG.set_phi(productL1Upgrade->egPhi[i]);
-      myL1TEGamma.push_back(thisEG);
+      myEvent.l1tEGammaCollection.push_back(thisEG);
     }
     
-    vector<ic::L1TMuon> myL1TMuon;
     unsigned short int nL1TMuon = productL1Upgrade->nMuons;
     for(unsigned i=0; i<nL1TMuon; i++){
       
@@ -236,10 +243,9 @@ int main(int argc, char* argv[]){
       thisMuon.set_pt (productL1Upgrade->muonEt [i]);
       thisMuon.set_eta(productL1Upgrade->muonEta[i]);
       thisMuon.set_phi(productL1Upgrade->muonPhi[i]);
-      myL1TMuon.push_back(thisMuon);
+      myEvent.l1tMuonCollection.push_back(thisMuon);
     }
     
-    vector<ic::L1TTau> myL1TTaus;
     unsigned short int nL1TTaus = productL1Upgrade->nTaus;
     for(unsigned i=0; i<nL1TTaus; i++){
       
@@ -249,10 +255,9 @@ int main(int argc, char* argv[]){
       thisTau.set_pt (productL1Upgrade->tauEt [i]);
       thisTau.set_eta(productL1Upgrade->tauEta[i]);
       thisTau.set_phi(productL1Upgrade->tauPhi[i]);
-      myL1TTaus.push_back(thisTau);
+      myEvent.l1tTauCollection.push_back(thisTau);
     }
     
-    vector<ic::L1TJet> myL1TJets;
     unsigned short int nL1TJets = productL1Upgrade->nJets;
     for(unsigned i=0; i<nL1TJets; i++){
       
@@ -262,21 +267,21 @@ int main(int argc, char* argv[]){
       thisJet.set_pt (productL1Upgrade->jetEt [i]);
       thisJet.set_eta(productL1Upgrade->jetEta[i]);
       thisJet.set_phi(productL1Upgrade->jetPhi[i]);
-      myL1TJets.push_back(thisJet);
+      myEvent.l1tJetCollection.push_back(thisJet);
     }
 
     if(options.verbose){printf("===== Sorting Collections =====\n");}
-    sort(myL1TEGamma.begin(),myL1TEGamma.end(),greater_ICCandidate());
-    sort(myL1TMuon  .begin(),myL1TMuon  .end(),greater_ICCandidate());
-    sort(myL1TTaus  .begin(),myL1TTaus  .end(),greater_ICCandidate());
-    sort(myL1TJets  .begin(),myL1TJets  .end(),greater_ICCandidate());
+    sort(myEvent.l1tEGammaCollection.begin(),myEvent.l1tEGammaCollection.end(),greater_ICCandidate());
+    sort(myEvent.l1tMuonCollection  .begin(),myEvent.l1tMuonCollection  .end(),greater_ICCandidate());
+    sort(myEvent.l1tTauCollection   .begin(),myEvent.l1tTauCollection   .end(),greater_ICCandidate());
+    sort(myEvent.l1tJetCollection   .begin(),myEvent.l1tJetCollection   .end(),greater_ICCandidate());
     
     //myAnalysis
-    myAnalysis.setL1TEGammaCollection(&myL1TEGamma);
-    myAnalysis.setL1TMuonCollection  (&myL1TMuon);
-    myAnalysis.setL1TTauCollection   (&myL1TTaus);
-    myAnalysis.setL1TJetCollection   (&myL1TJets);
-    myAnalysis.processEvent();
+    //myAnalysis.setL1TEGammaCollection(&myL1TEGamma);
+    //myAnalysis.setL1TMuonCollection  (&myL1TMuon);
+    //myAnalysis.setL1TTauCollection   (&myL1TTaus);
+    //myAnalysis.setL1TJetCollection   (&myL1TJets);
+    myAnalysis.processEvent(myEvent);
     myAnalysis.resetEvent();
     
     string strHiggsDecay="";
