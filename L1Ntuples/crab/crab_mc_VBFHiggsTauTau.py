@@ -9,8 +9,8 @@ config.General.transferLogs    = True
 config.JobType.pluginName = 'ANALYSIS'
 config.JobType.psetName   = 'cmssw_cfg.py'
 
-config.Data.inputDataset     = '/VBF_HToInvisible_M125_13TeV_powheg_pythia8/RunIIFall15DR76-25nsFlat10to25TSG_76X_mcRun2_asymptotic_v12-v1/GEN-SIM-RAW'
-config.Data.inputDBS         = 'global'
+config.Data.inputDataset     = '/VBFHToTauTau_M125_13TeV_powheg_pythia8/pela-Reprocessing_VBFHiggsTauTau_RAW_v3-02e742d2ba16f475bed5477b1348f921/USER'
+config.Data.inputDBS         = 'phys03'
 config.Data.splitting        = 'EventAwareLumiBased'
 config.Data.unitsPerJob      = 50000
 config.Data.outLFNDirBase    = '/store/user/%s/' % (getUsernameFromSiteDB())
