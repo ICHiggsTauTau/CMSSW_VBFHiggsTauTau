@@ -2,5 +2,8 @@
 <use name="rootgraphics"/>
 <use name="CMSSW_VBFHiggsTauTau/GenParticlesAnalysis"/>
 <use name="CMSSW_VBFHiggsTauTau/L1Analysis"/>
+<use name="CMSSW_VBFHiggsTauTau/IO"/>
+<use name="CMSSW_VBFHiggsTauTau/Style"/>
 <bin name="vbftautau_runTriggerAnalysis" file="runTriggerAnalysis.cxx"/>
+<bin name="vbftautau_runRatesExtraction" file="runRatesExtraction.cxx"/>
 <flags CXXFLAGS="-g"/> 
