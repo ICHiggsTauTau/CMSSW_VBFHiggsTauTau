@@ -3,10 +3,10 @@
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisEventDataFormat.h"
 
 // CMSSW_VBFHiggsTauTau includes
-#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsToTauTauGenAnalysisDataFormat.h"
-#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/MicroGenParticle.h"
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/Event.h"
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/L1TAlgoAnalysis.h"
+#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/MicroGenParticle.h"
+#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsToTauTauGenAnalysisDataFormat.h"
 
 // ICHiggsTauTau Objects
 #include "UserCode/ICHiggsTauTau/interface/L1TObject.hh"
@@ -31,7 +31,7 @@
 // C++ STD includes
 #include <iostream>
 #include <string>
-#include <iostream>
+#include <sstream>
 #include <fstream>
 #include <cstdio>
 #include <map>
@@ -52,28 +52,32 @@ struct ProgramOptions{
     inputType      = "file";
     input          = "input.root";
     maxEvents      = -1;
-    jobType        = "signal";
+    jobType        = "mc";
+    decay          = 0;
     outputFilename = "L1Analysis.root";
-    
   }
 
-  bool     verbose;
-  string   inputType;
-  string   input;
-  Long64_t maxEvents; 
-  string   jobType;
-  string   outputFilename;
+  bool             verbose;
+  string           inputType;
+  string           input;
+  vector<unsigned> runs;
+  Long64_t         maxEvents;
+  string           jobType;
+  unsigned char    decay;
+  string           outputFilename;
 };
 
 void printHelpMessage(){
   
-  cerr << "Usage: vbftautau_runTriggerAnalysis [commands]"    << endl;
-  cerr << " --verbose         "                               << endl;
-  cerr << " --inputType TYPE       options: file, filelist"   << endl;
-  cerr << " --input INPUT"                                    << endl;
-  cerr << " --maxEvents N"                                    << endl;
-  cerr << " --jobType TYPE         options: signal, zerobias" << endl;
-  cerr << " --outputFilename NAME"                            << endl;  
+  cerr << "Usage: vbftautau_runTriggerAnalysis [commands]"                                   << endl;
+  cerr << " --verbose         "                                                              << endl;
+  cerr << " --inputType TYPE       options: file, filelist"                                  << endl;
+  cerr << " --input INPUT"                                                                   << endl;
+  cerr << " --runs RUNS            options: comma separated"                                 << endl;
+  cerr << " --maxEvents N"                                                                   << endl;
+  cerr << " --jobType TYPE         options: mc, data"                                        << endl;
+  cerr << " --decay DECAY          options: EleEle, EleMuo, EleHad, MuoMuo, MuoHad, HadHad"  << endl;
+  cerr << " --outputFilename NAME"                                                           << endl;
 }
 
 bool processArgs(int argc, char* argv[], ProgramOptions &opt){
@@ -105,13 +109,52 @@ bool processArgs(int argc, char* argv[], ProgramOptions &opt){
         printHelpMessage();
         return 0;
       }
+    }else if(arg == "--runs"){
+      if(i+1<argc){
+        i++; 
+        
+        std::stringstream inVar(argv[i]);
+        int i;
+        while(inVar >> i){
+          opt.runs.push_back(i);
+          if(inVar.peek() == ','){inVar.ignore();}
+        }
+      }else{
+        printHelpMessage();
+        return 0;
+      }
+    }else if(arg == "--maxEvents"){
+      if(i+1<argc){i++; opt.maxEvents = atoi(argv[i]);}
+      else{
+        printHelpMessage();
+        return 0;
+      }
     }else if(arg == "--jobType"){
       if(i+1<argc){i++; opt.jobType = argv[i];}
       else{
         printHelpMessage();
         return 0;
       }
-    } 
+    }else if(arg == "--decay"){
+      if(i+1<argc){i++; 
+        if     (std::string(argv[i]) == "EleEle"){opt.decay = VBFHiggsToTauTau::HiggsDecay::EleEle;}
+        else if(std::string(argv[i]) == "EleMuo"){opt.decay = VBFHiggsToTauTau::HiggsDecay::EleMuo;}
+        else if(std::string(argv[i]) == "EleHad"){opt.decay = VBFHiggsToTauTau::HiggsDecay::EleHad;}
+        else if(std::string(argv[i]) == "MuoMuo"){opt.decay = VBFHiggsToTauTau::HiggsDecay::MuoMuo;}
+        else if(std::string(argv[i]) == "MuoHad"){opt.decay = VBFHiggsToTauTau::HiggsDecay::MuoHad;}
+        else if(std::string(argv[i]) == "HadHad"){opt.decay = VBFHiggsToTauTau::HiggsDecay::HadHad;}        
+      }
+      else{
+        printHelpMessage();
+        return 0;
+      }
+    }else if(arg == "--outputFilename"){
+      if(i+1<argc){i++; opt.outputFilename = argv[i];}
+      else{
+        printHelpMessage();
+        return 0;
+      }
+    }
   }
   
   return 1;
@@ -124,13 +167,22 @@ int main(int argc, char* argv[]){
   if(!processArgs(argc, argv, options)){return -1;}
   
   cout << "===== program options ===== " << endl;
-  cout << "verbose        = " << options.verbose   << endl;
-  cout << "inputType      = " << options.inputType << endl;
-  cout << "input          = " << options.input     << endl;
-  cout << "maxEvents      = " << options.maxEvents << endl;
-  cout << "jobType        = " << options.jobType   << endl;
-  cout << "outputFilename = " << options.outputFilename   << endl;
-
+  cout << "verbose        = " << options.verbose        << endl;
+  cout << "inputType      = " << options.inputType      << endl;
+  cout << "input          = " << options.input          << endl;
+  cout << "maxEvents      = " << options.maxEvents      << endl;
+  cout << "runs           = ";
+  for(unsigned i=0; i<options.runs.size(); i++){
+    if(i!=0){cout << ",";}
+    cout << options.runs[i];
+  }
+  cout << endl;
+  cout << "jobType        = " << options.jobType        << endl;
+  cout << "decay          = " << options.decay          << endl;  
+  cout << "outputFilename = " << options.outputFilename << endl;
+  cout << endl;
+  
+  
   // Stuff
   vector<string> vSig;
   if(options.inputType=="file"){
@@ -147,80 +199,110 @@ int main(int argc, char* argv[]){
   }
   
   L1TAlgoAnalysis myAnalysis;
-  myAnalysis.setVerbose(options.verbose);
+  myAnalysis.setVerbose       (options.verbose);
+  myAnalysis.setOutputFilename(options.outputFilename);
   myAnalysis.setDoSingleObjectsAnalysis(true);
+  
   myAnalysis.initPlots();
   
-  // Stuff
-  TFile *fOut         = new TFile(options.outputFilename.c_str(),"RECREATE");
-  TH1D  *m_EventCount = new TH1D("EventCount","EventCount",1, 0.5,1.5); m_EventCount->SetDirectory(fOut);
-  TH1D  *m_HiggsDecay = new TH1D("HiggsDecay","HiggsDecay",6, 0.5,6.5); m_HiggsDecay->SetDirectory(fOut);
-  m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::EleEle,"EleEle");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::EleMuo,"EleMuo");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::EleHad,"EleHad");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::MuoMuo,"MuoMuo");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::MuoHad,"MuoHad");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::HadHad,"HadHad");
-  
-  
   cout << "===== Open File ===== " << endl;
-  //TFile *t = TFile::Open(vSig[0].c_str());
   TChain treeEvent      ("l1EventTree/L1EventTree");
-  TChain treeL1Upgrade  ("l1UpgradeTree/L1UpgradeTree");
+  TChain treeL1Upgrade  ("l1UpgradeEmuTree/L1UpgradeTree");
   TChain treeGenAnalysis("decayAnalyzer/VBFHiggsToTauTauGenAnalysisTree");
   cout << endl;
   
-  //fOut->ls();
-  cout << "===== Objects ===== " << endl;
-  L1Analysis::L1AnalysisEventDataFormat *productL1Event = new L1Analysis::L1AnalysisEventDataFormat();
-  treeEvent.SetBranchAddress("Event",&productL1Event);
-  //fOut->ls();
+  L1Analysis::L1AnalysisEventDataFormat     *productL1Event   = 0;
+  L1Analysis::L1AnalysisL1UpgradeDataFormat *productL1Upgrade = 0;
+  VBFHiggsToTauTau::GenAnalysisDataFormat   *genInfo          = 0;
   
-  L1Analysis::L1AnalysisL1UpgradeDataFormat *productL1Upgrade = new L1Analysis::L1AnalysisL1UpgradeDataFormat();
+  productL1Event = new L1Analysis::L1AnalysisEventDataFormat();
+  treeEvent.SetBranchAddress("Event",&productL1Event);
+  
+  productL1Upgrade= new L1Analysis::L1AnalysisL1UpgradeDataFormat();
   treeL1Upgrade.SetBranchAddress("L1Upgrade",&productL1Upgrade);
   
-  VBFHiggsToTauTau::GenAnalysisDataFormat *genInfo = new VBFHiggsToTauTau::GenAnalysisDataFormat();
-  treeGenAnalysis.SetBranchAddress("GenAnalysis",&genInfo);
-  cout << endl;
-
+  if(options.jobType=="mc"){
+    genInfo = new VBFHiggsToTauTau::GenAnalysisDataFormat();
+    treeGenAnalysis.SetBranchAddress("GenAnalysis",&genInfo);
+  }
   
   for(unsigned i=0; i<vSig.size(); i++){
      cout << "Input file #" << i << " - " << vSig[i] << endl;
      treeEvent      .Add(vSig[i].c_str());
      treeL1Upgrade  .Add(vSig[i].c_str());
-     treeGenAnalysis.Add(vSig[i].c_str());
-  }
+     if(options.jobType=="mc"){
+       treeGenAnalysis.Add(vSig[i].c_str());
+     }
+    }
   
   
   cout << "===== Tree Summary ===== " << endl;
-  Long64_t entries_VBFHiggsToTauTau = treeGenAnalysis.GetEntries();
+  Long64_t entries_VBFHiggsToTauTau = treeEvent.GetEntries();
   cout << "Number of entries: " << entries_VBFHiggsToTauTau << endl;
   cout << endl;
   
   // If maxEvents if -1 this means run over all events
   if(options.maxEvents==-1){options.maxEvents=entries_VBFHiggsToTauTau;}
   
+  Long64_t eventsEffective=0;
   
   for(Long64_t ev=0; ev<entries_VBFHiggsToTauTau && ev<options.maxEvents; ev++){
     
     if(options.verbose){
-      printf("[main] Processing event #%lli\n",ev);
+      printf("\n\n");
+      printf("[main] ##########################################\n");
+      printf("[main] #### Processing event %15lld #####\n",ev);
+      printf("[main] ##########################################\n");
     }
     
-    m_EventCount->Fill(1);   // Counting the current event
     
-    if(!(ev % 10000)){cout << "Processing events #" << ev << endl;}
+    if(!(ev % 10000)){cout << "[main] Processing events #" << ev << endl;}
     
+    
+    if(options.verbose){printf("[main] Loading L1 Event Tree\n");}
     treeEvent.LoadTree(ev);
     treeEvent.GetEntry(ev);
     
+    if(options.verbose){printf("[main] Loading L1 Upgrade Tree\n");}
     treeL1Upgrade.LoadTree(ev);
     treeL1Upgrade.GetEntry(ev);
     
-    treeGenAnalysis.LoadTree(ev);
-    treeGenAnalysis.GetEntry(ev);
+    // Loading trees for mc
+    if(options.jobType=="mc"){
+      
+      if(options.verbose){printf("[main] Loading Generator Tree\n");}
+      treeGenAnalysis.LoadTree(ev);
+      treeGenAnalysis.GetEntry(ev);
+      
+      // Filtering on decays
+      if(options.decay!=0){
+        if(options.verbose){printf("[main] Decay: %u\n",genInfo->higgs_decayType);}
+        if(options.decay!=genInfo->higgs_decayType){continue;}
+      }
+    }
+    
+    // Checking if option runs is set
+    if(options.runs.size()){
+      bool passRun = false;
+      
+      // Check if this event belong to the selected runs
+      for(unsigned i=0; i<options.runs.size(); i++){
+        if(options.runs[i]==productL1Event->run){passRun=true;}
+      }
+      
+      if(!passRun){continue;}
+    }
+    
+    eventsEffective++;
     
     icTrg::Event myEvent;
+    
+    if(options.verbose){
+      printf("[main] L1T EGamma: %u\n",productL1Upgrade->nEGs);
+      printf("[main] L1T Muon  : %u\n",productL1Upgrade->nMuons);
+      printf("[main] L1T Tau   : %u\n",productL1Upgrade->nTaus);
+      printf("[main] L1T Jets  : %u\n",productL1Upgrade->nJets);
+    }
     
     unsigned short int nL1TEGamma = productL1Upgrade->nEGs;
     for(unsigned i=0; i<nL1TEGamma; i++){
@@ -228,9 +310,10 @@ int main(int argc, char* argv[]){
       if(productL1Upgrade->egBx[i] != 0){continue;}
       
       ic::L1TEGamma thisEG;
-      thisEG.set_pt (productL1Upgrade->egEt [i]);
-      thisEG.set_eta(productL1Upgrade->egEta[i]);
-      thisEG.set_phi(productL1Upgrade->egPhi[i]);
+      thisEG.set_pt    (productL1Upgrade->egEt    [i]);
+      thisEG.set_eta   (productL1Upgrade->egEta   [i]);
+      thisEG.set_phi   (productL1Upgrade->egPhi   [i]);
+      thisEG.set_energy(productL1Upgrade->egEnergy[i]);
       myEvent.l1tEGammaCollection.push_back(thisEG);
     }
     
@@ -240,9 +323,10 @@ int main(int argc, char* argv[]){
       if(productL1Upgrade->muonBx[i] != 0){continue;}
       
       ic::L1TMuon thisMuon;
-      thisMuon.set_pt (productL1Upgrade->muonEt [i]);
-      thisMuon.set_eta(productL1Upgrade->muonEta[i]);
-      thisMuon.set_phi(productL1Upgrade->muonPhi[i]);
+      thisMuon.set_pt    (productL1Upgrade->muonEt    [i]);
+      thisMuon.set_eta   (productL1Upgrade->muonEta   [i]);
+      thisMuon.set_phi   (productL1Upgrade->muonPhi   [i]);
+      thisMuon.set_energy(productL1Upgrade->muonEnergy[i]);
       myEvent.l1tMuonCollection.push_back(thisMuon);
     }
     
@@ -252,9 +336,10 @@ int main(int argc, char* argv[]){
       if(productL1Upgrade->tauBx[i] != 0){continue;}
  
       ic::L1TTau thisTau;
-      thisTau.set_pt (productL1Upgrade->tauEt [i]);
-      thisTau.set_eta(productL1Upgrade->tauEta[i]);
-      thisTau.set_phi(productL1Upgrade->tauPhi[i]);
+      thisTau.set_pt    (productL1Upgrade->tauEt    [i]);
+      thisTau.set_eta   (productL1Upgrade->tauEta   [i]);
+      thisTau.set_phi   (productL1Upgrade->tauPhi   [i]);
+      thisTau.set_energy(productL1Upgrade->tauEnergy[i]);
       myEvent.l1tTauCollection.push_back(thisTau);
     }
     
@@ -264,9 +349,10 @@ int main(int argc, char* argv[]){
       if(productL1Upgrade->jetBx[i] != 0){continue;}
       
       ic::L1TJet thisJet;
-      thisJet.set_pt (productL1Upgrade->jetEt [i]);
-      thisJet.set_eta(productL1Upgrade->jetEta[i]);
-      thisJet.set_phi(productL1Upgrade->jetPhi[i]);
+      thisJet.set_pt    (productL1Upgrade->jetEt    [i]);
+      thisJet.set_eta   (productL1Upgrade->jetEta   [i]);
+      thisJet.set_phi   (productL1Upgrade->jetPhi   [i]);
+      thisJet.set_energy(productL1Upgrade->jetEnergy[i]);
       myEvent.l1tJetCollection.push_back(thisJet);
     }
 
@@ -276,34 +362,17 @@ int main(int argc, char* argv[]){
     sort(myEvent.l1tTauCollection   .begin(),myEvent.l1tTauCollection   .end(),greater_ICCandidate());
     sort(myEvent.l1tJetCollection   .begin(),myEvent.l1tJetCollection   .end(),greater_ICCandidate());
     
-    //myAnalysis
-    //myAnalysis.setL1TEGammaCollection(&myL1TEGamma);
-    //myAnalysis.setL1TMuonCollection  (&myL1TMuon);
-    //myAnalysis.setL1TTauCollection   (&myL1TTaus);
-    //myAnalysis.setL1TJetCollection   (&myL1TJets);
+    
+    
+    
     myAnalysis.processEvent(myEvent);
     myAnalysis.resetEvent();
     
-    string strHiggsDecay="";
-    if     (genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::EleEle){strHiggsDecay="EleEle";}
-    else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::EleMuo){strHiggsDecay="EleMuo";}
-    else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::EleHad){strHiggsDecay="EleHad";}
-    else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::MuoMuo){strHiggsDecay="MuoMuo";}
-    else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::MuoHad){strHiggsDecay="MuoHad";}
-    else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::HadHad){strHiggsDecay="HadHad";}
-    
-    m_HiggsDecay->Fill(genInfo->higgs_decayType);
-    
-    if(options.verbose){
-      printf("Higgs decay type: %s (%u)\n",strHiggsDecay.c_str(),genInfo->higgs_decayType);
-      printf("Tau decay 1     : %u\n", genInfo->tau1_decayType);
-      printf("Tau decay 1 size: %lu\n",genInfo->tau1_stableDecayProducts.size());
-      printf("Tau decay 2     : %u\n", genInfo->tau2_decayType);
-      printf("Tau decay 2 size: %lu\n",genInfo->tau2_stableDecayProducts.size());
-    }
   }
   
-  fOut->Write();
+  
+  cout << "===== end job report ===== " << endl;
+  cout << "Effective events = " << eventsEffective << endl;
   
   return 0;
 }
