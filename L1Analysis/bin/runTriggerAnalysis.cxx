@@ -201,6 +201,9 @@ int main(int argc, char* argv[]){
   L1TAlgoAnalysis myAnalysis;
   myAnalysis.setVerbose       (options.verbose);
   myAnalysis.setOutputFilename(options.outputFilename);
+  if(options.jobType=="mc"){
+    myAnalysis.setDoGenAnalysis(true);
+  }
   myAnalysis.setDoSingleObjectsAnalysis(true);
   
   myAnalysis.initPlots();
@@ -251,7 +254,7 @@ int main(int argc, char* argv[]){
     if(options.verbose){
       printf("\n\n");
       printf("[main] ##########################################\n");
-      printf("[main] #### Processing event %15lld #####\n",ev);
+      printf("[main] #### Processing event %14lld #####\n",ev);
       printf("[main] ##########################################\n");
     }
     
@@ -296,6 +299,12 @@ int main(int argc, char* argv[]){
     eventsEffective++;
     
     icTrg::Event myEvent;
+
+    if(options.jobType=="mc"){
+      myEvent.genInfo = genInfo;
+    }else{
+      myEvent.genInfo = 0;
+    }
     
     if(options.verbose){
       printf("[main] L1T EGamma: %u\n",productL1Upgrade->nEGs);
@@ -340,7 +349,12 @@ int main(int argc, char* argv[]){
       thisTau.set_eta   (productL1Upgrade->tauEta   [i]);
       thisTau.set_phi   (productL1Upgrade->tauPhi   [i]);
       thisTau.set_energy(productL1Upgrade->tauEnergy[i]);
+      thisTau.isolation = productL1Upgrade->tauIso  [i];
       myEvent.l1tTauCollection.push_back(thisTau);
+      
+      if(thisTau.isolation!=0){
+        myEvent.l1tIsoTauCollection.push_back(thisTau);
+      }
     }
     
     unsigned short int nL1TJets = productL1Upgrade->nJets;
@@ -356,14 +370,34 @@ int main(int argc, char* argv[]){
       myEvent.l1tJetCollection.push_back(thisJet);
     }
 
+    unsigned short int nL1TSums = productL1Upgrade->nSums;
+    for(unsigned i=0; i<nL1TSums; i++){
+      
+      if(productL1Upgrade->sumBx[i] != 0){continue;}
+      
+      ic::L1TSum thisSum;
+      thisSum.et  = productL1Upgrade->sumEt [i];
+      thisSum.phi = productL1Upgrade->sumPhi[i];
+ 
+      short int type = productL1Upgrade->sumType[i];
+      if     (type==L1Analysis::EtSumType::kTotalEt)  {thisSum.sumType = ic::L1TSum::SumType::kTotalEt;}
+      else if(type==L1Analysis::EtSumType::kTotalHt)  {thisSum.sumType = ic::L1TSum::SumType::kTotalHt;}
+      else if(type==L1Analysis::EtSumType::kMissingEt){thisSum.sumType = ic::L1TSum::SumType::kMissingEt;}
+      else if(type==L1Analysis::EtSumType::kMissingHt){thisSum.sumType = ic::L1TSum::SumType::kMissingHt;}
+      else if(type==L1Analysis::EtSumType::kTotalEtx) {thisSum.sumType = ic::L1TSum::SumType::kTotalEtx;}
+      else if(type==L1Analysis::EtSumType::kTotalEty) {thisSum.sumType = ic::L1TSum::SumType::kTotalEty;}
+      else if(type==L1Analysis::EtSumType::kTotalHtx) {thisSum.sumType = ic::L1TSum::SumType::kTotalHtx;}
+      else if(type==L1Analysis::EtSumType::kTotalHty) {thisSum.sumType = ic::L1TSum::SumType::kTotalHty;}
+      myEvent.l1tSumCollection.push_back(thisSum);
+    }
+    
+    
     if(options.verbose){printf("===== Sorting Collections =====\n");}
     sort(myEvent.l1tEGammaCollection.begin(),myEvent.l1tEGammaCollection.end(),greater_ICCandidate());
     sort(myEvent.l1tMuonCollection  .begin(),myEvent.l1tMuonCollection  .end(),greater_ICCandidate());
     sort(myEvent.l1tTauCollection   .begin(),myEvent.l1tTauCollection   .end(),greater_ICCandidate());
+    sort(myEvent.l1tIsoTauCollection.begin(),myEvent.l1tIsoTauCollection.end(),greater_ICCandidate());
     sort(myEvent.l1tJetCollection   .begin(),myEvent.l1tJetCollection   .end(),greater_ICCandidate());
-    
-    
-    
     
     myAnalysis.processEvent(myEvent);
     myAnalysis.resetEvent();

@@ -20,6 +20,25 @@
 #include <vector>
 #include <map>
 
+class PlotsGenAnalysis{
+public:
+  
+  PlotsGenAnalysis();
+  ~PlotsGenAnalysis();
+  void create(TDirectory *dir);
+  
+  std::vector<std::string> m_channels;
+  
+  TH1D *m_HiggsDecay;
+  
+  std::map<std::string,TH1D*> m_L1Tau1_ResolutionEt;
+  std::map<std::string,TH1D*> m_L1Tau2_ResolutionEt;
+  std::map<std::string,TH1D*> m_L1Tau1_ResolutionEta;
+  std::map<std::string,TH1D*> m_L1Tau2_ResolutionEta;
+  std::map<std::string,TH1D*> m_L1Tau1_ResolutionPhi;
+  std::map<std::string,TH1D*> m_L1Tau2_ResolutionPhi;
+};
+
 class PlotsSingleObjects{
 public:
   
@@ -46,6 +65,12 @@ public:
   TH1D *m_L1TJet_Et;
   TH1D *m_L1TJet_Eta;
   TH1D *m_L1TJet_Phi;
+  
+  TH1D *m_L1TMet_Et;
+  TH1D *m_L1TMet_Phi;
+  
+  TH1D *m_L1TMHT_Et;
+  TH1D *m_L1TMHT_Phi;
 };
 
 class L1TAlgoAnalysis {
@@ -66,12 +91,17 @@ public:
   void setVerbose (bool value);
   void setDataType(L1TAlgoAnalysis::DataType type);
   
+  // Task setters
+  void setDoGenAnalysis          (bool value);
   void setDoSingleObjectsAnalysis(bool value);
+  
+  void setOutputFilename         (std::string value);
   
   void processEvent(icTrg::Event &iEvent);
   
 private:
   
+  void doGenAnalysis          (icTrg::Event &iEvent);
   void doSingleObjectsAnalysis(icTrg::Event &iEvent);
   
 private:
@@ -85,7 +115,11 @@ private:
   
   std::vector<TH1*> m_h;
   TH1D *m_EventCount;
+  TH1D *m_AlgoPass;
   TH1D *m_HiggsDecay;
+  
+  bool               m_doGenAnalysis;
+  PlotsGenAnalysis   m_plotsGenAnalysis;
   
   bool               m_doSingleObjectsAnalysis;
   PlotsSingleObjects m_plotsSingleObjects;

@@ -143,7 +143,7 @@ process.decayAnalyzer = cms.EDProducer('DecayAnalyzer',
     output_ntuple = cms.untracked.bool(True)
 )
 
-process.caloStage2Params.etSumEtaMax = cms.vint32(28,  28,  41,  28)
+process.caloStage2Params.etSumEtaMax = cms.vint32(41,  41,  41,  41)
 
 if options.sample=="mc":
   process.L1NtupleEMU +=  process.decayAnalyzer
