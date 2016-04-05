@@ -101,7 +101,11 @@ process = L1TTurnOffUnpackStage2GtGmtAndCalo(process)
 
 # End of customisation functions
 
-if options.sumRange==5:
+if options.sumRange==3:
+  process.caloStage2Params.etSumEtaMin = cms.vint32(-28,-28,-28,-28)
+  process.caloStage2Params.etSumEtaMax = cms.vint32( 28, 28, 28, 28)
+
+elif options.sumRange==5:
   process.caloStage2Params.etSumEtaMin = cms.vint32(-41,-41,-41,-41)
   process.caloStage2Params.etSumEtaMax = cms.vint32( 41, 41, 41, 41)
   

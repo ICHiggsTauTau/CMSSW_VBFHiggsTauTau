@@ -8,7 +8,7 @@ config.General.transferLogs    = True
 
 config.JobType.pluginName = 'ANALYSIS'
 config.JobType.psetName   = 'cmssw_cfg.py'
-config.JobType.pyCfgParams = ['sample=mc']
+config.JobType.pyCfgParams = ['sample=mc','sumRange=3']
 
 config.Data.inputDataset     = '/VBF_HToInvisible_M125_13TeV_powheg_pythia8/RunIIFall15DR76-25nsFlat10to25TSG_76X_mcRun2_asymptotic_v12-v1/GEN-SIM-RAW'
 config.Data.inputDBS         = 'global'

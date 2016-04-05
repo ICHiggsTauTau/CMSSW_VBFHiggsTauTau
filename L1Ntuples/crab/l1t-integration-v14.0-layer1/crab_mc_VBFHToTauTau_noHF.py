@@ -8,7 +8,7 @@ config.General.transferLogs    = True
 
 config.JobType.pluginName = 'ANALYSIS'
 config.JobType.psetName   = 'cmssw_cfg.py'
-config.JobType.pyCfgParams = ['sample=mc']
+config.JobType.pyCfgParams = ['sample=mc','sumRange=3']
 
 config.Data.inputDataset     = '/VBFHToTauTau_M125_13TeV_powheg_pythia8/pela-Reprocessing_VBFHiggsTauTau_RAW_v3-02e742d2ba16f475bed5477b1348f921/USER'
 config.Data.inputDBS         = 'phys03'

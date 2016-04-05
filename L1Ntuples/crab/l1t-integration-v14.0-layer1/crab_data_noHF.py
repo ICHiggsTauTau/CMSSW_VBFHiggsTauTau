@@ -8,7 +8,7 @@ config.General.transferLogs    = True
 
 config.JobType.pluginName = 'ANALYSIS'
 config.JobType.psetName   = 'cmssw_cfg.py'
-config.JobType.pyCfgParams = ['sample=data']
+config.JobType.pyCfgParams = ['sample=data','sumRange=3']
 
 config.Data.inputDataset     = '/ZeroBias/Run2015D-v1/RAW'
 config.Data.inputDBS         = 'global'
