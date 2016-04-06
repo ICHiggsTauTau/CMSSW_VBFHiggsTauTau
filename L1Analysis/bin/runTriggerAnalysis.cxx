@@ -236,7 +236,7 @@ int main(int argc, char* argv[]){
      if(options.jobType=="mc"){
        treeGenAnalysis.Add(vSig[i].c_str());
      }
-    }
+   }
   
   
   cout << "===== Tree Summary ===== " << endl;
