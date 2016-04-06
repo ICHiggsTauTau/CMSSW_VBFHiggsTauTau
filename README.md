@@ -22,9 +22,10 @@ Get IC Code
     mkdir UserCode
     cd UserCode
     git clone git@github.com:ajgilbert/ICHiggsTauTau.git
+    cd ICHiggsTauTau
     git fetch
     git checkout JP-L1Trigger-dev
-    cd ../
+    cd ../../
     scramv1 b -j8
 
 Get Joao's CMSSW analysis code
