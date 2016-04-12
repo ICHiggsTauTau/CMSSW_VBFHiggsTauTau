@@ -22,6 +22,33 @@
 
 using namespace std;
 
+double getConvertionFactor(int run){
+  
+  // How to calculate the rates
+  //rate_targetLumi = bunchEff*11246*2808*(target_lumiPerBunch/run259721_lumiPerBunch)
+  //                = bunchEff*11246*(1.15e34)*(517/0.15e34)
+  //                = bunchEff*11246*517*(1.15e34/0.15e34)
+  
+  double factor = 1;
+  
+  if(run==259721){
+  
+  //const int nMaxBunch50ns = 1380;
+    //const double nMaxBunch25ns = 2808;
+    const double ratePerBunch  = 11246;
+  
+    const double run259721_lumi   = 0.15e34;
+    const double run259721_nBunch = 517;
+  
+    //const double targetNBunchs = 2808;
+    const double targetLumi    = 1.15e34;
+  
+    factor = ratePerBunch*run259721_nBunch*(targetLumi/run259721_lumi);
+  }
+  
+  return factor;
+}
+
 bool hasEnding (std::string const &fullString, std::string const &ending) {
   if (fullString.length() >= ending.length()) {
     return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
@@ -34,12 +61,13 @@ class ProgramOptions{
 public:
   
   ProgramOptions(){
-    valid     = false;
-    verbose   = false;
-    plots     = false;
-    inputA    = "file";
-    inputB    = "file";
-    outputDir = "output/";
+    valid        = false;
+    verbose      = false;
+    plots        = false;
+    optimisation = false;
+    inputA       = "file";
+    inputB       = "file";
+    outputDir    = "output/";
   }
   
   ProgramOptions(int argc, char *argv[]){
@@ -53,8 +81,9 @@ public:
     
     for (int i = 1; i < argc; ++i) {
       std::string arg = argv[i];
-      if     (arg == "--verbose"){verbose = true;}
-      else if(arg == "--plots")  {plots   = true;}
+      if     (arg == "--verbose")     {verbose = true;}
+      else if(arg == "--plots")       {plots   = true;}
+      else if(arg == "--optimisation"){optimisation   = true;}
       else if(arg == "--inputA"){
         if(i+1<argc){i++; inputA = argv[i];}
         else{printHelpMessage(); valid=false;}
@@ -75,6 +104,7 @@ public:
     cerr << "Usage: vbftautau_runRatesExtraction [commands]" << endl;
     cerr << " --verbose"                                     << endl;
     cerr << " --plots"                                       << endl;
+    cerr << " --optimisation"                                << endl;
     cerr << " --inputA INPUT"                                << endl;
     cerr << " --inputB INPUT"                                << endl;
     cerr << " --outputDir DIR"                               << endl;
@@ -83,6 +113,7 @@ public:
   bool   valid;
   bool   verbose;
   bool   plots;
+  bool   optimisation;
   string inputA;
   string inputB;
   string outputDir;
@@ -111,9 +142,7 @@ struct sortGreaterEff_AlgoWorkingPoint{
 //#################################################################################
 TCanvas* doCanvas(TH1D* sig,TH1D* bkg,const char* name,const char* path,vector<AlgoWorkingPoint> &resAlgos){
   
-  //const int nMaxBunch50ns = 1380;
-  const int nMaxBunch25ns = 2808;
-  const int ratePerBunch  = 11246;
+  double run259721_convFactor = getConvertionFactor(259721);
   
   TCanvas *c0 = new TCanvas(Form("rates_%s",name));
   
@@ -123,6 +152,9 @@ TCanvas* doCanvas(TH1D* sig,TH1D* bkg,const char* name,const char* path,vector<A
   pad->SetTicky(false);
   pad->Draw();
   pad->cd();
+  
+  if(string(name)=="L1TMet_Et"){sig ->GetXaxis()->SetRangeUser(0,200);}
+  if(string(name)=="L1TMHT_Et"){sig ->GetXaxis()->SetRangeUser(0,200);}
   
   sig->GetYaxis()->SetTitleOffset(1.5);
   sig->GetYaxis()->SetTitle("Signal Efficiency");
@@ -141,11 +173,12 @@ TCanvas* doCanvas(TH1D* sig,TH1D* bkg,const char* name,const char* path,vector<A
   overlay->SetTicky(false);
   
   TH1D * rate = (TH1D*) bkg->Clone(Form("rate_%s",sig->GetTitle()));
-//   if(string(name)=="l1t_etm"){rate->GetXaxis()->SetRangeUser(0,200);}
-//   if(string(name)=="dijet_pt0 "){rate->GetXaxis()->SetTitle("Leading Jet p_{#perp}");}
+  if(string(name)=="L1TMet_Et"){rate->GetXaxis()->SetRangeUser(0,200);}
+  if(string(name)=="L1TMHT_Et"){rate->GetXaxis()->SetRangeUser(0,200);}
+  //   if(string(name)=="dijet_pt0 "){rate->GetXaxis()->SetTitle("Leading Jet p_{#perp}");}
   // rate->GetYaxis()->SetRangeUser(1,1.2e7);
   rate->GetYaxis()->SetTitle("L1T Rate (Hz)");
-  rate->Scale(ratePerBunch*nMaxBunch25ns);
+  rate->Scale(run259721_convFactor);
   rate->SetLineColor(kRed);
   rate->GetYaxis()->SetAxisColor(kRed);
   rate->GetYaxis()->SetTitleColor(kRed);
@@ -215,15 +248,20 @@ int main(int argc, char *argv[]){
   for(int i=1; i<HiggsDecay->GetNbinsX()+1; i++){
     printf("Decay: %10s - Faction: %6.4f\n",HiggsDecay->GetXaxis()->GetBinLabel(i),HiggsDecay->GetBinContent(i)/nSigEvents);
   }
+
+  printf("===== Convertion factor =====\n");
+  double run259721_convFactor = getConvertionFactor(259721);
+  printf("Data convertion factor: %10.2f\n",run259721_convFactor);
+  printf("\n");
   
   printf("===== Algo Efficiency Summary =====\n");
   TH1D* AlgoPass     = (TH1D*) fSig->Get("AlgoPass");
   TH1D* AlgoPassRate = (TH1D*) fBkg->Get("AlgoPass");
   for(int i=1; i<AlgoPass->GetNbinsX()+1; i++){
-    printf("Algo: %40s - Eff: %6.4f rate: %10.1f Hz\n",AlgoPass->GetXaxis()->GetBinLabel(i),AlgoPass->GetBinContent(i)/nSigEvents,2808*11246*AlgoPassRate->GetBinContent(i)/nBkgEvents);
+    printf("Algo: %40s - Eff: %6.4f rate: %10.1f Hz\n",AlgoPass->GetXaxis()->GetBinLabel(i),AlgoPass->GetBinContent(i)/nSigEvents,run259721_convFactor*AlgoPassRate->GetBinContent(i)/nBkgEvents);
   }
   
-  if(options.plots){
+  if(options.optimisation || options.plots){
     
     vector<AlgoWorkingPoint> resAlgos;
     
@@ -237,6 +275,13 @@ int main(int argc, char *argv[]){
       
       string sigTitle = pSig->GetName();
       string sigPath  = pSig->GetDirectory()->GetPath();
+
+      // Histograms to ignore
+      if(hasEnding(sigTitle,"_N"))          {continue;}
+      if(hasEnding(sigTitle,"_Eta"))        {continue;}
+      if(hasEnding(sigTitle,"_Phi"))        {continue;}
+      if(hasEnding(sigTitle,"_minDRL1TJet")){continue;}
+      
       sigPath  = sigPath.substr(sigPath.find(':')+2,sigPath.size()-1);
       
       for(unsigned b=0; b<hBkg.size(); b++){
@@ -248,10 +293,6 @@ int main(int argc, char *argv[]){
         bkgPath = bkgPath.substr(bkgPath.find(':')+2,bkgPath.size()-1);
         
         if(sigTitle == bkgTitle && sigPath == bkgPath && sigPath != ""){
-          
-          // Histograms to ignore
-          if(hasEnding(sigTitle,"_Eta")){continue;}
-          if(hasEnding(sigTitle,"_Phi")){continue;}
           
           //cout << "Plot: " << sigPath << " name: " << pSig->GetName() << " title: " << pSig->GetTitle() << endl;
           
@@ -285,11 +326,14 @@ int main(int argc, char *argv[]){
           }
           d->WriteTObject(c);
           
-          //FIXME: directory handling
-          system(Form("mkdir -p %s/%s",options.outputDir.c_str(),sigPath.c_str()));
-          c->SaveAs(Form("%s/%s/%s.%s",options.outputDir.c_str(),sigPath.c_str(),pSig->GetName(),"png"));
-          c->SaveAs(Form("%s/%s/%s.%s",options.outputDir.c_str(),sigPath.c_str(),pSig->GetName(),"pdf"));
-          c->SaveAs(Form("%s/%s/%s.%s",options.outputDir.c_str(),sigPath.c_str(),pSig->GetName(),"C"));
+          if(options.plots){
+          
+            //FIXME: directory handling
+            system(Form("mkdir -p %s/%s",options.outputDir.c_str(),sigPath.c_str()));
+            c->SaveAs(Form("%s/%s/%s.%s",options.outputDir.c_str(),sigPath.c_str(),pSig->GetName(),"png"));
+            c->SaveAs(Form("%s/%s/%s.%s",options.outputDir.c_str(),sigPath.c_str(),pSig->GetName(),"pdf"));
+            c->SaveAs(Form("%s/%s/%s.%s",options.outputDir.c_str(),sigPath.c_str(),pSig->GetName(),"C"));
+          }
           
           delete pSigEff;
           delete pBkgEff;
@@ -306,13 +350,14 @@ int main(int argc, char *argv[]){
     
     fOut->Write();
     
-    sort(resAlgos.begin(),resAlgos.end(),sortGreaterEff_AlgoWorkingPoint());
-    printf("===== Algo results =====\n");
-    for(unsigned i=0; i<resAlgos.size(); i++){
-      printf("Path: %40s Var: %30s Cut: %10.4f Eff: %6.4f Rate: %10.1f\n",
-             resAlgos[i].name.c_str(),resAlgos[i].var.c_str(),resAlgos[i].value,resAlgos[i].eff,resAlgos[i].rate);
+    if(options.optimisation){
+      sort(resAlgos.begin(),resAlgos.end(),sortGreaterEff_AlgoWorkingPoint());
+      printf("===== Algo results =====\n");
+      for(unsigned i=0; i<resAlgos.size(); i++){
+        printf("Path: %40s Var: %30s Cut: %10.4f Eff: %6.4f Rate: %10.1f\n",
+               resAlgos[i].name.c_str(),resAlgos[i].var.c_str(),resAlgos[i].value,resAlgos[i].eff,resAlgos[i].rate);
+      }
     }
-    
   }
   
   

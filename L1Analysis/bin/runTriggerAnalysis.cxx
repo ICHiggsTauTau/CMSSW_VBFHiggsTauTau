@@ -313,6 +313,8 @@ int main(int argc, char* argv[]){
       printf("[main] L1T Jets  : %u\n",productL1Upgrade->nJets);
     }
     
+    vector<ic::L1TObject>* l1tEG    = new vector<ic::L1TObject>();
+    vector<ic::L1TObject>* l1tIsoEG = new vector<ic::L1TObject>();
     unsigned short int nL1TEGamma = productL1Upgrade->nEGs;
     for(unsigned i=0; i<nL1TEGamma; i++){
       
@@ -323,9 +325,16 @@ int main(int argc, char* argv[]){
       thisEG.set_eta   (productL1Upgrade->egEta   [i]);
       thisEG.set_phi   (productL1Upgrade->egPhi   [i]);
       thisEG.set_energy(productL1Upgrade->egEnergy[i]);
+      thisEG.isolation = productL1Upgrade->egIso[i];
       myEvent.l1tEGammaCollection.push_back(thisEG);
+      l1tEG->push_back(thisEG);
+      if(thisEG.isolation!=0){
+        l1tIsoEG->push_back(thisEG);
+      }
     }
     
+    vector<ic::L1TObject>* l1tMuons    = new vector<ic::L1TObject>();
+    vector<ic::L1TObject>* l1tIsoMuons = new vector<ic::L1TObject>();
     unsigned short int nL1TMuon = productL1Upgrade->nMuons;
     for(unsigned i=0; i<nL1TMuon; i++){
       
@@ -336,9 +345,17 @@ int main(int argc, char* argv[]){
       thisMuon.set_eta   (productL1Upgrade->muonEta   [i]);
       thisMuon.set_phi   (productL1Upgrade->muonPhi   [i]);
       thisMuon.set_energy(productL1Upgrade->muonEnergy[i]);
+      thisMuon.isolation = productL1Upgrade->muonIso  [i];
+      
       myEvent.l1tMuonCollection.push_back(thisMuon);
+      l1tMuons->push_back(thisMuon);
+      if(thisMuon.isolation!=0){
+        l1tIsoMuons->push_back(thisMuon);
+      }
     }
     
+    vector<ic::L1TObject>* l1tTaus    = new vector<ic::L1TObject>();
+    vector<ic::L1TObject>* l1tIsoTaus = new vector<ic::L1TObject>();
     unsigned short int nL1TTaus = productL1Upgrade->nTaus;
     for(unsigned i=0; i<nL1TTaus; i++){
       
@@ -351,12 +368,15 @@ int main(int argc, char* argv[]){
       thisTau.set_energy(productL1Upgrade->tauEnergy[i]);
       thisTau.isolation = productL1Upgrade->tauIso  [i];
       myEvent.l1tTauCollection.push_back(thisTau);
+      l1tTaus->push_back(thisTau);
       
       if(thisTau.isolation!=0){
         myEvent.l1tIsoTauCollection.push_back(thisTau);
+        l1tIsoTaus->push_back(thisTau);
       }
     }
     
+    vector<ic::L1TObject>* l1tJets = new vector<ic::L1TObject>();
     unsigned short int nL1TJets = productL1Upgrade->nJets;
     for(unsigned i=0; i<nL1TJets; i++){
       
@@ -368,16 +388,20 @@ int main(int argc, char* argv[]){
       thisJet.set_phi   (productL1Upgrade->jetPhi   [i]);
       thisJet.set_energy(productL1Upgrade->jetEnergy[i]);
       myEvent.l1tJetCollection.push_back(thisJet);
+      l1tJets->push_back(thisJet);
     }
-
+    
+    vector<ic::L1TObject>* l1tSums = new vector<ic::L1TObject>();
     unsigned short int nL1TSums = productL1Upgrade->nSums;
     for(unsigned i=0; i<nL1TSums; i++){
       
       if(productL1Upgrade->sumBx[i] != 0){continue;}
       
       ic::L1TSum thisSum;
-      thisSum.et  = productL1Upgrade->sumEt [i];
-      thisSum.phi = productL1Upgrade->sumPhi[i];
+      thisSum.set_pt    (productL1Upgrade->sumEt [i]);
+      thisSum.set_eta   (0);
+      thisSum.set_phi   (productL1Upgrade->sumPhi[i]);
+      thisSum.set_energy(productL1Upgrade->sumEt [i]);
  
       short int type = productL1Upgrade->sumType[i];
       if     (type==L1Analysis::EtSumType::kTotalEt)  {thisSum.sumType = ic::L1TSum::SumType::kTotalEt;}
@@ -389,8 +413,9 @@ int main(int argc, char* argv[]){
       else if(type==L1Analysis::EtSumType::kTotalHtx) {thisSum.sumType = ic::L1TSum::SumType::kTotalHtx;}
       else if(type==L1Analysis::EtSumType::kTotalHty) {thisSum.sumType = ic::L1TSum::SumType::kTotalHty;}
       myEvent.l1tSumCollection.push_back(thisSum);
+      
+      l1tSums->push_back(thisSum);
     }
-    
     
     if(options.verbose){printf("===== Sorting Collections =====\n");}
     sort(myEvent.l1tEGammaCollection.begin(),myEvent.l1tEGammaCollection.end(),greater_ICCandidate());
@@ -398,6 +423,23 @@ int main(int argc, char* argv[]){
     sort(myEvent.l1tTauCollection   .begin(),myEvent.l1tTauCollection   .end(),greater_ICCandidate());
     sort(myEvent.l1tIsoTauCollection.begin(),myEvent.l1tIsoTauCollection.end(),greater_ICCandidate());
     sort(myEvent.l1tJetCollection   .begin(),myEvent.l1tJetCollection   .end(),greater_ICCandidate());
+    
+    sort(l1tEG      ->begin(),l1tEG      ->end(),greater_ICCandidate());
+    sort(l1tIsoEG   ->begin(),l1tIsoEG   ->end(),greater_ICCandidate());
+    sort(l1tMuons   ->begin(),l1tMuons   ->end(),greater_ICCandidate());
+    sort(l1tIsoMuons->begin(),l1tIsoMuons->end(),greater_ICCandidate());
+    sort(l1tTaus    ->begin(),l1tTaus    ->end(),greater_ICCandidate());
+    sort(l1tIsoTaus ->begin(),l1tIsoTaus ->end(),greater_ICCandidate());
+    sort(l1tJets    ->begin(),l1tJets    ->end(),greater_ICCandidate());
+
+    myEvent.add("l1t_eg",    l1tEG      );
+    myEvent.add("l1t_isoeg", l1tIsoEG   );
+    myEvent.add("l1t_mu",    l1tMuons   );
+    myEvent.add("l1t_isomu", l1tIsoMuons);
+    myEvent.add("l1t_tau",   l1tTaus    );
+    myEvent.add("l1t_isotau",l1tIsoTaus );
+    myEvent.add("l1t_jet",   l1tJets    );
+    myEvent.add("l1t_sum",   l1tSums    );
     
     myAnalysis.processEvent(myEvent);
     myAnalysis.resetEvent();

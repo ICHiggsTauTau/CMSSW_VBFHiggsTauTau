@@ -1,5 +1,7 @@
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/Event.h"
 
+#include "DataFormats/Math/interface/deltaR.h"
+
 // L1T Objects
 #include "UserCode/ICHiggsTauTau/interface/L1TObject.hh"
 #include "UserCode/ICHiggsTauTau/interface/L1TEGamma.hh"
@@ -15,8 +17,311 @@ using namespace std;
 
 namespace icTrg {
   
-  // Single object conditions
+  //##############################################
+  // Filter collections
+  //##############################################
   
+  inline bool filterByLeading1(icTrg::Event &iEvent,std::string input,std::string output){
+    
+    // If this collection was already made return true
+    if(iEvent.contains(output)){return true;}
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[filterByLeading1] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    // Filter the collection and record the results
+    vector<ic::L1TObject>* colOut = new vector<ic::L1TObject>();
+    if(colIn->size()>0){
+      colOut->push_back(colIn->at(0));
+    }
+
+    iEvent.add(output,colOut);
+    
+    return true;
+  }
+  
+  inline bool filterByLeading2(icTrg::Event &iEvent,std::string input,std::string output){
+    
+    // If this collection was already made return true
+    if(iEvent.contains(output)){return true;}
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[filterByLeading1] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    // Filter the collection and record the results
+    vector<ic::L1TObject>* colOut = new vector<ic::L1TObject>();
+    if(colIn->size()>1){
+      colOut->push_back(colIn->at(0));
+      colOut->push_back(colIn->at(1));
+    }
+    
+    iEvent.add(output,colOut);
+    
+    return true;
+  }
+  
+  inline bool filterByMinPt(icTrg::Event &iEvent,std::string input,double pt,std::string output){
+    
+    // If this collection was already made return true
+    if(iEvent.contains(output)){return true;}
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[filterByMinPt] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    // Filter the collection and record the results
+    vector<ic::L1TObject>* colOut = new vector<ic::L1TObject>();
+    for(auto obj=colIn->begin(); obj!=colIn->end(); obj++){
+      if(obj->pt()>=pt){colOut->push_back(*obj);}
+    }
+    iEvent.add(output,colOut);
+
+    return true;
+  }
+  
+  inline bool filterByMinDR(icTrg::Event &iEvent,std::string colReference,std::string colFilter,double dr,std::string output){
+    
+    // If this collection was already made return true
+    if(iEvent.contains(output)){return true;}
+    
+    // Get the input collections from the event
+    const vector<ic::L1TObject>* colRef = iEvent.get(colReference);
+    if(colRef==0){
+      cout << "[filterByMinDR] Failed too found input reference collection: " << colReference << endl;
+      return false;
+    }
+    const vector<ic::L1TObject>* colFil = iEvent.get(colFilter);
+    if(colFil==0){
+      cout << "[filterByMinDR] Failed too found input to filter collection: " << colFilter << endl;
+      return false;
+    }
+    
+    vector<ic::L1TObject>* colOut = new vector<ic::L1TObject>();
+    for(auto objTest=colFil->begin(); objTest!=colFil->end(); objTest++){
+      bool pass = true;
+      for(auto objRef=colRef->begin(); objRef!=colRef->end(); objRef++){
+        
+        if(deltaR<ic::Candidate,ic::Candidate>(*objTest,*objRef)<dr){
+          pass=false;
+          break;
+        }
+      }
+      if(pass){colOut->push_back(*objTest);}
+    }
+    
+    iEvent.add(output,colOut);
+    return true;
+  }
+  
+  inline bool pairFilter_vbfLikeSymmetric(icTrg::Event &iEvent,std::string input,bool oppSides,double dEta,double mjj,std::string output){
+    
+    // If this collection was already made return true
+    if(iEvent.containsPair(output)){return true;}
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[testVBFConditions] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    L1TObjectPairCollection* colOut = new L1TObjectPairCollection();
+    
+    for(unsigned a=0; a<colIn->size(); a++){
+      const ic::L1TObject *objA = &(colIn->at(a));
+      for(unsigned b=a+1; b<colIn->size(); b++){
+        const ic::L1TObject *objB = &(colIn->at(b));
+        
+        if(oppSides){
+          if(objA->eta()*objB->eta()>=0){continue;}
+        }
+        
+        if(dEta>0){
+          double valDEta = fabs(objA->eta()-objB->eta());
+          if(dEta>valDEta){continue;}
+        }
+        
+        if(mjj>0){
+          ROOT::Math::PtEtaPhiEVector vec = objA->vector() + objB->vector();
+          if(mjj>vec.mass()){continue;}
+        }
+        
+        L1TObjectPair thisPair(objA,objB);
+        colOut->push_back(thisPair);
+      }
+    }
+    
+    iEvent.addPairs(output,colOut);
+    return true;
+  }
+  
+  inline bool pairFilter_vbfLikeAverage(icTrg::Event &iEvent,std::string input,bool oppSides,double pt,double dEta,double mjj,std::string output){
+    
+    // If this collection was already made return true
+    if(iEvent.containsPair(output)){return true;}
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[testVBFConditions] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    L1TObjectPairCollection* colOut = new L1TObjectPairCollection();
+    
+    for(unsigned a=0; a<colIn->size(); a++){
+      const ic::L1TObject *objA = &(colIn->at(a));
+      for(unsigned b=a+1; b<colIn->size(); b++){
+        const ic::L1TObject *objB = &(colIn->at(b));
+        
+        if(oppSides){
+          if(objA->eta()*objB->eta()>=0){continue;}
+        }
+        
+        if(pt>0){
+          double valAvgPt = (objA->pt()+objB->pt())/2;
+          if(pt>valAvgPt){continue;}
+        }
+        
+        if(dEta>0){
+          double valDEta = fabs(objA->eta()-objB->eta());
+          if(dEta>valDEta){continue;}
+        }
+        
+        if(mjj>0){
+          ROOT::Math::PtEtaPhiEVector vec = objA->vector() + objB->vector();
+          if(mjj>vec.mass()){continue;}
+        }
+        
+        L1TObjectPair thisPair(objA,objB);
+        colOut->push_back(thisPair);
+      }
+    }
+    
+    iEvent.addPairs(output,colOut);
+    return true;
+  }
+  
+  
+  //##############################################
+  // Test collections
+  //##############################################
+  
+  inline bool testSize(icTrg::Event &iEvent,std::string input,unsigned minN){
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[filterByMinPt] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    // Testing collection size
+    if(colIn->size()<minN){return false;}
+    else                  {return true;}
+  }
+  
+  inline bool pairTest_size(icTrg::Event &iEvent,std::string input,unsigned minN){
+    
+    // Get the input collection from the event
+    const L1TObjectPairCollection *colIn = iEvent.getPairs(input);
+    if(colIn==0){
+      cout << "[pairTest_size] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    // Testing collection size
+    if(colIn->size()<minN){return false;}
+    else                  {return true;}
+  }
+  
+  inline bool testL1TObject1Pt(icTrg::Event &iEvent,std::string input,double pt){
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[testL1TObject1Pt] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    if(colIn->size()<1){return false;}
+    
+    if(colIn->at(0).pt()>=pt){return true;}
+    return false;
+    
+  }
+  
+  inline bool testL1TObject2Pt(icTrg::Event &iEvent,std::string input,double pt0,double pt1){
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[testL1TObject1Pt] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    if(colIn->size()<2){return false;}
+    
+    if(colIn->at(0).pt()>=pt0 && colIn->at(1).pt()>=pt1){return true;}
+    return false;
+  }
+  
+  inline bool testVBFConditions(icTrg::Event &iEvent,std::string input,bool oppSides,double dEta,double mjj){
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[testVBFConditions] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    if(colIn->size()<2){return false;}
+    
+    for(auto objA=colIn->begin(); objA!=colIn->end(); objA++){
+      for(auto objB=objA+1; objB!=colIn->end(); objB++){
+        
+        if(oppSides){
+          if(objA->eta()*objB->eta()>=0){continue;}
+        }
+        
+        if(dEta>0){
+          double valDEta = fabs(objA->eta()-objB->eta());
+          if(dEta>valDEta){continue;}
+        }
+        
+        if(mjj>0){
+          ROOT::Math::PtEtaPhiEVector vec = objA->vector() + objB->vector();
+          if(mjj>vec.mass()){continue;}
+        }
+
+        // If we get to here we found a pair that works
+        return true;
+      }
+    }
+    
+    
+    return false;
+  }
+  
+  
+  //##############################################
+  //##############################################
+  //##############################################
+  //##############################################
+  //##############################################
+  
+  // Single object conditions
   inline bool testL1TEGamma1Pt(icTrg::Event &iEvent,double pt1){
     
     if(iEvent.l1tEGammaCollection.size()<1){return false;}
@@ -165,7 +470,7 @@ namespace icTrg {
     for(unsigned i=0; i<iEvent.l1tSumCollection.size(); i++){
       
       ic::L1TSum *iSum = &(iEvent.l1tSumCollection.at(i));
-      if(iSum->sumType==ic::L1TSum::SumType::kMissingEt && iSum->et>=et){return true;}
+      if(iSum->sumType==ic::L1TSum::SumType::kMissingEt && iSum->vector().Et()>=et){return true;}
     }
     return false;
   }
@@ -175,7 +480,7 @@ namespace icTrg {
     for(unsigned i=0; i<iEvent.l1tSumCollection.size(); i++){
       
       ic::L1TSum *iSum = &(iEvent.l1tSumCollection.at(i));
-      if(iSum->sumType==ic::L1TSum::SumType::kMissingHt && iSum->et>=et){return true;}
+      if(iSum->sumType==ic::L1TSum::SumType::kMissingHt && iSum->vector().Et()>=et){return true;}
     }
     return false;
   }

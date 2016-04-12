@@ -7,7 +7,16 @@ icTrg::Event::Event(){
   
 }
 
-icTrg::Event::~Event(){}
+icTrg::Event::~Event(){
+  
+  for(auto i=m_collections.begin(); i!=m_collections.end(); i++){
+    delete i->second;
+  }
+  
+  for(auto i=m_pairs.begin(); i!=m_pairs.end(); i++){
+    delete i->second;
+  }
+}
 
 double icTrg::Event::getDijetMaxMjj(double pt){
   
@@ -44,4 +53,72 @@ double icTrg::Event::getDijetMaxMjj(double pt){
     return entry->second;
   }
   
+}
+
+
+const std::vector<ic::L1TObject>* icTrg::Event::get(std::string name){
+  
+  auto p = m_collections.find(name);
+  if(p!=m_collections.end()){
+    return p->second;
+  }else{
+    return 0;
+  }
+}
+
+bool icTrg::Event::contains(std::string name){
+  
+  if(m_collections.find(name)!=m_collections.end()){return true;}
+  else{return false;}
+}
+
+bool icTrg::Event::add(std::string name,std::vector<ic::L1TObject> *objs){
+  
+  if(this->contains(name)){return false;}
+  
+  m_collections[name] = objs;
+  return true;
+}
+
+void icTrg::Event::printCollections(){
+  
+  printf("\n");
+  printf("[Event::Event] => Printing all contained L1TObjectsCollection\n");
+  for(auto it=m_collections.begin(); it!=m_collections.end(); it++){
+    
+    vector<ic::L1TObject>* colObj = it->second;
+    
+    printf("\n");
+    printf("[Event::Event] ===== List of %s : %lu =====\n",it->first.c_str(),colObj->size());
+    
+    unsigned count=0;
+    for(auto obj=colObj->begin(); obj!=colObj->end(); obj++){
+      printf("[Event::Event] L1TObject #%u - et=%5.1f eta=%5.2f phi=%5.2f\n",count,obj->pt(),obj->eta(),obj->phi());
+      count++;
+    }
+  }
+}
+
+bool icTrg::Event::containsPair(std::string name){
+  
+  if(m_pairs.find(name)!=m_pairs.end()){return true;}
+  else{return false;}
+}
+
+bool icTrg::Event::addPairs(std::string name,icTrg::L1TObjectPairCollection *pairs){
+  
+  if(this->containsPair(name)){return false;}
+  
+  m_pairs[name] = pairs;
+  return true;
+}
+
+const icTrg::L1TObjectPairCollection* icTrg::Event::getPairs(std::string name){
+  
+  auto p = m_pairs.find(name);
+  if(p!=m_pairs.end()){
+    return p->second;
+  }else{
+    return 0;
+  }
 }
