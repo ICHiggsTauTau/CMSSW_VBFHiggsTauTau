@@ -166,6 +166,53 @@ namespace icTrg {
     return true;
   }
   
+  inline bool pairFilter_vbfLikeAsymmetric(icTrg::Event &iEvent,std::string input,bool oppSides,double pt1,double pt2,double dEta,double mjj,std::string output){
+    
+    // If this collection was already made return true
+    if(iEvent.containsPair(output)){return true;}
+    
+    // Get the input collection from the event
+    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    if(colIn==0){
+      cout << "[testVBFConditions] Failed too found input collection: " << input << endl;
+      return false;
+    }
+    
+    L1TObjectPairCollection* colOut = new L1TObjectPairCollection();
+    
+    for(unsigned a=0; a<colIn->size(); a++){
+      const ic::L1TObject *objA = &(colIn->at(a));
+      for(unsigned b=a+1; b<colIn->size(); b++){
+        const ic::L1TObject *objB = &(colIn->at(b));
+        
+        if(oppSides){
+          if(objA->eta()*objB->eta()>=0){continue;}
+        }
+        
+        if(pt1>0 && pt2>0){
+          if(pt1>objA->pt()){continue;}
+          if(pt2>objB->pt()){continue;}
+        }
+        
+        if(dEta>0){
+          double valDEta = fabs(objA->eta()-objB->eta());
+          if(dEta>valDEta){continue;}
+        }
+        
+        if(mjj>0){
+          ROOT::Math::PtEtaPhiEVector vec = objA->vector() + objB->vector();
+          if(mjj>vec.mass()){continue;}
+        }
+        
+        L1TObjectPair thisPair(objA,objB);
+        colOut->push_back(thisPair);
+      }
+    }
+    
+    iEvent.addPairs(output,colOut);
+    return true;
+  }
+  
   inline bool pairFilter_vbfLikeAverage(icTrg::Event &iEvent,std::string input,bool oppSides,double pt,double dEta,double mjj,std::string output){
     
     // If this collection was already made return true

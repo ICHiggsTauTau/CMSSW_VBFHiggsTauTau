@@ -633,6 +633,42 @@ void L1TAlgoAnalysis::initPlots(){
     }
   }
   
+  // Algo: Double Jet
+  for(double jetPt1=10; jetPt1<=100; jetPt1+=10){
+    for(double jetPt2=10; jetPt2<=jetPt1; jetPt2+=10){
+      
+      pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0f",jetPt1,jetPt2),dirNoClean);
+      pAlgo->setVerbose(m_verbose);
+      string name_dijetCol = Form("l1t_dijet_pt%.0f-%.0f",jetPt1,jetPt2);
+      pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAsymmetric,_1,"l1t_jet",false,jetPt1,jetPt2,0,0,name_dijetCol));
+      pAlgo->addCondition(std::bind(icTrg::pairTest_size,               _1,name_dijetCol,1));
+      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      m_algos.push_back(pAlgo);
+      
+      for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+        
+        pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fmjj%.0f",jetPt1,jetPt2,jetMjj),dirNoClean);
+        pAlgo->setVerbose(m_verbose);
+        string name_dijetCol = Form("l1t_dijet_pt%.0f-%.0f_mjj%.0f",jetPt1,jetPt2,jetMjj);
+        pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAsymmetric,_1,"l1t_jet",false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(icTrg::pairTest_size,               _1,name_dijetCol,1));
+        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+          
+          pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fdeta%2.0fmjj%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj),dirNoClean);
+          pAlgo->setVerbose(m_verbose);
+          string name_dijetCol = Form("l1t_dijet_pt%.0f-%.0f_deta%3.1f_mjj%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj);
+          pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAsymmetric,_1,"l1t_jet",false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(icTrg::pairTest_size,               _1,name_dijetCol,1));
+          pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+        }
+      }
+    }
+  }
+  
   // Algo: Double Jet Avg pT
   for(double jetPt=20; jetPt<=60; jetPt+=10){
     
