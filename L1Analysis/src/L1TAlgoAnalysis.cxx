@@ -703,6 +703,14 @@ void L1TAlgoAnalysis::initPlots(){
     }
   }
   
+  pAlgo = new L1TAlgo("DijetAvg30deta25",dirNoClean);
+  pAlgo->setVerbose(m_verbose);
+  string name_dijetCol = "l1t_dijet_avgpt30_deta25";
+  pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAverage,_1,"l1t_jet",false,30,2.5,0,name_dijetCol));
+  pAlgo->addCondition(std::bind(icTrg::pairTest_size,            _1,name_dijetCol,1));
+  pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+  m_algos.push_back(pAlgo);
+  
   
   // ########### MET based ###########
   for(double i=10; i<=250; i+=10){

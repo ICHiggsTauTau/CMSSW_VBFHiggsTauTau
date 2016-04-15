@@ -6,4 +6,5 @@
 <use name="CMSSW_VBFHiggsTauTau/Style"/>
 <bin name="vbftautau_runTriggerAnalysis" file="runTriggerAnalysis.cxx"/>
 <bin name="vbftautau_runRatesExtraction" file="runRatesExtraction.cxx"/>
+<bin name="vbfinv_runMETAnalysis" file="runMETAnalysis.cxx"/>
 <flags CXXFLAGS="-g"/> 

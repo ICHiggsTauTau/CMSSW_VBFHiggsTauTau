@@ -73,7 +73,7 @@ L1TAlgoPlots::L1TAlgoPlots(string name, TDirectory* baseBirectory){
   m_L1TMET_Et = new TH1D("L1TMET_Et","L1T MET Et",512,0,512); m_L1TMET_Et->SetDirectory(m_plotsDirectory);
   m_L1TMHT_Et = new TH1D("L1TMHT_Et","L1T MHT Et",512,0,512); m_L1TMHT_Et->SetDirectory(m_plotsDirectory);
   
-  
+  m_METvsMjj  = new TH2D("METvsMjj",      "MET vs Mjj",   100,0,200, 100,0,1000);       m_METvsMjj     ->SetDirectory(m_plotsDirectory);
 }
 
 L1TAlgoPlots::~L1TAlgoPlots(){
@@ -102,6 +102,23 @@ L1TAlgoPlots::~L1TAlgoPlots(){
 }
 
 void L1TAlgoPlots::fill(icTrg::Event &iEvent){
+  
+  double evMET = 0.;
+//   double evMHT = 0.;
+  
+  for(unsigned i=0; i<iEvent.l1tSumCollection.size(); i++){
+    
+    ic::L1TSum *iSum = &(iEvent.l1tSumCollection.at(i));
+    
+    if(iSum->sumType==ic::L1TSum::SumType::kMissingEt){
+      evMET = iSum->vector().Et();
+      m_L1TMET_Et ->Fill(iSum->vector().Et());
+    }
+    else if(iSum->sumType==ic::L1TSum::SumType::kMissingHt){
+//       evMHT = iSum->vector().Et();
+      m_L1TMHT_Et ->Fill(iSum->vector().Et());
+    }
+  }
   
   ic::L1TEGammaCollection* colEG = (ic::L1TEGammaCollection*) iEvent.get(tag_l1tEG);
   if(colEG->size()>0){
@@ -201,18 +218,8 @@ void L1TAlgoPlots::fill(icTrg::Event &iEvent){
     m_L1TJet_AvgPt  ->Fill(maxAvgPt);
     m_L1TJet_maxDEta->Fill(maxDEta);
     m_L1TJet_maxMjj ->Fill(maxMjj);
-  }
-
-  for(unsigned i=0; i<iEvent.l1tSumCollection.size(); i++){
     
-    ic::L1TSum *iSum = &(iEvent.l1tSumCollection.at(i));
-    
-    if(iSum->sumType==ic::L1TSum::SumType::kMissingEt){
-      m_L1TMET_Et ->Fill(iSum->vector().Et());
-    }
-    else if(iSum->sumType==ic::L1TSum::SumType::kMissingHt){
-      m_L1TMHT_Et ->Fill(iSum->vector().Et());
-    }
+    m_METvsMjj      ->Fill(evMET,maxMjj);
   }
   
   // Separation tau-jet
