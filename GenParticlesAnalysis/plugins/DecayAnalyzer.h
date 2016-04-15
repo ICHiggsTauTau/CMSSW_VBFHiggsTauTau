@@ -20,6 +20,7 @@
 #include "TH1D.h"
 
 // VBFHiggsToTauTau includes
+#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsGenAnalysisDataFormat.h"
 #include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsToTauTauGenAnalysisDataFormat.h"
 
 // C++ include files
@@ -51,9 +52,9 @@ private:
   bool m_output_ntuple;
   
   // Ntuple output handles
-  edm::Service<TFileService>              m_fs;               // Output file
-  TTree                                   *m_tree;            // Output tree
-  VBFHiggsToTauTau::GenAnalysisDataFormat *m_genAnalysisData; // Data for tree
+  edm::Service<TFileService>       m_fs;              // Output file
+  TTree                           *m_tree;            // Output tree
+  VBFHiggs::GenAnalysisDataFormat *m_genAnalysisData; // Data for tree
   
   // ROOT output handles
   TFile* fOut;

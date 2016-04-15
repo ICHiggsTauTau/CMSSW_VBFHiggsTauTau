@@ -45,11 +45,11 @@ DecayAnalyzer::DecayAnalyzer(const edm::ParameterSet& pset){
   }
   
   if(m_output_ntuple){
-    m_genAnalysisData = new VBFHiggsToTauTau::GenAnalysisDataFormat();
+    m_genAnalysisData = new VBFHiggs::GenAnalysisDataFormat();
     
-    m_tree = m_fs->make<TTree>("VBFHiggsToTauTauGenAnalysisTree","VBFHiggsToTauTauGenAnalysisTree");
-    //m_tree->Branch("GenAnalysis", "VBFHiggsToTauTau::GenAnalysisDataFormat", &m_genAnalysisData, 32000, 3);
-    m_tree->Branch("GenAnalysis", "VBFHiggsToTauTau::GenAnalysisDataFormat", &m_genAnalysisData);
+    m_tree = m_fs->make<TTree>("VBFHiggsGenAnalysisTree","VBFHiggsGenAnalysisTree");
+    //m_tree->Branch("GenAnalysis", "VBFHiggs::GenAnalysisDataFormat", &m_genAnalysisData, 32000, 3);
+    m_tree->Branch("GenAnalysis", "VBFHiggs::GenAnalysisDataFormat", &m_genAnalysisData);
   }
   
   m_InputTag_HepMCProduct          = consumes<edm::HepMCProduct>          (inputTag_HepMCProduct);
@@ -104,8 +104,14 @@ void DecayAnalyzer::produce(edm::Event& iEvent,const edm::EventSetup& iSetup){
   unsigned char tau1_decay = 0;
   unsigned char tau2_decay = 0;
   
+  ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > vecNeutrino(0,0,0,0);
+  
   for(size_t i = 0; i < genParticles->size(); ++ i) {
     const reco::GenParticle & p = (*genParticles)[i];
+    
+    if(p.status()==1 && (fabs(p.pdgId())==12 || fabs(p.pdgId())==12 || fabs(p.pdgId())==16) ){
+      vecNeutrino += p.p4();
+    }
     
     if(fabs(p.pdgId())==15){
       //       cout << "Found a tau..." << endl;
@@ -135,14 +141,14 @@ void DecayAnalyzer::produce(edm::Event& iEvent,const edm::EventSetup& iSetup){
         }
         
         if(nTau==0){
-          if(decayEle){TauToEle++; tau1_decay=VBFHiggsToTauTau::TauDecay::Ele;}
-          if(decayMu) {TauToMuo++; tau1_decay=VBFHiggsToTauTau::TauDecay::Muo;}
-          if(decayHad){TauToHad++; tau1_decay=VBFHiggsToTauTau::TauDecay::Had;}
+          if(decayEle){TauToEle++; tau1_decay=VBFHiggs::TauDecay::Ele;}
+          if(decayMu) {TauToMuo++; tau1_decay=VBFHiggs::TauDecay::Muo;}
+          if(decayHad){TauToHad++; tau1_decay=VBFHiggs::TauDecay::Had;}
         }
         else if(nTau==1){
-          if(decayEle){TauToEle++; tau2_decay=VBFHiggsToTauTau::TauDecay::Ele;}
-          if(decayMu) {TauToMuo++; tau2_decay=VBFHiggsToTauTau::TauDecay::Muo;}
-          if(decayHad){TauToHad++; tau2_decay=VBFHiggsToTauTau::TauDecay::Had;}
+          if(decayEle){TauToEle++; tau2_decay=VBFHiggs::TauDecay::Ele;}
+          if(decayMu) {TauToMuo++; tau2_decay=VBFHiggs::TauDecay::Muo;}
+          if(decayHad){TauToHad++; tau2_decay=VBFHiggs::TauDecay::Had;}
         }
         nTau++;
       }
@@ -199,6 +205,8 @@ void DecayAnalyzer::produce(edm::Event& iEvent,const edm::EventSetup& iSetup){
     m_genAnalysisData->tau1_decayType=tau1_decay;
     m_genAnalysisData->tau2_decayType=tau2_decay;
     
+    m_genAnalysisData->genMet = vecNeutrino.pt();
+    
     for(auto it=vHiggsDecayTau1Stable->begin(); it!=vHiggsDecayTau1Stable->end(); it++){
       m_genAnalysisData->tau1_stableDecayProducts.push_back(VBFHiggsToTauTau::MicroGenParticle(it->status(),it->pdgId(),it->charge(),it->p4()));
     }
@@ -211,27 +219,27 @@ void DecayAnalyzer::produce(edm::Event& iEvent,const edm::EventSetup& iSetup){
   auto_ptr< string > decayMode(new string);
   if(TauToHad==2 && TauToEle==0 && TauToMuo==0){
     (*decayMode)="HadHad"; 
-    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggsToTauTau::HiggsDecay::HadHad;}
+    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggs::HiggsDecay::HadHad;}
   }
   else if(TauToHad==1 && TauToEle==1 && TauToMuo==0){
     (*decayMode)="HadEle"; 
-    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggsToTauTau::HiggsDecay::EleHad;}
+    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggs::HiggsDecay::EleHad;}
   }  
   else if(TauToHad==1 && TauToEle==0 && TauToMuo==1){
     (*decayMode)="HadMuo"; 
-    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggsToTauTau::HiggsDecay::MuoHad;}
+    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggs::HiggsDecay::MuoHad;}
   }
   else if(TauToHad==0 && TauToEle==2 && TauToMuo==0){
     (*decayMode)="EleEle"; 
-    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggsToTauTau::HiggsDecay::EleEle;}
+    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggs::HiggsDecay::EleEle;}
   }
   else if(TauToHad==0 && TauToEle==1 && TauToMuo==1){
     (*decayMode)="EleMuo"; 
-    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggsToTauTau::HiggsDecay::EleMuo;}
+    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggs::HiggsDecay::EleMuo;}
   }
   else if(TauToHad==0 && TauToEle==0 && TauToMuo==2){
     (*decayMode)="MuoMuo"; 
-    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggsToTauTau::HiggsDecay::MuoMuo;}
+    if(m_output_ntuple){m_genAnalysisData->higgs_decayType=VBFHiggs::HiggsDecay::MuoMuo;}
   }
   else{
     (*decayMode)="Error";
