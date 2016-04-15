@@ -229,6 +229,8 @@ int main(int argc, char *argv[]){
   hepfw::File *fSig = new hepfw::File(options.inputA.c_str());
   hepfw::File *fBkg = new hepfw::File(options.inputB.c_str());
   
+  
+  
   // Getting all histograms
   vector<TH1*> hSig = fSig->getHistograms();
   vector<TH1*> hBkg = fBkg->getHistograms();
