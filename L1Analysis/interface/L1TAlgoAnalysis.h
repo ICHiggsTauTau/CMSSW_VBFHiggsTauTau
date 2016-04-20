@@ -10,6 +10,7 @@
 
 // This algos
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/L1TAlgo.h"
+#include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/L1TResolutionAnalysis.h"
 
 #include "TMath.h"
 #include "TFile.h"
@@ -120,9 +121,11 @@ private:
   
   bool               m_doGenAnalysis;
   PlotsGenAnalysis   m_plotsGenAnalysis;
-  
+
   bool               m_doSingleObjectsAnalysis;
   PlotsSingleObjects m_plotsSingleObjects;
+  
+  L1TResolutionAnalysis *m_L1TResolutionAnalysis;
   
   std::vector<L1TAlgo*> m_algos;
   

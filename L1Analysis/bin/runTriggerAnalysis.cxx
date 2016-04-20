@@ -6,7 +6,7 @@
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/Event.h"
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/L1TAlgoAnalysis.h"
 #include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/MicroGenParticle.h"
-#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsToTauTauGenAnalysisDataFormat.h"
+#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsGenAnalysisDataFormat.h"
 
 // ICHiggsTauTau Objects
 #include "UserCode/ICHiggsTauTau/interface/L1TObject.hh"
@@ -137,12 +137,12 @@ bool processArgs(int argc, char* argv[], ProgramOptions &opt){
       }
     }else if(arg == "--decay"){
       if(i+1<argc){i++; 
-        if     (std::string(argv[i]) == "EleEle"){opt.decay = VBFHiggsToTauTau::HiggsDecay::EleEle;}
-        else if(std::string(argv[i]) == "EleMuo"){opt.decay = VBFHiggsToTauTau::HiggsDecay::EleMuo;}
-        else if(std::string(argv[i]) == "EleHad"){opt.decay = VBFHiggsToTauTau::HiggsDecay::EleHad;}
-        else if(std::string(argv[i]) == "MuoMuo"){opt.decay = VBFHiggsToTauTau::HiggsDecay::MuoMuo;}
-        else if(std::string(argv[i]) == "MuoHad"){opt.decay = VBFHiggsToTauTau::HiggsDecay::MuoHad;}
-        else if(std::string(argv[i]) == "HadHad"){opt.decay = VBFHiggsToTauTau::HiggsDecay::HadHad;}        
+        if     (std::string(argv[i]) == "EleEle"){opt.decay = VBFHiggs::HiggsDecay::EleEle;}
+        else if(std::string(argv[i]) == "EleMuo"){opt.decay = VBFHiggs::HiggsDecay::EleMuo;}
+        else if(std::string(argv[i]) == "EleHad"){opt.decay = VBFHiggs::HiggsDecay::EleHad;}
+        else if(std::string(argv[i]) == "MuoMuo"){opt.decay = VBFHiggs::HiggsDecay::MuoMuo;}
+        else if(std::string(argv[i]) == "MuoHad"){opt.decay = VBFHiggs::HiggsDecay::MuoHad;}
+        else if(std::string(argv[i]) == "HadHad"){opt.decay = VBFHiggs::HiggsDecay::HadHad;}        
       }
       else{
         printHelpMessage();
@@ -184,18 +184,35 @@ int main(int argc, char* argv[]){
   
   
   // Stuff
-  vector<string> vSig;
-  if(options.inputType=="file"){
-    vSig.push_back(options.input);
+  vector<string> inputFileCollection;
+  if(options.inputType=="file"){    
+
+    stringstream ss(options.input);
+    string token;
+    
+    while( ss.good() ){
+      string substr;
+      getline( ss, substr, ',' );
+      inputFileCollection.push_back(substr);
+    }
+      
   }else if(options.inputType=="filelist"){
     string line;
     ifstream myfile (options.input);
     if (myfile.is_open()){
       while ( getline(myfile,line) ){
-        vSig.push_back(line);
+        inputFileCollection.push_back(line);
       }
       myfile.close();
     }
+  }
+  
+  L1TResolutionAnalysis *m_L1TResolutionAnalysis = 0;
+  
+  TFile *m_resOut = 0;
+  if(options.jobType=="mc"){
+    m_resOut = new TFile("L1TResAnalysis.root","RECREATE");
+    m_L1TResolutionAnalysis = new L1TResolutionAnalysis(m_resOut->mkdir("res"));
   }
   
   L1TAlgoAnalysis myAnalysis;
@@ -211,12 +228,12 @@ int main(int argc, char* argv[]){
   cout << "===== Open File ===== " << endl;
   TChain treeEvent      ("l1EventTree/L1EventTree");
   TChain treeL1Upgrade  ("l1UpgradeEmuTree/L1UpgradeTree");
-  TChain treeGenAnalysis("decayAnalyzer/VBFHiggsToTauTauGenAnalysisTree");
+  TChain treeGenAnalysis("decayAnalyzer/VBFHiggsGenAnalysisTree");
   cout << endl;
   
   L1Analysis::L1AnalysisEventDataFormat     *productL1Event   = 0;
   L1Analysis::L1AnalysisL1UpgradeDataFormat *productL1Upgrade = 0;
-  VBFHiggsToTauTau::GenAnalysisDataFormat   *genInfo          = 0;
+  VBFHiggs::GenAnalysisDataFormat           *genInfo          = 0;
   
   productL1Event = new L1Analysis::L1AnalysisEventDataFormat();
   treeEvent.SetBranchAddress("Event",&productL1Event);
@@ -225,16 +242,16 @@ int main(int argc, char* argv[]){
   treeL1Upgrade.SetBranchAddress("L1Upgrade",&productL1Upgrade);
   
   if(options.jobType=="mc"){
-    genInfo = new VBFHiggsToTauTau::GenAnalysisDataFormat();
+    genInfo = new VBFHiggs::GenAnalysisDataFormat();
     treeGenAnalysis.SetBranchAddress("GenAnalysis",&genInfo);
   }
   
-  for(unsigned i=0; i<vSig.size(); i++){
-     cout << "Input file #" << i << " - " << vSig[i] << endl;
-     treeEvent      .Add(vSig[i].c_str());
-     treeL1Upgrade  .Add(vSig[i].c_str());
+  for(unsigned i=0; i<inputFileCollection.size(); i++){
+     cout << "Input file #" << i << " - " << inputFileCollection[i] << endl;
+     treeEvent      .Add(inputFileCollection[i].c_str());
+     treeL1Upgrade  .Add(inputFileCollection[i].c_str());
      if(options.jobType=="mc"){
-       treeGenAnalysis.Add(vSig[i].c_str());
+       treeGenAnalysis.Add(inputFileCollection[i].c_str());
      }
    }
   
@@ -442,13 +459,22 @@ int main(int argc, char* argv[]){
     myEvent.add("l1t_sum",   l1tSums    );
     
     myAnalysis.processEvent(myEvent);
+    
+    if(options.jobType=="mc"){
+      m_L1TResolutionAnalysis->run(myEvent);
+    }
+    
     myAnalysis.resetEvent();
     
   }
   
-  
   cout << "===== end job report ===== " << endl;
   cout << "Effective events = " << eventsEffective << endl;
+  
+  if(options.jobType=="mc"){
+    m_resOut->Write();
+    delete m_L1TResolutionAnalysis;
+  }
   
   return 0;
 }

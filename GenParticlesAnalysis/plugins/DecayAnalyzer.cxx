@@ -109,7 +109,7 @@ void DecayAnalyzer::produce(edm::Event& iEvent,const edm::EventSetup& iSetup){
   for(size_t i = 0; i < genParticles->size(); ++ i) {
     const reco::GenParticle & p = (*genParticles)[i];
     
-    if(p.status()==1 && (fabs(p.pdgId())==12 || fabs(p.pdgId())==12 || fabs(p.pdgId())==16) ){
+    if(p.status()==1 && (fabs(p.pdgId())==12 || fabs(p.pdgId())==14 || fabs(p.pdgId())==16) ){
       vecNeutrino += p.p4();
     }
     

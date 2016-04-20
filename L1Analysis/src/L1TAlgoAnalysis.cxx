@@ -17,8 +17,8 @@ PlotsGenAnalysis::PlotsGenAnalysis(){
   m_channels.push_back("MuoHad");
   m_channels.push_back("HadHad");
   
-  m_HiggsDecay = 0;
-
+  m_HiggsDecay            = 0;
+  
   for(unsigned i=0; i<m_channels.size(); i++){
     m_L1Tau1_ResolutionEt[m_channels[i]]  = 0;
     m_L1Tau2_ResolutionEt[m_channels[i]]  = 0;
@@ -33,7 +33,7 @@ PlotsGenAnalysis::PlotsGenAnalysis(){
 }
 
 PlotsGenAnalysis::~PlotsGenAnalysis(){
-  
+
 }
 
 void PlotsGenAnalysis::create(TDirectory *dir){
@@ -158,6 +158,7 @@ L1TAlgoAnalysis::~L1TAlgoAnalysis(){
   
   if(m_verbose){printf("[L1TAlgoAnalysis::~L1TAlgoAnalysis] Method called\n");}
   m_fileOut->Write();
+  
 }
 
 void L1TAlgoAnalysis::init(){
@@ -170,6 +171,8 @@ void L1TAlgoAnalysis::init(){
   m_fileOutName             = "L1TAlgoAnalysis.root";
   
   m_dataType = L1TAlgoAnalysis::DataType::MC;
+  
+
 }
 
 void L1TAlgoAnalysis::initPlots(){

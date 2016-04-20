@@ -10,7 +10,7 @@
 #include "UserCode/ICHiggsTauTau/interface/L1TSum.hh"
 
 #include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/MicroGenParticle.h"
-#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsToTauTauGenAnalysisDataFormat.h"
+#include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsGenAnalysisDataFormat.h"
 
 #include <string>
 #include <vector>
@@ -35,7 +35,7 @@ namespace icTrg{
     ic::L1TJetCollection    l1tJetCollection;
     ic::L1TSumCollection    l1tSumCollection;
     
-    VBFHiggsToTauTau::GenAnalysisDataFormat *genInfo;
+    VBFHiggs::GenAnalysisDataFormat *genInfo;
     
     void   printCollections();
     double getDijetMaxMjj(double pt);
