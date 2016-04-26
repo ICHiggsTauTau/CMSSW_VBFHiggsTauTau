@@ -36,11 +36,11 @@ void L1TAlgo::init(){
   m_name = "";
 }
 
-void L1TAlgo::addCondition(std::function<bool(icTrg::Event &iEvent)> function){
+void L1TAlgo::addCondition(std::function<bool(trgfw::Event &iEvent)> function){
   m_conditions.push_back(function);
 }
 
-bool L1TAlgo::run(icTrg::Event &iEvent){
+bool L1TAlgo::run(trgfw::Event &iEvent){
   
   if(m_verbose){printf("[L1TAlgo::run] Method called for L1TAlgo name=%s\n",m_name.c_str());}
   

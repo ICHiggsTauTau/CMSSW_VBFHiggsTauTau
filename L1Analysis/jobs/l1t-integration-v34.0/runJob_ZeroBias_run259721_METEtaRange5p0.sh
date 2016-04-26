@@ -10,4 +10,4 @@ cd /vols/cms02/jca10/VBFHiggsToTauTau/${TAG}/CMSSW_8_0_2/src/CMSSW_VBFHiggsTauTa
 mkdir ${SAMPLE}
 cd ${SAMPLE}
 
-vbftautau_runTriggerAnalysis --input ${REMOTEDIR}/L1Ntuple_${SGE_TASK_ID}.root --outputFilename results_${SGE_TASK_ID}.root --maxEvents -1 --jobType data --runs 259721
+vbftautau_runTriggerAnalysis --doAnalysisL1TAlgoScan --input ${REMOTEDIR}/L1Ntuple_${SGE_TASK_ID}.root --outputFilename results_${SGE_TASK_ID}.root --maxEvents -1 --jobType data --runs 259721

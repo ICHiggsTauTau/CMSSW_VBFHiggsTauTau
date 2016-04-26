@@ -21,7 +21,7 @@ L1TAlgoPlots::L1TAlgoPlots(string name, TDirectory* baseBirectory){
   m_plotsDirectory = baseBirectory->mkdir(name.c_str());
 
   tag_l1tEG      = "l1t_eg";
-  tag_l1tMuon    = "l1t_mu";
+  tag_l1tMuon    = "l1t_muon";
   tag_l1tTau     = "l1t_tau";
   tag_l1tIsoTau  = "l1t_isotau";
   tag_l1tJet     = "l1t_jet";
@@ -101,86 +101,86 @@ L1TAlgoPlots::~L1TAlgoPlots(){
   delete m_L1TMHT_Et;
 }
 
-void L1TAlgoPlots::fill(icTrg::Event &iEvent){
+void L1TAlgoPlots::fill(trgfw::Event &iEvent){
   
-  double evMET = 0.;
-//   double evMHT = 0.;
+  vector<ic::L1TSum*>* mySums  = iEvent.getByName< vector<ic::L1TSum*> >("l1t_sum");
   
-  for(unsigned i=0; i<iEvent.l1tSumCollection.size(); i++){
+  ic::L1TSum* myMET = 0;
+  ic::L1TSum* myMHT = 0;
+  
+  for(unsigned i=0; i<mySums->size(); i++){
     
-    ic::L1TSum *iSum = &(iEvent.l1tSumCollection.at(i));
+    ic::L1TSum *iSum = mySums->at(i);
     
-    if(iSum->sumType==ic::L1TSum::SumType::kMissingEt){
-      evMET = iSum->vector().Et();
-      m_L1TMET_Et ->Fill(iSum->vector().Et());
-    }
-    else if(iSum->sumType==ic::L1TSum::SumType::kMissingHt){
-//       evMHT = iSum->vector().Et();
-      m_L1TMHT_Et ->Fill(iSum->vector().Et());
-    }
+    if     (iSum->sumType==ic::L1TSum::SumType::kMissingEt){myMET = iSum;}
+    else if(iSum->sumType==ic::L1TSum::SumType::kMissingHt){myMHT = iSum;}
   }
   
-  ic::L1TEGammaCollection* colEG = (ic::L1TEGammaCollection*) iEvent.get(tag_l1tEG);
-  if(colEG->size()>0){
-    m_L1TEGamma1_Et ->Fill(colEG->at(0).pt());
-    m_L1TEGamma1_Eta->Fill(colEG->at(0).phi());
-    m_L1TEGamma1_Phi->Fill(colEG->at(0).eta());
+  // Filling plots
+  m_L1TMET_Et ->Fill(myMET->vector().Et());
+  m_L1TMHT_Et ->Fill(myMHT->vector().Et());
+  
+  vector<ic::L1TEGamma*>* myEGs = iEvent.getByName< vector<ic::L1TEGamma*> >(tag_l1tEG);
+  if(myEGs->size()>0){
+    m_L1TEGamma1_Et ->Fill(myEGs->at(0)->pt());
+    m_L1TEGamma1_Eta->Fill(myEGs->at(0)->phi());
+    m_L1TEGamma1_Phi->Fill(myEGs->at(0)->eta());
   }
   
-  ic::L1TMuonCollection* colMuon = (ic::L1TMuonCollection*) iEvent.get(tag_l1tMuon);
-  if(colMuon->size()>0){
-    m_L1TMuon1_Et ->Fill(colMuon->at(0).pt());
-    m_L1TMuon1_Eta->Fill(colMuon->at(0).phi());
-    m_L1TMuon1_Phi->Fill(colMuon->at(0).eta());
+  vector<ic::L1TMuon*>* myMuons = iEvent.getByName< vector<ic::L1TMuon*> >(tag_l1tMuon);
+  if(myMuons->size()>0){
+    m_L1TMuon1_Et ->Fill(myMuons->at(0)->pt());
+    m_L1TMuon1_Eta->Fill(myMuons->at(0)->phi());
+    m_L1TMuon1_Phi->Fill(myMuons->at(0)->eta());
   }
   
-  ic::L1TTauCollection* colTau = (ic::L1TTauCollection*) iEvent.get(tag_l1tTau);
-  m_L1TTau_N->Fill(colTau->size());
-  if(colTau->size()>0){
-    m_L1TTau1_Et ->Fill(colTau->at(0).pt());
-    m_L1TTau1_Phi->Fill(colTau->at(0).phi());
-    m_L1TTau1_Eta->Fill(colTau->at(0).eta());
+  vector<ic::L1TTau*>* myTaus = iEvent.getByName< vector<ic::L1TTau*> >(tag_l1tTau);
+  m_L1TTau_N->Fill(myTaus->size());
+  if(myTaus->size()>0){
+    m_L1TTau1_Et ->Fill(myTaus->at(0)->pt());
+    m_L1TTau1_Phi->Fill(myTaus->at(0)->phi());
+    m_L1TTau1_Eta->Fill(myTaus->at(0)->eta());
   }
-  if(colTau->size()>1){
-    m_L1TTau2_Et ->Fill(colTau->at(1).pt());
-    m_L1TTau2_Phi->Fill(colTau->at(1).phi());
-    m_L1TTau2_Eta->Fill(colTau->at(1).eta());
-  }
-  
-  ic::L1TTauCollection* colIsoTau = (ic::L1TTauCollection*) iEvent.get(tag_l1tIsoTau);
-  m_L1TIsoTau_N->Fill(colIsoTau->size());
-  if(colIsoTau->size()>0){
-    m_L1TIsoTau1_Et ->Fill(colIsoTau->at(0).pt());
-    m_L1TIsoTau1_Phi->Fill(colIsoTau->at(0).phi());
-    m_L1TIsoTau1_Eta->Fill(colIsoTau->at(0).eta());
-  }
-  if(colIsoTau->size()>1){
-    m_L1TIsoTau2_Et ->Fill(colIsoTau->at(1).pt());
-    m_L1TIsoTau2_Phi->Fill(colIsoTau->at(1).phi());
-    m_L1TIsoTau2_Eta->Fill(colIsoTau->at(1).eta());
+  if(myTaus->size()>1){
+    m_L1TTau2_Et ->Fill(myTaus->at(1)->pt());
+    m_L1TTau2_Phi->Fill(myTaus->at(1)->phi());
+    m_L1TTau2_Eta->Fill(myTaus->at(1)->eta());
   }
   
-  ic::L1TJetCollection* colJet = (ic::L1TJetCollection*) iEvent.get(tag_l1tJet);
+  vector<ic::L1TTau*>* myIsoTaus = iEvent.getByName< vector<ic::L1TTau*> >(tag_l1tIsoTau);
+  m_L1TIsoTau_N->Fill(myIsoTaus->size());
+  if(myIsoTaus->size()>0){
+    m_L1TIsoTau1_Et ->Fill(myIsoTaus->at(0)->pt());
+    m_L1TIsoTau1_Phi->Fill(myIsoTaus->at(0)->phi());
+    m_L1TIsoTau1_Eta->Fill(myIsoTaus->at(0)->eta());
+  }
+  if(myIsoTaus->size()>1){
+    m_L1TIsoTau2_Et ->Fill(myIsoTaus->at(1)->pt());
+    m_L1TIsoTau2_Phi->Fill(myIsoTaus->at(1)->phi());
+    m_L1TIsoTau2_Eta->Fill(myIsoTaus->at(1)->eta());
+  }
+  
+  vector<ic::L1TJet*>* myJets = iEvent.getByName< vector<ic::L1TJet*> >(tag_l1tJet);
   if(tag_l1tJetPair==""){
   
-    m_L1TJet_N->Fill(colJet->size());
+    m_L1TJet_N->Fill(myJets->size());
     
-    if(colJet->size()>0){
-      m_L1TJet1_Et ->Fill(colJet->at(0).pt());
-      m_L1TJet1_Phi->Fill(colJet->at(0).phi());
-      m_L1TJet1_Eta->Fill(colJet->at(0).eta());
+    if(myJets->size()>0){
+      m_L1TJet1_Et ->Fill(myJets->at(0)->pt());
+      m_L1TJet1_Phi->Fill(myJets->at(0)->phi());
+      m_L1TJet1_Eta->Fill(myJets->at(0)->eta());
     }
-    if(colJet->size()>1){
-      m_L1TJet2_Et ->Fill(colJet->at(1).pt());
-      m_L1TJet2_Phi->Fill(colJet->at(1).phi());
-      m_L1TJet2_Eta->Fill(colJet->at(1).eta());
+    if(myJets->size()>1){
+      m_L1TJet2_Et ->Fill(myJets->at(1)->pt());
+      m_L1TJet2_Phi->Fill(myJets->at(1)->phi());
+      m_L1TJet2_Eta->Fill(myJets->at(1)->eta());
     }
   }
   else{
       
-    const icTrg::L1TObjectPairCollection* colJetPairs = iEvent.getPairs(tag_l1tJetPair);
+    trgfw::L1TObjectPairCollection* myJetPair = iEvent.getByName< trgfw::L1TObjectPairCollection >(tag_l1tJetPair);
     
-    m_L1TJet_N->Fill(colJetPairs->size());
+    m_L1TJet_N->Fill(myJetPair->size());
     
     double maxObj1Pt = 0.;
     double maxObj2Pt = 0.;
@@ -188,9 +188,9 @@ void L1TAlgoPlots::fill(icTrg::Event &iEvent){
     double maxDEta   = 0.;
     double maxMjj    = 0.;
     
-    for(unsigned i=0; i<colJetPairs->size(); i++){
+    for(unsigned i=0; i<myJetPair->size(); i++){
       
-      const icTrg::L1TObjectPair iPair = colJetPairs->at(i);
+      trgfw::L1TObjectPair iPair = myJetPair->at(i);
       
       // Checking lead jet max pt
       if(maxObj1Pt<iPair.first->pt()) {maxObj1Pt=iPair.first->pt();}
@@ -219,15 +219,15 @@ void L1TAlgoPlots::fill(icTrg::Event &iEvent){
     m_L1TJet_maxDEta->Fill(maxDEta);
     m_L1TJet_maxMjj ->Fill(maxMjj);
     
-    m_METvsMjj      ->Fill(evMET,maxMjj);
+    m_METvsMjj      ->Fill(myMET->vector().Et(),maxMjj);
   }
   
   // Separation tau-jet
-  if(colTau->size()>0 && colJet->size()>0){
+  if(myTaus->size()>0 && myJets->size()>0){
     
     double minDR = 999.;
-    for(auto it=colJet->begin(); it!=colJet->end(); it++){
-      double iDR = deltaR<ic::Candidate,ic::Candidate>(colTau->at(0),*it);
+    for(auto it=myJets->begin(); it!=myJets->end(); it++){
+      double iDR = deltaR<ic::Candidate,ic::Candidate>(*(myTaus->at(0)),**it);
       if(iDR<minDR){minDR=iDR;}
     }
     m_L1TTau1_minDRL1TJet->Fill(minDR);

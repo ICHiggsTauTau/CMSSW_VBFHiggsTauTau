@@ -38,11 +38,16 @@
 #include <vector>
 #include <functional>
 
+typedef std::vector<ic::L1TEGamma*> L1TEGammaPointerCollection;
+typedef std::vector<ic::L1TMuon*>   L1TMuonPointerCollection;
+typedef std::vector<ic::L1TTau*>    L1TTauPointerCollection;
+typedef std::vector<ic::L1TJet*>    L1TJetPointerCollection;
+
 using namespace std;
 
 struct greater_ICCandidate{
-  bool operator() (ic::Candidate a,ic::Candidate b) {
-    return (a.pt() > b.pt());
+  bool operator() (ic::Candidate *a,ic::Candidate *b) {
+    return (a->pt() > b->pt());
   }
 };
 
@@ -55,6 +60,9 @@ struct ProgramOptions{
     jobType        = "mc";
     decay          = 0;
     outputFilename = "L1Analysis.root";
+    
+    doAnalysisL1TAlgoScan   = false;
+    doAnalysisL1TResolution = false;
   }
 
   bool             verbose;
@@ -65,19 +73,28 @@ struct ProgramOptions{
   string           jobType;
   unsigned char    decay;
   string           outputFilename;
+  
+  // Analysis options
+  bool doAnalysisL1TAlgoScan;
+  bool doAnalysisL1TResolution;
+  
 };
 
 void printHelpMessage(){
   
-  cerr << "Usage: vbftautau_runTriggerAnalysis [commands]"                                   << endl;
-  cerr << " --verbose         "                                                              << endl;
-  cerr << " --inputType TYPE       options: file, filelist"                                  << endl;
-  cerr << " --input INPUT"                                                                   << endl;
-  cerr << " --runs RUNS            options: comma separated"                                 << endl;
-  cerr << " --maxEvents N"                                                                   << endl;
-  cerr << " --jobType TYPE         options: mc, data"                                        << endl;
-  cerr << " --decay DECAY          options: EleEle, EleMuo, EleHad, MuoMuo, MuoHad, HadHad"  << endl;
-  cerr << " --outputFilename NAME"                                                           << endl;
+  cerr << "Usage: vbftautau_runTriggerAnalysis [commands]"                                     << endl;
+  cerr << " --verbose         "                                                                << endl;
+  cerr << " --inputType TYPE          options: file, filelist"                                 << endl;
+  cerr << " --input INPUT"                                                                     << endl;
+  cerr << " --runs RUNS               options: comma separated"                                << endl;
+  cerr << " --maxEvents N"                                                                     << endl;
+  cerr << " --jobType TYPE            options: mc, data"                                       << endl;
+  cerr << " --decay DECAY             options: EleEle, EleMuo, EleHad, MuoMuo, MuoHad, HadHad" << endl;
+  cerr << endl;
+  cerr << "ANALYSIS OPTIONS:" << endl;
+  cerr << " --doAnalysisL1TAlgoScan"                                                           << endl;
+  cerr << " --doAnalysisL1TResolution"                                                         << endl;
+  cerr << " --outputFilename NAME"                                                             << endl;
 }
 
 bool processArgs(int argc, char* argv[], ProgramOptions &opt){
@@ -90,7 +107,9 @@ bool processArgs(int argc, char* argv[], ProgramOptions &opt){
   
   for (int i = 1; i < argc; ++i) {
     std::string arg = argv[i];
-    if     (arg == "--verbose")  {opt.verbose  = true;}
+    if     (arg == "--verbose")                {opt.verbose  = true;}
+    else if(arg == "--doAnalysisL1TResolution"){opt.doAnalysisL1TResolution = true;}
+    else if(arg == "--doAnalysisL1TAlgoScan")  {opt.doAnalysisL1TAlgoScan   = true;}
     else if(arg == "--inputType"){
       if(i+1<argc){i++; opt.inputType = argv[i];} 
       else{
@@ -177,9 +196,11 @@ int main(int argc, char* argv[]){
     cout << options.runs[i];
   }
   cout << endl;
-  cout << "jobType        = " << options.jobType        << endl;
-  cout << "decay          = " << options.decay          << endl;  
-  cout << "outputFilename = " << options.outputFilename << endl;
+  cout << "jobType                 = " << options.jobType        << endl;
+  cout << "decay                   = " << options.decay          << endl;  
+  cout << "doAnalysisL1TResolution = " << options.doAnalysisL1TResolution << endl;
+  cout << "doAnalysisL1TAlgoScan   = " << options.doAnalysisL1TAlgoScan << endl;
+  cout << "outputFilename          = " << options.outputFilename << endl;
   cout << endl;
   
   
@@ -207,23 +228,34 @@ int main(int argc, char* argv[]){
     }
   }
   
-  L1TResolutionAnalysis *m_L1TResolutionAnalysis = 0;
   
-  TFile *m_resOut = 0;
-  if(options.jobType=="mc"){
-    m_resOut = new TFile("L1TResAnalysis.root","RECREATE");
-    m_L1TResolutionAnalysis = new L1TResolutionAnalysis(m_resOut->mkdir("res"));
+  // Making output file
+  TFile *fileOut = new TFile(options.outputFilename.c_str(),"RECREATE");
+  
+  // Making the analysis sequence
+  vector<trgfw::AnalysisModule*> moduleSequence;
+  
+  if(options.doAnalysisL1TResolution && options.jobType=="mc"){
+    TDirectory *dir = fileOut->mkdir("L1TResolutions");
+    
+    L1TResolutionAnalysis *myL1TRes = new L1TResolutionAnalysis("L1TResolutions",dir);
+    myL1TRes->setVerbose(options.verbose);
+    
+    moduleSequence.push_back(myL1TRes);
   }
   
-  L1TAlgoAnalysis myAnalysis;
-  myAnalysis.setVerbose       (options.verbose);
-  myAnalysis.setOutputFilename(options.outputFilename);
-  if(options.jobType=="mc"){
-    myAnalysis.setDoGenAnalysis(true);
+  if(options.doAnalysisL1TAlgoScan){
+    TDirectory *dir = fileOut->mkdir("L1TAlgoScan");
+
+    L1TAlgoAnalysis *myAnalysis = new L1TAlgoAnalysis("L1TAlgoAnalysis",dir);
+    myAnalysis->setVerbose                (options.verbose);
+    myAnalysis->setDoSingleObjectsAnalysis(true);
+    if(options.jobType=="mc"){
+      myAnalysis->setDoGenAnalysis(true);
+    }
+    
+    moduleSequence.push_back(myAnalysis);
   }
-  myAnalysis.setDoSingleObjectsAnalysis(true);
-  
-  myAnalysis.initPlots();
   
   cout << "===== Open File ===== " << endl;
   TChain treeEvent      ("l1EventTree/L1EventTree");
@@ -260,6 +292,10 @@ int main(int argc, char* argv[]){
   Long64_t entries_VBFHiggsToTauTau = treeEvent.GetEntries();
   cout << "Number of entries: " << entries_VBFHiggsToTauTau << endl;
   cout << endl;
+  
+  for(unsigned i=0; i<moduleSequence.size(); i++){
+    moduleSequence[i]->beginJob();
+  }
   
   // If maxEvents if -1 this means run over all events
   if(options.maxEvents==-1){options.maxEvents=entries_VBFHiggsToTauTau;}
@@ -315,7 +351,7 @@ int main(int argc, char* argv[]){
     
     eventsEffective++;
     
-    icTrg::Event myEvent;
+    trgfw::Event myEvent;
 
     if(options.jobType=="mc"){
       myEvent.genInfo = genInfo;
@@ -330,151 +366,161 @@ int main(int argc, char* argv[]){
       printf("[main] L1T Jets  : %u\n",productL1Upgrade->nJets);
     }
     
-    vector<ic::L1TObject>* l1tEG    = new vector<ic::L1TObject>();
-    vector<ic::L1TObject>* l1tIsoEG = new vector<ic::L1TObject>();
+    vector<ic::L1TEGamma*> l1tEG;
+    vector<ic::L1TEGamma*> l1tIsoEG;
     unsigned short int nL1TEGamma = productL1Upgrade->nEGs;
     for(unsigned i=0; i<nL1TEGamma; i++){
       
       if(productL1Upgrade->egBx[i] != 0){continue;}
       
-      ic::L1TEGamma thisEG;
-      thisEG.set_pt    (productL1Upgrade->egEt    [i]);
-      thisEG.set_eta   (productL1Upgrade->egEta   [i]);
-      thisEG.set_phi   (productL1Upgrade->egPhi   [i]);
-      thisEG.set_energy(productL1Upgrade->egEnergy[i]);
-      thisEG.isolation = productL1Upgrade->egIso[i];
-      myEvent.l1tEGammaCollection.push_back(thisEG);
-      l1tEG->push_back(thisEG);
-      if(thisEG.isolation!=0){
-        l1tIsoEG->push_back(thisEG);
+      ic::L1TEGamma *thisEG = new ic::L1TEGamma;
+      thisEG->set_pt    (productL1Upgrade->egEt    [i]);
+      thisEG->set_eta   (productL1Upgrade->egEta   [i]);
+      thisEG->set_phi   (productL1Upgrade->egPhi   [i]);
+      thisEG->set_energy(productL1Upgrade->egEnergy[i]);
+      thisEG->isolation = productL1Upgrade->egIso[i];
+      
+      //myEvent.l1tEGammaCollection.push_back(thisEG);
+      
+      l1tEG.push_back(thisEG);
+      if(thisEG->isolation!=0){
+        l1tIsoEG.push_back(thisEG);
       }
     }
     
-    vector<ic::L1TObject>* l1tMuons    = new vector<ic::L1TObject>();
-    vector<ic::L1TObject>* l1tIsoMuons = new vector<ic::L1TObject>();
+    vector<ic::L1TMuon*> l1tMuons;
+    vector<ic::L1TMuon*> l1tIsoMuons;
     unsigned short int nL1TMuon = productL1Upgrade->nMuons;
     for(unsigned i=0; i<nL1TMuon; i++){
       
       if(productL1Upgrade->muonBx[i] != 0){continue;}
       
-      ic::L1TMuon thisMuon;
-      thisMuon.set_pt    (productL1Upgrade->muonEt    [i]);
-      thisMuon.set_eta   (productL1Upgrade->muonEta   [i]);
-      thisMuon.set_phi   (productL1Upgrade->muonPhi   [i]);
-      thisMuon.set_energy(productL1Upgrade->muonEnergy[i]);
-      thisMuon.isolation = productL1Upgrade->muonIso  [i];
+      ic::L1TMuon *thisMuon = new ic::L1TMuon();
+      thisMuon->set_pt    (productL1Upgrade->muonEt    [i]);
+      thisMuon->set_eta   (productL1Upgrade->muonEta   [i]);
+      thisMuon->set_phi   (productL1Upgrade->muonPhi   [i]);
+      thisMuon->set_energy(productL1Upgrade->muonEnergy[i]);
+      thisMuon->isolation = productL1Upgrade->muonIso  [i];
       
-      myEvent.l1tMuonCollection.push_back(thisMuon);
-      l1tMuons->push_back(thisMuon);
-      if(thisMuon.isolation!=0){
-        l1tIsoMuons->push_back(thisMuon);
+      //myEvent.l1tMuonCollection.push_back(thisMuon);
+      
+      l1tMuons.push_back(thisMuon);
+      if(thisMuon->isolation!=0){
+        l1tIsoMuons.push_back(thisMuon);
       }
     }
     
-    vector<ic::L1TObject>* l1tTaus    = new vector<ic::L1TObject>();
-    vector<ic::L1TObject>* l1tIsoTaus = new vector<ic::L1TObject>();
+    vector<ic::L1TTau*> l1tTaus;
+    vector<ic::L1TTau*> l1tIsoTaus;
     unsigned short int nL1TTaus = productL1Upgrade->nTaus;
     for(unsigned i=0; i<nL1TTaus; i++){
       
       if(productL1Upgrade->tauBx[i] != 0){continue;}
  
-      ic::L1TTau thisTau;
-      thisTau.set_pt    (productL1Upgrade->tauEt    [i]);
-      thisTau.set_eta   (productL1Upgrade->tauEta   [i]);
-      thisTau.set_phi   (productL1Upgrade->tauPhi   [i]);
-      thisTau.set_energy(productL1Upgrade->tauEnergy[i]);
-      thisTau.isolation = productL1Upgrade->tauIso  [i];
-      myEvent.l1tTauCollection.push_back(thisTau);
-      l1tTaus->push_back(thisTau);
+      ic::L1TTau *thisTau = new ic::L1TTau;
+      thisTau->set_pt    (productL1Upgrade->tauEt    [i]);
+      thisTau->set_eta   (productL1Upgrade->tauEta   [i]);
+      thisTau->set_phi   (productL1Upgrade->tauPhi   [i]);
+      thisTau->set_energy(productL1Upgrade->tauEnergy[i]);
+      thisTau->isolation = productL1Upgrade->tauIso  [i];
       
-      if(thisTau.isolation!=0){
-        myEvent.l1tIsoTauCollection.push_back(thisTau);
-        l1tIsoTaus->push_back(thisTau);
+      //myEvent->l1tTauCollection.push_back(thisTau);
+      
+      l1tTaus.push_back(thisTau);
+      if(thisTau->isolation!=0){
+        //myEvent.l1tIsoTauCollection.push_back(thisTau);
+        l1tIsoTaus.push_back(thisTau);
       }
     }
     
-    vector<ic::L1TObject>* l1tJets = new vector<ic::L1TObject>();
+    vector<ic::L1TJet*> l1tJets;
     unsigned short int nL1TJets = productL1Upgrade->nJets;
     for(unsigned i=0; i<nL1TJets; i++){
       
       if(productL1Upgrade->jetBx[i] != 0){continue;}
       
-      ic::L1TJet thisJet;
-      thisJet.set_pt    (productL1Upgrade->jetEt    [i]);
-      thisJet.set_eta   (productL1Upgrade->jetEta   [i]);
-      thisJet.set_phi   (productL1Upgrade->jetPhi   [i]);
-      thisJet.set_energy(productL1Upgrade->jetEnergy[i]);
-      myEvent.l1tJetCollection.push_back(thisJet);
-      l1tJets->push_back(thisJet);
-    }
+      ic::L1TJet *thisJet = new ic::L1TJet();
+      thisJet->set_pt    (productL1Upgrade->jetEt    [i]);
+      thisJet->set_eta   (productL1Upgrade->jetEta   [i]);
+      thisJet->set_phi   (productL1Upgrade->jetPhi   [i]);
+      thisJet->set_energy(productL1Upgrade->jetEnergy[i]);
+      
+      l1tJets.push_back(thisJet);
+    }         
     
-    vector<ic::L1TObject>* l1tSums = new vector<ic::L1TObject>();
+    vector<ic::L1TSum*> l1tSums;
     unsigned short int nL1TSums = productL1Upgrade->nSums;
     for(unsigned i=0; i<nL1TSums; i++){
       
       if(productL1Upgrade->sumBx[i] != 0){continue;}
       
-      ic::L1TSum thisSum;
-      thisSum.set_pt    (productL1Upgrade->sumEt [i]);
-      thisSum.set_eta   (0);
-      thisSum.set_phi   (productL1Upgrade->sumPhi[i]);
-      thisSum.set_energy(productL1Upgrade->sumEt [i]);
+      ic::L1TSum *thisSum = new ic::L1TSum;
+      thisSum->set_pt    (productL1Upgrade->sumEt [i]);
+      thisSum->set_eta   (0);
+      thisSum->set_phi   (productL1Upgrade->sumPhi[i]);
+      thisSum->set_energy(productL1Upgrade->sumEt [i]);
  
       short int type = productL1Upgrade->sumType[i];
-      if     (type==L1Analysis::EtSumType::kTotalEt)  {thisSum.sumType = ic::L1TSum::SumType::kTotalEt;}
-      else if(type==L1Analysis::EtSumType::kTotalHt)  {thisSum.sumType = ic::L1TSum::SumType::kTotalHt;}
-      else if(type==L1Analysis::EtSumType::kMissingEt){thisSum.sumType = ic::L1TSum::SumType::kMissingEt;}
-      else if(type==L1Analysis::EtSumType::kMissingHt){thisSum.sumType = ic::L1TSum::SumType::kMissingHt;}
-      else if(type==L1Analysis::EtSumType::kTotalEtx) {thisSum.sumType = ic::L1TSum::SumType::kTotalEtx;}
-      else if(type==L1Analysis::EtSumType::kTotalEty) {thisSum.sumType = ic::L1TSum::SumType::kTotalEty;}
-      else if(type==L1Analysis::EtSumType::kTotalHtx) {thisSum.sumType = ic::L1TSum::SumType::kTotalHtx;}
-      else if(type==L1Analysis::EtSumType::kTotalHty) {thisSum.sumType = ic::L1TSum::SumType::kTotalHty;}
-      myEvent.l1tSumCollection.push_back(thisSum);
-      
-      l1tSums->push_back(thisSum);
+      if     (type==L1Analysis::EtSumType::kTotalEt)  {thisSum->sumType = ic::L1TSum::SumType::kTotalEt;}
+      else if(type==L1Analysis::EtSumType::kTotalHt)  {thisSum->sumType = ic::L1TSum::SumType::kTotalHt;}
+      else if(type==L1Analysis::EtSumType::kMissingEt){thisSum->sumType = ic::L1TSum::SumType::kMissingEt;}
+      else if(type==L1Analysis::EtSumType::kMissingHt){thisSum->sumType = ic::L1TSum::SumType::kMissingHt;}
+      else if(type==L1Analysis::EtSumType::kTotalEtx) {thisSum->sumType = ic::L1TSum::SumType::kTotalEtx;}
+      else if(type==L1Analysis::EtSumType::kTotalEty) {thisSum->sumType = ic::L1TSum::SumType::kTotalEty;}
+      else if(type==L1Analysis::EtSumType::kTotalHtx) {thisSum->sumType = ic::L1TSum::SumType::kTotalHtx;}
+      else if(type==L1Analysis::EtSumType::kTotalHty) {thisSum->sumType = ic::L1TSum::SumType::kTotalHty;}
+
+      l1tSums.push_back(thisSum);
     }
     
     if(options.verbose){printf("===== Sorting Collections =====\n");}
-    sort(myEvent.l1tEGammaCollection.begin(),myEvent.l1tEGammaCollection.end(),greater_ICCandidate());
-    sort(myEvent.l1tMuonCollection  .begin(),myEvent.l1tMuonCollection  .end(),greater_ICCandidate());
-    sort(myEvent.l1tTauCollection   .begin(),myEvent.l1tTauCollection   .end(),greater_ICCandidate());
-    sort(myEvent.l1tIsoTauCollection.begin(),myEvent.l1tIsoTauCollection.end(),greater_ICCandidate());
-    sort(myEvent.l1tJetCollection   .begin(),myEvent.l1tJetCollection   .end(),greater_ICCandidate());
-    
-    sort(l1tEG      ->begin(),l1tEG      ->end(),greater_ICCandidate());
-    sort(l1tIsoEG   ->begin(),l1tIsoEG   ->end(),greater_ICCandidate());
-    sort(l1tMuons   ->begin(),l1tMuons   ->end(),greater_ICCandidate());
-    sort(l1tIsoMuons->begin(),l1tIsoMuons->end(),greater_ICCandidate());
-    sort(l1tTaus    ->begin(),l1tTaus    ->end(),greater_ICCandidate());
-    sort(l1tIsoTaus ->begin(),l1tIsoTaus ->end(),greater_ICCandidate());
-    sort(l1tJets    ->begin(),l1tJets    ->end(),greater_ICCandidate());
+    sort(l1tEG      .begin(),l1tEG      .end(),greater_ICCandidate());
+    sort(l1tIsoEG   .begin(),l1tIsoEG   .end(),greater_ICCandidate());
+    sort(l1tMuons   .begin(),l1tMuons   .end(),greater_ICCandidate());
+    sort(l1tIsoMuons.begin(),l1tIsoMuons.end(),greater_ICCandidate());
+    sort(l1tTaus    .begin(),l1tTaus    .end(),greater_ICCandidate());
+    sort(l1tIsoTaus .begin(),l1tIsoTaus .end(),greater_ICCandidate());
+    sort(l1tJets    .begin(),l1tJets    .end(),greater_ICCandidate());
 
-    myEvent.add("l1t_eg",    l1tEG      );
-    myEvent.add("l1t_isoeg", l1tIsoEG   );
-    myEvent.add("l1t_mu",    l1tMuons   );
-    myEvent.add("l1t_isomu", l1tIsoMuons);
-    myEvent.add("l1t_tau",   l1tTaus    );
-    myEvent.add("l1t_isotau",l1tIsoTaus );
-    myEvent.add("l1t_jet",   l1tJets    );
-    myEvent.add("l1t_sum",   l1tSums    );
+    myEvent.addProduct< vector<ic::L1TEGamma*> >("l1t_eg",     l1tEG      );
+    myEvent.addProduct< vector<ic::L1TEGamma*> >("l1t_isoeg",  l1tIsoEG   );
+    myEvent.addProduct< vector<ic::L1TMuon*> >  ("l1t_muon",   l1tMuons   );
+    myEvent.addProduct< vector<ic::L1TMuon*> >  ("l1t_isomuon",l1tIsoMuons);
+    myEvent.addProduct< vector<ic::L1TTau*> >   ("l1t_tau",    l1tTaus    );
+    myEvent.addProduct< vector<ic::L1TTau*> >   ("l1t_isotau", l1tIsoTaus );
+    myEvent.addProduct< vector<ic::L1TJet*> >   ("l1t_jet",    l1tJets    );
+    myEvent.addProduct< vector<ic::L1TSum*> >   ("l1t_sum",    l1tSums    );
     
-    myAnalysis.processEvent(myEvent);
-    
-    if(options.jobType=="mc"){
-      m_L1TResolutionAnalysis->run(myEvent);
+    // Now processing all analysis
+    for(unsigned iModule=0; iModule<moduleSequence.size(); iModule++){
+      moduleSequence[iModule]->run(myEvent);
     }
     
-    myAnalysis.resetEvent();
-    
+    // Memory cleaning
+    for(unsigned obj=0; obj<l1tEG.size();    obj++){delete l1tEG[obj];}
+    for(unsigned obj=0; obj<l1tMuons.size(); obj++){delete l1tMuons[obj];}
+    for(unsigned obj=0; obj<l1tTaus.size();  obj++){delete l1tTaus[obj];}
+    for(unsigned obj=0; obj<l1tJets.size();  obj++){delete l1tJets[obj];}
+    for(unsigned obj=0; obj<l1tSums.size();  obj++){delete l1tSums[obj];}
   }
   
+  for(unsigned iModule=0; iModule<moduleSequence.size(); iModule++){
+    moduleSequence[iModule]->endJob();
+  }
+  
+  // Writting/closing output file
+  fileOut->Write();
+  fileOut->Close();
+  delete fileOut;
+  
+  // Cleaning memory
+  for(unsigned iModule=0; iModule<moduleSequence.size(); iModule++){
+    delete moduleSequence[iModule];
+  }
+  
+  // Reporting on effective entries
   cout << "===== end job report ===== " << endl;
   cout << "Effective events = " << eventsEffective << endl;
-  
-  if(options.jobType=="mc"){
-    m_resOut->Write();
-    delete m_L1TResolutionAnalysis;
-  }
   
   return 0;
 }

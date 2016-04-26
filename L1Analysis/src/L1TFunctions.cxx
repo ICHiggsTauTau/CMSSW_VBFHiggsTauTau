@@ -15,133 +15,143 @@
 
 using namespace std;
 
-namespace icTrg {
+namespace trgfw {
   
   //##############################################
   // Filter collections
   //##############################################
   
-  inline bool filterByLeading1(icTrg::Event &iEvent,std::string input,std::string output){
+  template <class Product>
+  inline bool filterByLeading1(trgfw::Event &iEvent,std::string input,std::string output){
     
     // If this collection was already made return true
-    if(iEvent.contains(output)){return true;}
+    if(iEvent.containsProduct(output)){return true;}
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
     if(colIn==0){
       cout << "[filterByLeading1] Failed too found input collection: " << input << endl;
       return false;
     }
     
     // Filter the collection and record the results
-    vector<ic::L1TObject>* colOut = new vector<ic::L1TObject>();
+    vector<Product*> colOut;
     if(colIn->size()>0){
-      colOut->push_back(colIn->at(0));
+      colOut.push_back(colIn->at(0));
     }
 
-    iEvent.add(output,colOut);
+    iEvent.addProduct< vector<Product*> >(output,colOut);
     
     return true;
   }
   
-  inline bool filterByLeading2(icTrg::Event &iEvent,std::string input,std::string output){
+  template <class Product>
+  inline bool filterByLeading2(trgfw::Event &iEvent,std::string input,std::string output){
     
     // If this collection was already made return true
-    if(iEvent.contains(output)){return true;}
+    if(iEvent.containsProduct(output)){return true;}
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
     if(colIn==0){
       cout << "[filterByLeading1] Failed too found input collection: " << input << endl;
       return false;
     }
     
     // Filter the collection and record the results
-    vector<ic::L1TObject>* colOut = new vector<ic::L1TObject>();
+    vector<Product*> colOut;
     if(colIn->size()>1){
-      colOut->push_back(colIn->at(0));
-      colOut->push_back(colIn->at(1));
+      colOut.push_back(colIn->at(0));
+      colOut.push_back(colIn->at(1));
     }
     
-    iEvent.add(output,colOut);
+    iEvent.addProduct< vector<Product*> >(output,colOut);
     
     return true;
   }
   
-  inline bool filterByMinPt(icTrg::Event &iEvent,std::string input,double pt,std::string output){
+  template <class Product>
+  inline bool filterByMinPt(trgfw::Event &iEvent,std::string input,double pt,std::string output){
     
     // If this collection was already made return true
-    if(iEvent.contains(output)){return true;}
+    if(iEvent.containsProduct(output)){return true;}
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
     if(colIn==0){
       cout << "[filterByMinPt] Failed too found input collection: " << input << endl;
       return false;
     }
     
     // Filter the collection and record the results
-    vector<ic::L1TObject>* colOut = new vector<ic::L1TObject>();
+    vector<Product*>  colOut;
     for(auto obj=colIn->begin(); obj!=colIn->end(); obj++){
-      if(obj->pt()>=pt){colOut->push_back(*obj);}
+      if((*obj)->pt()>=pt){colOut.push_back(*obj);}
     }
-    iEvent.add(output,colOut);
+    iEvent.addProduct< vector<Product*> >(output,colOut);
 
     return true;
   }
   
-  inline bool filterByMinDR(icTrg::Event &iEvent,std::string colReference,std::string colFilter,double dr,std::string output){
+  template <class ProductRef, class ProductFil>
+  inline bool filterByMinDR(trgfw::Event &iEvent,std::string colReference,std::string colFilter,double dr,std::string output){
     
     // If this collection was already made return true
-    if(iEvent.contains(output)){return true;}
+    if(iEvent.containsProduct(output)){return true;}
     
     // Get the input collections from the event
-    const vector<ic::L1TObject>* colRef = iEvent.get(colReference);
+    vector<ProductRef*> *colRef = iEvent.getByName< vector<ProductRef*> >(colReference);
     if(colRef==0){
       cout << "[filterByMinDR] Failed too found input reference collection: " << colReference << endl;
       return false;
     }
-    const vector<ic::L1TObject>* colFil = iEvent.get(colFilter);
+    vector<ProductFil*> *colFil = iEvent.getByName< vector<ProductFil*> >(colFilter);
     if(colFil==0){
       cout << "[filterByMinDR] Failed too found input to filter collection: " << colFilter << endl;
       return false;
     }
     
-    vector<ic::L1TObject>* colOut = new vector<ic::L1TObject>();
+    vector<ProductFil*> colOut;
     for(auto objTest=colFil->begin(); objTest!=colFil->end(); objTest++){
       bool pass = true;
       for(auto objRef=colRef->begin(); objRef!=colRef->end(); objRef++){
         
-        if(deltaR<ic::Candidate,ic::Candidate>(*objTest,*objRef)<dr){
+        if(deltaR<ic::Candidate,ic::Candidate>(**objTest,**objRef)<dr){
           pass=false;
           break;
         }
       }
-      if(pass){colOut->push_back(*objTest);}
+      if(pass){colOut.push_back(*objTest);}
     }
     
-    iEvent.add(output,colOut);
+    iEvent.addProduct< vector<ProductFil*> >(output,colOut);
     return true;
   }
   
-  inline bool pairFilter_vbfLikeSymmetric(icTrg::Event &iEvent,std::string input,bool oppSides,double dEta,double mjj,std::string output){
+  template <class Product>
+  inline bool pairFilter_vbfLikeSymmetric(trgfw::Event &iEvent,std::string input,bool oppSides,double dEta,double mjj,std::string output){
     
     // If this collection was already made return true
-    if(iEvent.containsPair(output)){return true;}
+    if(iEvent.containsProduct(output)){return true;}
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
     if(colIn==0){
-      cout << "[testVBFConditions] Failed too found input collection: " << input << endl;
+      cout << "[pairFilter_vbfLikeSymmetric] Failed to found input collection: " << input << endl;
       return false;
     }
     
-    L1TObjectPairCollection* colOut = new L1TObjectPairCollection();
+    L1TObjectPairCollection colOut;
     
-    for(unsigned a=0; a<colIn->size(); a++){
-      const ic::L1TObject *objA = &(colIn->at(a));
+    // If we do not have at least 2 jets we stop here
+    // NOTE: Protecting going into the cycle with less that 2 elements
+    //       this will give trouble with the unsigned vs. signed int
+    if(colIn->size()<2){return false;}
+    
+    for(unsigned a=0; a<colIn->size()-1; a++){
+      Product *objA = colIn->at(a);
       for(unsigned b=a+1; b<colIn->size(); b++){
-        const ic::L1TObject *objB = &(colIn->at(b));
+        Product *objB = colIn->at(b);
         
         if(oppSides){
           if(objA->eta()*objB->eta()>=0){continue;}
@@ -158,32 +168,38 @@ namespace icTrg {
         }
         
         L1TObjectPair thisPair(objA,objB);
-        colOut->push_back(thisPair);
+        colOut.push_back(thisPair);
       }
     }
     
-    iEvent.addPairs(output,colOut);
+    iEvent.addProduct<L1TObjectPairCollection>(output,colOut);
     return true;
   }
   
-  inline bool pairFilter_vbfLikeAsymmetric(icTrg::Event &iEvent,std::string input,bool oppSides,double pt1,double pt2,double dEta,double mjj,std::string output){
+  template <class Product>
+  inline bool pairFilter_vbfLikeAsymmetric(trgfw::Event &iEvent,std::string input,bool oppSides,double pt1,double pt2,double dEta,double mjj,std::string output){
     
     // If this collection was already made return true
-    if(iEvent.containsPair(output)){return true;}
+    if(iEvent.containsProduct(output)){return true;}
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
     if(colIn==0){
-      cout << "[testVBFConditions] Failed too found input collection: " << input << endl;
+      cout << "[pairFilter_vbfLikeAsymmetric] Failed to found input collection: " << input << endl;
       return false;
     }
+
+    L1TObjectPairCollection colOut;
+
+    // If we do not have at least 2 jets we stop here
+    // NOTE: Protecting going into the cycle with less that 2 elements
+    //       this will give trouble with the unsigned vs. signed int
+    if(colIn->size()<2){return false;}
     
-    L1TObjectPairCollection* colOut = new L1TObjectPairCollection();
-    
-    for(unsigned a=0; a<colIn->size(); a++){
-      const ic::L1TObject *objA = &(colIn->at(a));
+    for(unsigned a=0; a<colIn->size()-1; a++){
+      Product *objA = colIn->at(a);
       for(unsigned b=a+1; b<colIn->size(); b++){
-        const ic::L1TObject *objB = &(colIn->at(b));
+        Product *objB = colIn->at(b);
         
         if(oppSides){
           if(objA->eta()*objB->eta()>=0){continue;}
@@ -205,32 +221,38 @@ namespace icTrg {
         }
         
         L1TObjectPair thisPair(objA,objB);
-        colOut->push_back(thisPair);
+        colOut.push_back(thisPair);
       }
     }
     
-    iEvent.addPairs(output,colOut);
+    iEvent.addProduct<L1TObjectPairCollection>(output,colOut);
     return true;
   }
   
-  inline bool pairFilter_vbfLikeAverage(icTrg::Event &iEvent,std::string input,bool oppSides,double pt,double dEta,double mjj,std::string output){
+  template <class Product>
+  inline bool pairFilter_vbfLikeAverage(trgfw::Event &iEvent,std::string input,bool oppSides,double pt,double dEta,double mjj,std::string output){
     
     // If this collection was already made return true
-    if(iEvent.containsPair(output)){return true;}
+    if(iEvent.containsProduct(output)){return true;}
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
     if(colIn==0){
-      cout << "[testVBFConditions] Failed too found input collection: " << input << endl;
+      cout << "[pairFilter_vbfLikeAverage] Failed to found input collection: " << input << endl;
       return false;
     }
     
-    L1TObjectPairCollection* colOut = new L1TObjectPairCollection();
+    L1TObjectPairCollection colOut;
     
-    for(unsigned a=0; a<colIn->size(); a++){
-      const ic::L1TObject *objA = &(colIn->at(a));
+    // If we do not have at least 2 jets we stop here
+    // NOTE: Protecting going into the cycle with less that 2 elements
+    //       this will give trouble with the unsigned vs. signed int
+    if(colIn->size()<2){return false;}
+    
+    for(unsigned a=0; a<colIn->size()-1; a++){
+      Product *objA = colIn->at(a);
       for(unsigned b=a+1; b<colIn->size(); b++){
-        const ic::L1TObject *objB = &(colIn->at(b));
+        Product *objB = colIn->at(b);
         
         if(oppSides){
           if(objA->eta()*objB->eta()>=0){continue;}
@@ -252,11 +274,11 @@ namespace icTrg {
         }
         
         L1TObjectPair thisPair(objA,objB);
-        colOut->push_back(thisPair);
+        colOut.push_back(thisPair);
       }
     }
     
-    iEvent.addPairs(output,colOut);
+    iEvent.addProduct<L1TObjectPairCollection>(output,colOut);
     return true;
   }
   
@@ -265,12 +287,13 @@ namespace icTrg {
   // Test collections
   //##############################################
   
-  inline bool testSize(icTrg::Event &iEvent,std::string input,unsigned minN){
+  template <class Product>
+  inline bool testSize(trgfw::Event &iEvent,std::string input,unsigned minN){
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
     if(colIn==0){
-      cout << "[filterByMinPt] Failed too found input collection: " << input << endl;
+      cout << "[testSize] Failed too found input collection: " << input << endl;
       return false;
     }
     
@@ -279,10 +302,10 @@ namespace icTrg {
     else                  {return true;}
   }
   
-  inline bool pairTest_size(icTrg::Event &iEvent,std::string input,unsigned minN){
+  inline bool pairTest_size(trgfw::Event &iEvent,std::string input,unsigned minN){
     
     // Get the input collection from the event
-    const L1TObjectPairCollection *colIn = iEvent.getPairs(input);
+    L1TObjectPairCollection *colIn = iEvent.getByName<L1TObjectPairCollection>(input);
     if(colIn==0){
       cout << "[pairTest_size] Failed too found input collection: " << input << endl;
       return false;
@@ -293,12 +316,12 @@ namespace icTrg {
     else                  {return true;}
   }
   
-  inline bool testL1TObject1Pt(icTrg::Event &iEvent,std::string input,double pt){
+  inline bool testL1TObject1Pt(trgfw::Event &iEvent,std::string input,double pt){
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<ic::L1TObject>* colIn = iEvent.getByName< vector<ic::L1TObject> >(input);
     if(colIn==0){
-      cout << "[testL1TObject1Pt] Failed too found input collection: " << input << endl;
+      cout << "[testL1TObject1Pt] Failed to found input collection: " << input << endl;
       return false;
     }
     
@@ -309,12 +332,12 @@ namespace icTrg {
     
   }
   
-  inline bool testL1TObject2Pt(icTrg::Event &iEvent,std::string input,double pt0,double pt1){
+  inline bool testL1TObject2Pt(trgfw::Event &iEvent,std::string input,double pt0,double pt1){
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<ic::L1TObject>* colIn = iEvent.getByName< vector<ic::L1TObject> >(input);
     if(colIn==0){
-      cout << "[testL1TObject1Pt] Failed too found input collection: " << input << endl;
+      cout << "[testL1TObject2Pt] Failed to found input collection: " << input << endl;
       return false;
     }
     
@@ -324,10 +347,11 @@ namespace icTrg {
     return false;
   }
   
-  inline bool testVBFConditions(icTrg::Event &iEvent,std::string input,bool oppSides,double dEta,double mjj){
+  template <class Product>
+  inline bool testVBFConditions(trgfw::Event &iEvent,std::string input,bool oppSides,double dEta,double mjj){
     
     // Get the input collection from the event
-    const vector<ic::L1TObject>* colIn = iEvent.get(input);
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
     if(colIn==0){
       cout << "[testVBFConditions] Failed too found input collection: " << input << endl;
       return false;
@@ -361,15 +385,39 @@ namespace icTrg {
     return false;
   }
   
+  // Sum algos
+  inline bool testL1TMetEt(trgfw::Event &iEvent,double et){
+    
+    vector<ic::L1TSum*>* mySums = iEvent.getByName< vector<ic::L1TSum*> >("l1t_sum");
+    
+    for(unsigned i=0; i<mySums->size(); i++){
+      
+      ic::L1TSum *iSum = mySums->at(i);
+      if(iSum->sumType==ic::L1TSum::SumType::kMissingEt && iSum->vector().Et()>=et){return true;}
+    }
+    return false;
+  }
+  
+  inline bool testL1TMHTEt(trgfw::Event &iEvent,double et){
+    
+    vector<ic::L1TSum*>* mySums = iEvent.getByName< vector<ic::L1TSum*> >("l1t_sum");
+    
+    for(unsigned i=0; i<mySums->size(); i++){
+      
+      ic::L1TSum *iSum = mySums->at(i);
+      if(iSum->sumType==ic::L1TSum::SumType::kMissingHt && iSum->vector().Et()>=et){return true;}
+    }
+    return false;
+  }
   
   //##############################################
   //##############################################
   //##############################################
   //##############################################
   //##############################################
-  
+  /*
   // Single object conditions
-  inline bool testL1TEGamma1Pt(icTrg::Event &iEvent,double pt1){
+  inline bool testL1TEGamma1Pt(trgfw::Event &iEvent,double pt1){
     
     if(iEvent.l1tEGammaCollection.size()<1){return false;}
     
@@ -377,7 +425,7 @@ namespace icTrg {
     return false;
   }
   
-  inline bool testL1TMuon1Pt(icTrg::Event &iEvent,double pt1){
+  inline bool testL1TMuon1Pt(trgfw::Event &iEvent,double pt1){
     
     if(iEvent.l1tMuonCollection.size()<1){return false;}
     
@@ -385,7 +433,7 @@ namespace icTrg {
     return false;
   }
   
-  inline bool testL1TTau1Pt(icTrg::Event &iEvent,double pt1){
+  inline bool testL1TTau1Pt(trgfw::Event &iEvent,double pt1){
     
     if(iEvent.l1tTauCollection.size()<1){return false;}
     
@@ -393,7 +441,7 @@ namespace icTrg {
     return false;
   }
   
-  inline bool testL1TIsoTau1Pt(icTrg::Event &iEvent,double pt1){
+  inline bool testL1TIsoTau1Pt(trgfw::Event &iEvent,double pt1){
     
     if(iEvent.l1tIsoTauCollection.size()<1){return false;}
     
@@ -401,7 +449,7 @@ namespace icTrg {
     return false;
   }
   
-  inline bool testL1TJet1Pt(icTrg::Event &iEvent,double pt1){
+  inline bool testL1TJet1Pt(trgfw::Event &iEvent,double pt1){
     
     if(iEvent.l1tJetCollection.size()<1){return false;}
     
@@ -411,7 +459,7 @@ namespace icTrg {
   
   // Double objects conditions
   
-  inline bool testL1TTau2Pt(icTrg::Event &iEvent,double pt1, double pt2){
+  inline bool testL1TTau2Pt(trgfw::Event &iEvent,double pt1, double pt2){
     
     if(iEvent.l1tTauCollection.size()<2){return false;}
     
@@ -419,7 +467,7 @@ namespace icTrg {
     return false;
   }
   
-  inline bool testL1TIsoTau2Pt(icTrg::Event &iEvent,double pt1, double pt2){
+  inline bool testL1TIsoTau2Pt(trgfw::Event &iEvent,double pt1, double pt2){
     
     if(iEvent.l1tIsoTauCollection.size()<2){return false;}
     
@@ -427,7 +475,7 @@ namespace icTrg {
     return false;
   }
   
-  inline bool testL1TJet2Pt(icTrg::Event &iEvent,double pt1, double pt2){
+  inline bool testL1TJet2Pt(trgfw::Event &iEvent,double pt1, double pt2){
     
     if(iEvent.l1tJetCollection.size()<2){return false;}
     
@@ -435,7 +483,7 @@ namespace icTrg {
     return false;
   }
   
-  inline bool testL1TJet2Pt_Mjj(icTrg::Event &iEvent,double pt, double mjj,TH1D *hMjj=0){
+  inline bool testL1TJet2Pt_Mjj(trgfw::Event &iEvent,double pt, double mjj,TH1D *hMjj=0){
     
     if(iEvent.l1tJetCollection.size()<2){return false;}
     
@@ -470,7 +518,7 @@ namespace icTrg {
     return pass;
   }
   
-  inline bool testL1TJet2Pt_DEta_Mjj(icTrg::Event &iEvent,double pt,double eta, double mjj,TH1D *hDEta=0,TH1D *hMjj=0){
+  inline bool testL1TJet2Pt_DEta_Mjj(trgfw::Event &iEvent,double pt,double eta, double mjj,TH1D *hDEta=0,TH1D *hMjj=0){
     
     if(iEvent.l1tJetCollection.size()<2){return false;}
     
@@ -512,7 +560,7 @@ namespace icTrg {
   }
   
   // Sum algos
-  inline bool testL1TMetEt(icTrg::Event &iEvent,double et){
+  inline bool testL1TMetEt(trgfw::Event &iEvent,double et){
     
     for(unsigned i=0; i<iEvent.l1tSumCollection.size(); i++){
       
@@ -522,7 +570,7 @@ namespace icTrg {
     return false;
   }
   
-  inline bool testL1TMHTEt(icTrg::Event &iEvent,double et){
+  inline bool testL1TMHTEt(trgfw::Event &iEvent,double et){
     
     for(unsigned i=0; i<iEvent.l1tSumCollection.size(); i++){
       
@@ -531,5 +579,8 @@ namespace icTrg {
     }
     return false;
   }
+  
+*/
+
   
 }

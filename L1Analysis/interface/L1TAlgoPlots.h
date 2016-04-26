@@ -19,7 +19,7 @@ public:
   L1TAlgoPlots(std::string name, TDirectory* baseDirector);
   ~L1TAlgoPlots();
   
-  void fill(icTrg::Event &iEvent);
+  void fill(trgfw::Event &iEvent);
   
   void setVerbose  (bool value);
 

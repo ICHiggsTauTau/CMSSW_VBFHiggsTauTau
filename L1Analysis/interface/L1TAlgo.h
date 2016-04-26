@@ -29,10 +29,10 @@ public:
   
   void init();
   
-  bool run(icTrg::Event &iEvent);
+  bool run(trgfw::Event &iEvent);
   
   void setVerbose  (bool value);
-  void addCondition(std::function<bool(icTrg::Event &iEvent)> function);
+  void addCondition(std::function<bool(trgfw::Event &iEvent)> function);
   
   std::string getName();
   
@@ -40,7 +40,7 @@ private:
   
   bool m_verbose;
   
-  std::vector<std::function<bool(icTrg::Event &iEvent)> > m_conditions;
+  std::vector<std::function<bool(trgfw::Event &iEvent)> > m_conditions;
   
   std::string m_name;
   

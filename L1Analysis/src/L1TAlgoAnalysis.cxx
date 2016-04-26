@@ -2,200 +2,62 @@
 
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/src/L1TFunctions.cxx"
 
-#include <iostream>
 #include <string>
+#include <iostream>
 #include <fstream>
 
 using namespace std;
 
-PlotsGenAnalysis::PlotsGenAnalysis(){
-
-  m_channels.push_back("EleEle");
-  m_channels.push_back("EleMuo");
-  m_channels.push_back("EleHad");
-  m_channels.push_back("MuoMuo");
-  m_channels.push_back("MuoHad");
-  m_channels.push_back("HadHad");
-  
-  m_HiggsDecay            = 0;
-  
-  for(unsigned i=0; i<m_channels.size(); i++){
-    m_L1Tau1_ResolutionEt[m_channels[i]]  = 0;
-    m_L1Tau2_ResolutionEt[m_channels[i]]  = 0;
-    
-    m_L1Tau1_ResolutionEta[m_channels[i]] = 0;
-    m_L1Tau2_ResolutionEta[m_channels[i]] = 0;
-    
-    m_L1Tau1_ResolutionPhi[m_channels[i]] = 0;
-    m_L1Tau2_ResolutionPhi[m_channels[i]] = 0;
-  }
-
-}
-
-PlotsGenAnalysis::~PlotsGenAnalysis(){
-
-}
-
-void PlotsGenAnalysis::create(TDirectory *dir){
-  
-  m_HiggsDecay = new TH1D("HiggsDecay","HiggsDecay",6, 0.5,6.5); m_HiggsDecay->SetDirectory(dir);
-  m_HiggsDecay->GetXaxis()->SetBinLabel(1,"EleEle");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(2,"EleMuo");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(3,"EleHad");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(4,"MuoMuo");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(5,"MuoHad");
-  m_HiggsDecay->GetXaxis()->SetBinLabel(6,"HadHad");
-  
-  for(unsigned i=0; i<m_channels.size(); i++){
-    m_L1Tau1_ResolutionEt[m_channels[i]]  = new TH1D(Form("L1Tau1_%s_ResolutionEt",m_channels[i].c_str()),Form("L1Tau1_%s_ResolutionEt",m_channels[i].c_str()),100,-50,50); m_L1Tau1_ResolutionEt[m_channels[i]]->SetDirectory(dir);
-    m_L1Tau2_ResolutionEt[m_channels[i]]  = new TH1D(Form("L1Tau2_%s_ResolutionEt",m_channels[i].c_str()),Form("L1Tau2_%s_ResolutionEt",m_channels[i].c_str()),100,-50,50); m_L1Tau2_ResolutionEt[m_channels[i]]->SetDirectory(dir);
-    
-    m_L1Tau1_ResolutionEta[m_channels[i]] = new TH1D(Form("L1Tau1_%s_ResolutionEta",m_channels[i].c_str()),Form("L1Tau1_%s_ResolutionEta",m_channels[i].c_str()),40,-1,1); m_L1Tau1_ResolutionEta[m_channels[i]]->SetDirectory(dir);
-    m_L1Tau2_ResolutionEta[m_channels[i]] = new TH1D(Form("L1Tau2_%s_ResolutionEta",m_channels[i].c_str()),Form("L1Tau2_%s_ResolutionEta",m_channels[i].c_str()),40,-1,1); m_L1Tau2_ResolutionEta[m_channels[i]]->SetDirectory(dir);
-    
-    m_L1Tau1_ResolutionPhi[m_channels[i]] = new TH1D(Form("L1Tau1_%s_ResolutionPhi",m_channels[i].c_str()),Form("L1Tau1_%s_ResolutionPhi",m_channels[i].c_str()),100,-TMath::Pi()/10,TMath::Pi()/10); m_L1Tau1_ResolutionPhi[m_channels[i]]->SetDirectory(dir);
-    m_L1Tau2_ResolutionPhi[m_channels[i]] = new TH1D(Form("L1Tau2_%s_ResolutionPhi",m_channels[i].c_str()),Form("L1Tau2_%s_ResolutionPhi",m_channels[i].c_str()),100,-TMath::Pi()/10,TMath::Pi()/10); m_L1Tau2_ResolutionPhi[m_channels[i]]->SetDirectory(dir);
-  }
-  
-}
-
-
-PlotsSingleObjects::PlotsSingleObjects(){
-  
-  m_L1TEGamma_N   = 0;
-  m_L1TEGamma_Et  = 0;
-  m_L1TEGamma_Eta = 0;
-  m_L1TEGamma_Phi = 0;
-  
-  m_L1TMuon_N   = 0;
-  m_L1TMuon_Et  = 0;
-  m_L1TMuon_Eta = 0;
-  m_L1TMuon_Phi = 0;
-  
-  m_L1TTau_N   = 0;
-  m_L1TTau_Et  = 0;
-  m_L1TTau_Eta = 0;
-  m_L1TTau_Phi = 0;
-  
-  m_L1TJet_N   = 0;
-  m_L1TJet_Et  = 0;
-  m_L1TJet_Eta = 0;
-  m_L1TJet_Phi = 0;
-  
-  m_L1TMet_Et  = 0;
-  m_L1TMet_Phi = 0;
-  
-  m_L1TMHT_Et  = 0;
-  m_L1TMHT_Phi = 0;
-}
-
-PlotsSingleObjects::~PlotsSingleObjects(){
-  
-  if(m_L1TEGamma_N)  {delete m_L1TEGamma_N;}
-  if(m_L1TEGamma_Et) {delete m_L1TEGamma_Et;}
-  if(m_L1TEGamma_Eta){delete m_L1TEGamma_Eta;}
-  if(m_L1TEGamma_Phi){delete m_L1TEGamma_Phi;}
-  
-  if(m_L1TMuon_N)  {delete m_L1TMuon_N;}
-  if(m_L1TMuon_Et) {delete m_L1TMuon_Et;}
-  if(m_L1TMuon_Eta){delete m_L1TMuon_Eta;}
-  if(m_L1TMuon_Phi){delete m_L1TMuon_Phi;}
-  
-  if(m_L1TTau_N)  {delete m_L1TTau_N;}
-  if(m_L1TTau_Et) {delete m_L1TTau_Et;}
-  if(m_L1TTau_Eta){delete m_L1TTau_Eta;}
-  if(m_L1TTau_Phi){delete m_L1TTau_Phi;}
-
-  if(m_L1TJet_N)  {delete m_L1TJet_N;}
-  if(m_L1TJet_Et) {delete m_L1TJet_Et;}
-  if(m_L1TJet_Eta){delete m_L1TJet_Eta;}
-  if(m_L1TJet_Phi){delete m_L1TJet_Phi;}
-  
-  if(m_L1TMet_Et) {delete m_L1TMet_Et;}
-  if(m_L1TMet_Phi){delete m_L1TMet_Phi;}
-
-  if(m_L1TMHT_Et) {delete m_L1TMHT_Et;}
-  if(m_L1TMHT_Phi){delete m_L1TMHT_Phi;}
-}
-
-void PlotsSingleObjects::create(TDirectory *dir){
-  
-  m_L1TEGamma_N   = new TH1D("L1TEGamma_N",  "L1T Tau N",    21,        -0.5,       20.5); m_L1TEGamma_N  ->SetDirectory(dir);
-  m_L1TEGamma_Et  = new TH1D("L1TEGamma_Et", "L1T Tau Et",  250,           0,        250); m_L1TEGamma_Et ->SetDirectory(dir);
-  m_L1TEGamma_Eta = new TH1D("L1TEGamma_Eta","L1T Tau Eta", 100,          -5,          5); m_L1TEGamma_Eta->SetDirectory(dir);
-  m_L1TEGamma_Phi = new TH1D("L1TEGamma_Phi","L1T Tau Phi", 100,-TMath::Pi(),TMath::Pi()); m_L1TEGamma_Phi->SetDirectory(dir);
-  
-  m_L1TMuon_N     = new TH1D("L1TMuon_N",    "L1T Muon N",   21,        -0.5,       20.5); m_L1TMuon_N    ->SetDirectory(dir);
-  m_L1TMuon_Et    = new TH1D("L1TMuon_Et",   "L1T Muon Et", 250,           0,        250); m_L1TMuon_Et   ->SetDirectory(dir);
-  m_L1TMuon_Eta   = new TH1D("L1TMuon_Eta",  "L1T Muon Eta",100,          -5,          5); m_L1TMuon_Eta  ->SetDirectory(dir);
-  m_L1TMuon_Phi   = new TH1D("L1TMuon_Phi",  "L1T Muon Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TMuon_Phi  ->SetDirectory(dir);
-  
-  m_L1TTau_N      = new TH1D("L1TTau_N",     "L1T Tau N",    21,        -0.5,       20.5); m_L1TTau_N     ->SetDirectory(dir);
-  m_L1TTau_Et     = new TH1D("L1TTau_Et",    "L1T Tau Et",  250,           0,        250); m_L1TTau_Et    ->SetDirectory(dir);
-  m_L1TTau_Eta    = new TH1D("L1TTau_Eta",   "L1T Tau Eta", 100,          -5,          5); m_L1TTau_Eta   ->SetDirectory(dir);
-  m_L1TTau_Phi    = new TH1D("L1TTau_Phi",   "L1T Tau Phi", 100,-TMath::Pi(),TMath::Pi()); m_L1TTau_Phi   ->SetDirectory(dir);
-  
-  m_L1TJet_N      = new TH1D("L1TJet_N",     "L1T Jet N",    21,        -0.5,       20.5); m_L1TJet_N     ->SetDirectory(dir);
-  m_L1TJet_Et     = new TH1D("L1TJet_Et",    "L1T Jet Et",  250,           0,        250); m_L1TJet_Et    ->SetDirectory(dir);
-  m_L1TJet_Eta    = new TH1D("L1TJet_Eta",   "L1T Jet Eta", 100,          -5,          5); m_L1TJet_Eta   ->SetDirectory(dir);
-  m_L1TJet_Phi    = new TH1D("L1TJet_Phi",   "L1T Jet Phi", 100,-TMath::Pi(),TMath::Pi()); m_L1TJet_Phi   ->SetDirectory(dir);
-  
-  m_L1TMet_Et     = new TH1D("L1TMet_Et",    "L1T Met Et",   512,           0,        512); m_L1TMet_Et    ->SetDirectory(dir);
-  m_L1TMet_Phi    = new TH1D("L1TMet_Phi",   "L1T Met Phi",  100,-TMath::Pi(),TMath::Pi()); m_L1TMet_Phi   ->SetDirectory(dir);
-  
-  m_L1TMHT_Et     = new TH1D("L1TMHT_Et",    "L1T MHT Et",   512,           0,        512); m_L1TMHT_Et    ->SetDirectory(dir);
-  m_L1TMHT_Phi    = new TH1D("L1TMHT_Phi",   "L1T MHT Phi",  100,-TMath::Pi(),TMath::Pi()); m_L1TMHT_Phi   ->SetDirectory(dir);
-  
-}
-
 L1TAlgoAnalysis::L1TAlgoAnalysis(){
-  
-  if(m_verbose){printf("[L1TAlgoAnalysis::L1TAlgoAnalysis] Method called\n");}
   init();
+  if(m_verbose){printf("[L1TAlgoAnalysis::L1TAlgoAnalysis] Method called\n");}
+}
+
+L1TAlgoAnalysis::L1TAlgoAnalysis(std::string name,TDirectory* baseDirector){
+  init();
+  if(m_verbose){printf("[L1TAlgoAnalysis::L1TAlgoAnalysis] Method called\n");}
+  
+  m_name = name;
+  m_dir  = baseDirector;
 }
 
 L1TAlgoAnalysis::~L1TAlgoAnalysis(){
   
   if(m_verbose){printf("[L1TAlgoAnalysis::~L1TAlgoAnalysis] Method called\n");}
-  m_fileOut->Write();
-  
 }
 
 void L1TAlgoAnalysis::init(){
   
   if(m_verbose){printf("[L1TAlgoAnalysis::init] Method called\n");}
   
+  m_name                    = "";
+  m_dir                     = 0;
   m_verbose                 = false;
   m_doGenAnalysis           = false;
   m_doSingleObjectsAnalysis = false;
-  m_fileOutName             = "L1TAlgoAnalysis.root";
-  
+
   m_dataType = L1TAlgoAnalysis::DataType::MC;
-  
 
 }
 
-void L1TAlgoAnalysis::initPlots(){
+void L1TAlgoAnalysis::beginJob(){
   
   using namespace std::placeholders; 
   
-  // Output file
-  m_fileOut = new TFile(m_fileOutName.c_str(),"RECREATE");
-  
   // ===== Histograms =====
-  m_EventCount = new TH1D("EventCount","EventCount",1, 0.5,1.5); m_EventCount->SetDirectory(m_fileOut);
+  m_EventCount = new TH1D("EventCount","EventCount",1, 0.5,1.5); m_EventCount->SetDirectory(m_dir);
   
   if(m_doGenAnalysis){
-    TDirectory* dirGenAnalysis = m_fileOut->mkdir("GenAnalysis");
+    TDirectory* dirGenAnalysis = m_dir->mkdir("GenAnalysis");
     m_plotsGenAnalysis.create(dirGenAnalysis);
   }
   
   if(m_doSingleObjectsAnalysis){
-    TDirectory* dirSingleObjects = m_fileOut->mkdir("SingleObject");
+    TDirectory* dirSingleObjects = m_dir->mkdir("SingleObject");
     m_plotsSingleObjects.create(dirSingleObjects);
   }
   
-  TDirectory* dirAlgos = m_fileOut->mkdir("Algos");
+  TDirectory* dirAlgos = m_dir->mkdir("Algos");
 
   L1TAlgo *pAlgo;
   pAlgo = new L1TAlgo("NoCuts",dirAlgos);
@@ -212,7 +74,7 @@ void L1TAlgoAnalysis::initPlots(){
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("EG%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt,_1,i));
+    pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt,_1,i));
     m_algos.push_back(pAlgo);
   }
   
@@ -220,7 +82,7 @@ void L1TAlgoAnalysis::initPlots(){
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("Mu%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt,_1,i));
+    pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,_1,i));
     m_algos.push_back(pAlgo);
   }
   
@@ -228,7 +90,7 @@ void L1TAlgoAnalysis::initPlots(){
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("Tau%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TTau1Pt,_1,i));
+    pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt,_1,i));
     m_algos.push_back(pAlgo);
   }
   
@@ -236,7 +98,7 @@ void L1TAlgoAnalysis::initPlots(){
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("IsoTau%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau1Pt,_1,i));
+    pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,_1,i));
     m_algos.push_back(pAlgo);
   }
   
@@ -249,21 +111,21 @@ void L1TAlgoAnalysis::initPlots(){
     
     pAlgo = new L1TAlgo(Form("Dijet%.0f",jetPt),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt,_1,jetPt,jetPt));
+    pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt,_1,jetPt,jetPt));
     m_algos.push_back(pAlgo);
     
     for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
       
       pAlgo = new L1TAlgo(Form("Dijet%.0fmjj%.0f",jetPt,jetMjj),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_Mjj,_1,jetPt,jetMjj,0));
+      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,jetPt,jetMjj,0));
       m_algos.push_back(pAlgo);
       
       for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
       
         pAlgo = new L1TAlgo(Form("Dijet%.0fdeta%0.fmjj%.0f",jetPt,jetDEta,jetMjj),dirNoClean);
         pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,jetPt,jetDEta,jetMjj,0,0));
+        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,jetPt,jetDEta,jetMjj,0,0));
         m_algos.push_back(pAlgo);
       }
     }
@@ -274,8 +136,8 @@ void L1TAlgoAnalysis::initPlots(){
     for(double mu=10; mu<=30; mu+=5){
       pAlgo = new L1TAlgo(Form("EG%.0f_Mu%.0f",eg,mu),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt ,_1,eg));
-      pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt,   _1,mu));
+      pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,_1,eg));
+      pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,   _1,mu));
       m_algos.push_back(pAlgo);
     }
   }
@@ -285,8 +147,8 @@ void L1TAlgoAnalysis::initPlots(){
     for(double ta=10; ta<=30; ta+=5){
       pAlgo = new L1TAlgo(Form("EG%.0f_Tau%.0f",eg,ta),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt ,_1,eg));
-      pAlgo->addCondition(std::bind(icTrg::testL1TTau1Pt,    _1,ta));
+      pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,_1,eg));
+      pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt,    _1,ta));
       m_algos.push_back(pAlgo);
     }
   }
@@ -296,8 +158,8 @@ void L1TAlgoAnalysis::initPlots(){
     for(double ta=10; ta<=30; ta+=5){
       pAlgo = new L1TAlgo(Form("EG%.0f_IsoTau%.0f",eg,ta),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt ,_1,eg));
-      pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau1Pt, _1,ta));
+      pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,_1,eg));
+      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt, _1,ta));
       m_algos.push_back(pAlgo);
     }
   }
@@ -307,8 +169,8 @@ void L1TAlgoAnalysis::initPlots(){
     for(double ta=10; ta<=30; ta+=5){
       pAlgo = new L1TAlgo(Form("Mu%.0f_Tau%.0f",mu,ta),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt ,_1,mu));
-      pAlgo->addCondition(std::bind(icTrg::testL1TTau1Pt,  _1,ta));
+      pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt ,_1,mu));
+      pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt,  _1,ta));
       m_algos.push_back(pAlgo);
     }
   }
@@ -318,8 +180,8 @@ void L1TAlgoAnalysis::initPlots(){
     for(double ta=10; ta<=30; ta+=5){
       pAlgo = new L1TAlgo(Form("Mu%.0f_IsoTau%.0f",mu,ta),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt,  _1,mu));
-      pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau1Pt,_1,ta));
+      pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,  _1,mu));
+      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,_1,ta));
       m_algos.push_back(pAlgo);
     }
   }
@@ -328,7 +190,7 @@ void L1TAlgoAnalysis::initPlots(){
   for(double ta=10; ta<=50; ta+=5){
     pAlgo = new L1TAlgo(Form("DiTau%.0f",ta),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TTau2Pt,_1,ta,ta));
+    pAlgo->addCondition(std::bind(trgfw::testL1TTau2Pt,_1,ta,ta));
     m_algos.push_back(pAlgo);
   }
   
@@ -336,7 +198,7 @@ void L1TAlgoAnalysis::initPlots(){
   for(double ta=10; ta<=50; ta+=5){
     pAlgo = new L1TAlgo(Form("DiIsoTau%.0f",ta),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TTau2Pt,_1,ta,ta));
+    pAlgo->addCondition(std::bind(trgfw::testL1TTau2Pt,_1,ta,ta));
     m_algos.push_back(pAlgo);
   }
   
@@ -347,77 +209,77 @@ void L1TAlgoAnalysis::initPlots(){
   // Algo: Dijet + EG
   pAlgo = new L1TAlgo("Dijet30_EG20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt   ,_1,30.,30.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt,_1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt   ,_1,30.,30.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt,_1,20.));
   m_algos.push_back(pAlgo);
   
   pAlgo = new L1TAlgo("Dijet30mjj300_EG20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_Mjj,_1,30.,300.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt ,_1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,300.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,_1,20.));
   m_algos.push_back(pAlgo);
   
   pAlgo = new L1TAlgo("Dijet30deta3p0mjj300_EG20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt ,     _1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,     _1,20.));
   m_algos.push_back(pAlgo);
   
   // Algo: Dijet + Muon
   pAlgo = new L1TAlgo("Dijet30_Mu20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt ,_1,30.,30.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt,_1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt ,_1,30.,30.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,_1,20.));
   m_algos.push_back(pAlgo);
   
   pAlgo = new L1TAlgo("Dijet30mjj300_Mu20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_Mjj,_1,30.,300.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt,   _1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,300.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,   _1,20.));
   m_algos.push_back(pAlgo);
   
   pAlgo = new L1TAlgo("Dijet30deta3p0mjj300_Mu20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt ,       _1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt ,       _1,20.));
   m_algos.push_back(pAlgo);
   
   // Algo: Dijet + Tau
   pAlgo = new L1TAlgo("Dijet30_Tau20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt ,_1,30.,30.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TTau1Pt, _1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt ,_1,30.,30.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt, _1,20.));
   m_algos.push_back(pAlgo);
   
   pAlgo = new L1TAlgo("Dijet30mjj300_Tau20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_Mjj,_1,30.,300.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TTau1Pt,    _1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,300.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt,    _1,20.));
   m_algos.push_back(pAlgo);
   
   pAlgo = new L1TAlgo("Dijet30deta3p0mjj300_Tau20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TTau1Pt ,        _1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt ,        _1,20.));
   m_algos.push_back(pAlgo);
   
   // Algo: Dijet + IsoTau
   pAlgo = new L1TAlgo("Dijet30_IsoTau20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt,   _1,30.,30.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau1Pt,_1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt,   _1,30.,30.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,_1,20.));
   m_algos.push_back(pAlgo);
   
   pAlgo = new L1TAlgo("Dijet30mjj300_IsoTau20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_Mjj,_1,30.,300.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau1Pt, _1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,300.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt, _1,20.));
   m_algos.push_back(pAlgo);
   
   pAlgo = new L1TAlgo("Dijet30deta3p0mjj300_IsoTau20",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
-  pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau1Pt,      _1,20.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
+  pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,      _1,20.));
   m_algos.push_back(pAlgo);
   
   // #######################################
@@ -430,9 +292,9 @@ void L1TAlgoAnalysis::initPlots(){
     for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
       pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_EG%.0f_Mu%.0f",jetMjj,elePt,muoPt),dirNoClean);
         pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,jetMjj));
-        pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt,      _1,elePt));
-        pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt,        _1,muoPt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,jetMjj));
+        pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt,      _1,elePt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,        _1,muoPt));
         m_algos.push_back(pAlgo);
       }
     }
@@ -446,9 +308,9 @@ void L1TAlgoAnalysis::initPlots(){
         
         pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_EG%.0f_Tau%.0f",mjj,elePt,tauPt),dirNoClean);
         pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-        pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt,      _1,elePt));
-        pAlgo->addCondition(std::bind(icTrg::testL1TTau1Pt,         _1,tauPt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
+        pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt,      _1,elePt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt,         _1,tauPt));
         m_algos.push_back(pAlgo);
       }
     }
@@ -461,9 +323,9 @@ void L1TAlgoAnalysis::initPlots(){
         
         pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_EG%.0f_IsoTau%.0f",mjj,elePt,tauPt),dirNoClean);
         pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-        pAlgo->addCondition(std::bind(icTrg::testL1TEGamma1Pt,      _1,elePt));
-        pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau1Pt,      _1,tauPt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
+        pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt,      _1,elePt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,      _1,tauPt));
         m_algos.push_back(pAlgo);
       }
     }
@@ -476,9 +338,9 @@ void L1TAlgoAnalysis::initPlots(){
         
         pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_Mu%.0f_Tau%.0f",mjj,muoPt,tauPt),dirNoClean);
         pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-        pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt,        _1,muoPt));
-        pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau1Pt,      _1,tauPt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
+        pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,        _1,muoPt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,      _1,tauPt));
         m_algos.push_back(pAlgo);
       }
     }
@@ -490,9 +352,9 @@ void L1TAlgoAnalysis::initPlots(){
       for(double mjj=200; mjj<=400; mjj+=100){
         pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_Mu%.0f_IsoTau%.0f",mjj,muoPt,tauPt),dirNoClean);
         pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-        pAlgo->addCondition(std::bind(icTrg::testL1TMuon1Pt,        _1,muoPt));
-        pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau1Pt,      _1,tauPt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
+        pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,        _1,muoPt));
+        pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,      _1,tauPt));
         m_algos.push_back(pAlgo);
       }
     }
@@ -503,22 +365,22 @@ void L1TAlgoAnalysis::initPlots(){
     
     pAlgo = new L1TAlgo(Form("Dijet30_DiTau%.0f",lep),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt,_1,30.,30.));
-    pAlgo->addCondition(std::bind(icTrg::testL1TTau2Pt,_1,lep,lep));
+    pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt,_1,30.,30.));
+    pAlgo->addCondition(std::bind(trgfw::testL1TTau2Pt,_1,lep,lep));
     m_algos.push_back(pAlgo);
     
     for(double mjj=200; mjj<=400; mjj+=100){
       
       pAlgo = new L1TAlgo(Form("Dijet30mjj%.0f_DiTau%.0f",mjj,lep),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_Mjj,_1,30.,mjj));
-      pAlgo->addCondition(std::bind(icTrg::testL1TTau2Pt,    _1,lep,lep));
+      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,mjj));
+      pAlgo->addCondition(std::bind(trgfw::testL1TTau2Pt,    _1,lep,lep));
       m_algos.push_back(pAlgo);
       
       pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_DiTau%.0f",mjj,lep),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-      pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau2Pt,      _1,lep,lep));
+      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
+      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau2Pt,      _1,lep,lep));
       m_algos.push_back(pAlgo);
     }
   }
@@ -528,22 +390,22 @@ void L1TAlgoAnalysis::initPlots(){
 
     pAlgo = new L1TAlgo(Form("Dijet30_DiIsoTau%.0f",lep),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt,   _1,30.,30.));
-    pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau2Pt,_1,lep,lep));
+    pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt,   _1,30.,30.));
+    pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau2Pt,_1,lep,lep));
     m_algos.push_back(pAlgo);
 
     for(double mjj=200; mjj<=400; mjj+=100){
 
       pAlgo = new L1TAlgo(Form("Dijet30mjj%.0f_DiIsoTau%.0f",mjj,lep),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_Mjj,_1,30.,mjj));
-      pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau2Pt,      _1,lep,lep));
+      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,mjj));
+      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau2Pt,      _1,lep,lep));
       m_algos.push_back(pAlgo);
       
       pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_DiIsoTau%.0f",mjj,lep),dirNoClean);
       pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(icTrg::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0));
-      pAlgo->addCondition(std::bind(icTrg::testL1TIsoTau2Pt,      _1,lep,lep));
+      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0));
+      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau2Pt,      _1,lep,lep));
       m_algos.push_back(pAlgo);
     }
   }
@@ -557,10 +419,10 @@ void L1TAlgoAnalysis::initPlots(){
     pAlgo->setVerbose(m_verbose);
     string name_jetCol   = Form("l1t_jet_pt%.0f",jetPt);
     string name_dijetCol = "l1t_dijet_pt%.0f";
-    pAlgo->addCondition(std::bind(icTrg::filterByMinPt,              _1,"l1t_jet",jetPt,name_jetCol));
-    pAlgo->addCondition(std::bind(icTrg::testSize,                   _1,name_jetCol, 2));
-    pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeSymmetric,_1,name_jetCol,false,0,0,name_dijetCol));
-    pAlgo->addCondition(std::bind(icTrg::pairTest_size,              _1,name_dijetCol,1));
+    pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,              _1,"l1t_jet",jetPt,name_jetCol));
+    pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
+    pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,false,0,0,name_dijetCol));
+    pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
     pAlgo->plots.tag_l1tJetPair = name_dijetCol;
     m_algos.push_back(pAlgo);
     
@@ -570,10 +432,10 @@ void L1TAlgoAnalysis::initPlots(){
       pAlgo->setVerbose(m_verbose);
       string name_jetCol   = Form("l1t_jet_pt%.0f",jetPt);
       string name_dijetCol = Form("l1t_dijet_pt%.0f_mjj%.0f",jetPt,jetMjj);
-      pAlgo->addCondition(std::bind(icTrg::filterByMinPt,              _1,"l1t_jet",jetPt,name_jetCol));
-      pAlgo->addCondition(std::bind(icTrg::testSize,                   _1,name_jetCol, 2));
-      pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeSymmetric,_1,name_jetCol,false,0,jetMjj,name_dijetCol));
-      pAlgo->addCondition(std::bind(icTrg::pairTest_size,              _1,name_dijetCol,1));
+      pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,              _1,"l1t_jet",jetPt,name_jetCol));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,false,0,jetMjj,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
       pAlgo->plots.tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
@@ -583,10 +445,10 @@ void L1TAlgoAnalysis::initPlots(){
         pAlgo->setVerbose(m_verbose);
         string name_jetCol   = Form("l1t_jet_pt%.0f",jetPt);
         string name_dijetCol = Form("l1t_dijet_pt%.0f_deta%3.1f_mjj%.0f",jetPt,jetDEta*10,jetMjj);
-        pAlgo->addCondition(std::bind(icTrg::filterByMinPt,              _1,"l1t_jet",jetPt,name_jetCol));
-        pAlgo->addCondition(std::bind(icTrg::testSize,                   _1,name_jetCol, 2));
-        pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeSymmetric,_1,name_jetCol,false,jetDEta,jetMjj,name_dijetCol));
-        pAlgo->addCondition(std::bind(icTrg::pairTest_size,              _1,name_dijetCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,              _1,"l1t_jet",jetPt,name_jetCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,false,jetDEta,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
         pAlgo->plots.tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
       }
@@ -600,10 +462,10 @@ void L1TAlgoAnalysis::initPlots(){
     pAlgo->setVerbose(m_verbose);
     string name_jetCol   = Form("l1t_jet_pt%.0f",jetPt);
     string name_dijetCol = "l1t_dijet_pt%.0f_oppSide";
-    pAlgo->addCondition(std::bind(icTrg::filterByMinPt,              _1,"l1t_jet",jetPt,name_jetCol));
-    pAlgo->addCondition(std::bind(icTrg::testSize,                   _1,name_jetCol, 2));
-    pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeSymmetric,_1,name_jetCol,true,0,0,name_dijetCol));
-    pAlgo->addCondition(std::bind(icTrg::pairTest_size,              _1,name_dijetCol,1));
+    pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,              _1,"l1t_jet",jetPt,name_jetCol));
+    pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
+    pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,true,0,0,name_dijetCol));
+    pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
     pAlgo->plots.tag_l1tJetPair = name_dijetCol;
     m_algos.push_back(pAlgo);
     
@@ -613,10 +475,10 @@ void L1TAlgoAnalysis::initPlots(){
       pAlgo->setVerbose(m_verbose);
       string name_jetCol   = Form("l1t_jet_pt%.0f",jetPt);
       string name_dijetCol = Form("l1t_dijet_pt%.0f_oppSide_mjj%.0f",jetPt,jetMjj);
-      pAlgo->addCondition(std::bind(icTrg::filterByMinPt,              _1,"l1t_jet",jetPt,name_jetCol));
-      pAlgo->addCondition(std::bind(icTrg::testSize,                   _1,name_jetCol, 2));
-      pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeSymmetric,_1,name_jetCol,true,0,jetMjj,name_dijetCol));
-      pAlgo->addCondition(std::bind(icTrg::pairTest_size,              _1,name_dijetCol,1));
+      pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,              _1,"l1t_jet",jetPt,name_jetCol));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,true,0,jetMjj,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
       pAlgo->plots.tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
@@ -626,10 +488,10 @@ void L1TAlgoAnalysis::initPlots(){
         pAlgo->setVerbose(m_verbose);
         string name_jetCol   = Form("l1t_jet_pt%.0f",jetPt);
         string name_dijetCol = Form("l1t_dijet_pt%.0f_oppSide_deta%3.1f_mjj%.0f",jetPt,jetDEta*10,jetMjj);
-        pAlgo->addCondition(std::bind(icTrg::filterByMinPt,              _1,"l1t_jet",jetPt,name_jetCol));
-        pAlgo->addCondition(std::bind(icTrg::testSize,                   _1,name_jetCol, 2));
-        pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeSymmetric,_1,name_jetCol,true,jetDEta,jetMjj,name_dijetCol));
-        pAlgo->addCondition(std::bind(icTrg::pairTest_size,              _1,name_dijetCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,              _1,"l1t_jet",jetPt,name_jetCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,true,jetDEta,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
         pAlgo->plots.tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
       }
@@ -643,8 +505,8 @@ void L1TAlgoAnalysis::initPlots(){
       pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0f",jetPt1,jetPt2),dirNoClean);
       pAlgo->setVerbose(m_verbose);
       string name_dijetCol = Form("l1t_dijet_pt%.0f-%.0f",jetPt1,jetPt2);
-      pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAsymmetric,_1,"l1t_jet",false,jetPt1,jetPt2,0,0,name_dijetCol));
-      pAlgo->addCondition(std::bind(icTrg::pairTest_size,               _1,name_dijetCol,1));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,"l1t_jet",false,jetPt1,jetPt2,0,0,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
       pAlgo->plots.tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
@@ -653,8 +515,8 @@ void L1TAlgoAnalysis::initPlots(){
         pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fmjj%.0f",jetPt1,jetPt2,jetMjj),dirNoClean);
         pAlgo->setVerbose(m_verbose);
         string name_dijetCol = Form("l1t_dijet_pt%.0f-%.0f_mjj%.0f",jetPt1,jetPt2,jetMjj);
-        pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAsymmetric,_1,"l1t_jet",false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
-        pAlgo->addCondition(std::bind(icTrg::pairTest_size,               _1,name_dijetCol,1));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,"l1t_jet",false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
         pAlgo->plots.tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
         
@@ -663,8 +525,8 @@ void L1TAlgoAnalysis::initPlots(){
           pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fdeta%2.0fmjj%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj),dirNoClean);
           pAlgo->setVerbose(m_verbose);
           string name_dijetCol = Form("l1t_dijet_pt%.0f-%.0f_deta%3.1f_mjj%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj);
-          pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAsymmetric,_1,"l1t_jet",false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
-          pAlgo->addCondition(std::bind(icTrg::pairTest_size,               _1,name_dijetCol,1));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,"l1t_jet",false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
           pAlgo->plots.tag_l1tJetPair = name_dijetCol;
           m_algos.push_back(pAlgo);
         }
@@ -678,8 +540,8 @@ void L1TAlgoAnalysis::initPlots(){
     pAlgo = new L1TAlgo(Form("DijetAvg%.0f",jetPt),dirNoClean);
     pAlgo->setVerbose(m_verbose);
     string name_dijetCol = Form("l1t_dijet_avgpt%.0f",jetPt);
-    pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAverage,_1,"l1t_jet",false,jetPt,0,0,name_dijetCol));
-    pAlgo->addCondition(std::bind(icTrg::pairTest_size,            _1,name_dijetCol,1));
+    pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,"l1t_jet",false,jetPt,0,0,name_dijetCol));
+    pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
     pAlgo->plots.tag_l1tJetPair = name_dijetCol;
     m_algos.push_back(pAlgo);
     
@@ -688,8 +550,8 @@ void L1TAlgoAnalysis::initPlots(){
       pAlgo = new L1TAlgo(Form("DijetAvg%.0fmjj%.0f",jetPt,jetMjj),dirNoClean);
       pAlgo->setVerbose(m_verbose);
       string name_dijetCol = Form("l1t_dijet_avgpt%.0f_mjj%.0f",jetPt,jetMjj);
-      pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAverage,_1,"l1t_jet",false,jetPt,0,jetMjj,name_dijetCol));
-      pAlgo->addCondition(std::bind(icTrg::pairTest_size,            _1,name_dijetCol,1));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,"l1t_jet",false,jetPt,0,jetMjj,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
       pAlgo->plots.tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
@@ -698,8 +560,8 @@ void L1TAlgoAnalysis::initPlots(){
         pAlgo = new L1TAlgo(Form("DijetAvg%.0fdeta%2.0fmjj%.0f",jetPt,jetDEta*10,jetMjj),dirNoClean);
         pAlgo->setVerbose(m_verbose);
         string name_dijetCol = Form("l1t_dijet_avgpt%.0f_deta%3.1f_mjj%.0f",jetPt,jetDEta*10,jetMjj);
-        pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAverage,_1,"l1t_jet",false,jetPt,jetDEta,jetMjj,name_dijetCol));
-        pAlgo->addCondition(std::bind(icTrg::pairTest_size,            _1,name_dijetCol,1));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,"l1t_jet",false,jetPt,jetDEta,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
         pAlgo->plots.tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
       }
@@ -709,8 +571,8 @@ void L1TAlgoAnalysis::initPlots(){
   pAlgo = new L1TAlgo("DijetAvg30deta25",dirNoClean);
   pAlgo->setVerbose(m_verbose);
   string name_dijetCol = "l1t_dijet_avgpt30_deta25";
-  pAlgo->addCondition(std::bind(icTrg::pairFilter_vbfLikeAverage,_1,"l1t_jet",false,30,2.5,0,name_dijetCol));
-  pAlgo->addCondition(std::bind(icTrg::pairTest_size,            _1,name_dijetCol,1));
+  pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,"l1t_jet",false,30,2.5,0,name_dijetCol));
+  pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
   pAlgo->plots.tag_l1tJetPair = name_dijetCol;
   m_algos.push_back(pAlgo);
   
@@ -719,7 +581,7 @@ void L1TAlgoAnalysis::initPlots(){
   for(double i=10; i<=250; i+=10){
     pAlgo = new L1TAlgo(Form("MET%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TMetEt,_1,i));
+    pAlgo->addCondition(std::bind(trgfw::testL1TMetEt,_1,i));
     m_algos.push_back(pAlgo);
   }
   
@@ -727,16 +589,16 @@ void L1TAlgoAnalysis::initPlots(){
   for(double i=10; i<=250; i+=10){
     pAlgo = new L1TAlgo(Form("MHT%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(icTrg::testL1TMHTEt,_1,i));
+    pAlgo->addCondition(std::bind(trgfw::testL1TMHTEt,_1,i));
     m_algos.push_back(pAlgo);
   }
   
   pAlgo = new L1TAlgo("Dijet30_Tau30",dirNoClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::filterByMinPt   ,_1,"l1t_tau",30,"l1t_tau_pt30"));
-  pAlgo->addCondition(std::bind(icTrg::testSize,        _1,"l1t_tau_pt30",1));
-  pAlgo->addCondition(std::bind(icTrg::filterByMinPt   ,_1,"l1t_jet",30,"l1t_jet_pt30"));
-  pAlgo->addCondition(std::bind(icTrg::testSize,        _1,"l1t_jet_pt30", 2));
+  pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,_1,"l1t_tau",30,"l1t_tau_pt30"));
+  pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,     _1,"l1t_tau_pt30",1));
+  pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,_1,"l1t_jet",30,"l1t_jet_pt30"));
+  pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,     _1,"l1t_jet_pt30", 2));
   pAlgo->plots.tag_l1tTau = "l1t_tau_pt30";
   pAlgo->plots.tag_l1tJet = "l1t_jet_pt30";
   m_algos.push_back(pAlgo);
@@ -746,18 +608,18 @@ void L1TAlgoAnalysis::initPlots(){
   // ########### New algo scheme ###########
   pAlgo = new L1TAlgo("Dijet30_Tau30",dirOverlapClean);
   pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(icTrg::filterByMinPt   ,_1,"l1t_tau",30,"l1t_tau_pt30"));
-  pAlgo->addCondition(std::bind(icTrg::testSize,        _1,"l1t_tau_pt30",1));
-  pAlgo->addCondition(std::bind(icTrg::filterByLeading1,_1,"l1t_tau_pt30","l1t_tau_pt30_leading1"));
-  pAlgo->addCondition(std::bind(icTrg::filterByMinDR,   _1,"l1t_tau_pt30_leading1","l1t_jet",0.4,"l1t_jet_cleanTauPt30Leading1"));
-  pAlgo->addCondition(std::bind(icTrg::filterByMinPt   ,_1,"l1t_jet_cleanTauPt30Leading1",30,"l1t_jet_cleanTauPt30Leading1_pt30"));
-  pAlgo->addCondition(std::bind(icTrg::testSize,        _1,"l1t_jet_cleanTauPt30Leading1_pt30", 2));
+  pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,           _1,"l1t_tau",30,"l1t_tau_pt30"));
+  pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                            _1,"l1t_tau_pt30",1));
+  pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,        _1,"l1t_tau_pt30","l1t_tau_pt30_leading1"));
+  pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>,_1,"l1t_tau_pt30_leading1","l1t_jet",0.4,"l1t_jet_cleanTauPt30Leading1"));
+  pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,           _1,"l1t_jet_cleanTauPt30Leading1",30,"l1t_jet_cleanTauPt30Leading1_pt30"));
+  pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                _1,"l1t_jet_cleanTauPt30Leading1_pt30", 2));
   pAlgo->plots.tag_l1tTau = "l1t_tau_pt30";
   pAlgo->plots.tag_l1tJet = "l1t_jet_cleanTauPt30Leading1_pt30";
   m_algos.push_back(pAlgo);
   
   int nAlgos = m_algos.size();
-  m_AlgoPass = new TH1D("AlgoPass","AlgoPass",nAlgos,-0.5,nAlgos-0.5); m_AlgoPass->SetDirectory(m_fileOut);
+  m_AlgoPass = new TH1D("AlgoPass","AlgoPass",nAlgos,-0.5,nAlgos-0.5); m_AlgoPass->SetDirectory(m_dir);
   for(unsigned i=0; i<m_algos.size(); i++){
     m_AlgoPass->GetXaxis()->SetBinLabel(i+1,m_algos[i]->getName().c_str());
   }
@@ -792,12 +654,7 @@ void L1TAlgoAnalysis::setDoGenAnalysis(bool value){
   m_doGenAnalysis=value;
 }
 
-void L1TAlgoAnalysis::setOutputFilename(string value){
-  if(m_verbose){printf("[L1TAlgoAnalysis::setOutputFilename] Method called\n");}
-  m_fileOutName=value;
-}
-
-void L1TAlgoAnalysis::doGenAnalysis(icTrg::Event &iEvent){
+void L1TAlgoAnalysis::doGenAnalysis(trgfw::Event &iEvent){
   
   if(m_verbose){printf("[L1TAlgoAnalysis::doGenAnalysis] Method called\n");}
   
@@ -887,16 +744,22 @@ void L1TAlgoAnalysis::doGenAnalysis(icTrg::Event &iEvent){
   
 }
 
-void L1TAlgoAnalysis::doSingleObjectsAnalysis(icTrg::Event &iEvent){
+void L1TAlgoAnalysis::doSingleObjectsAnalysis(trgfw::Event &iEvent){
+  
+  vector<ic::L1TEGamma*>* myEGs   = iEvent.getByName< vector<ic::L1TEGamma*> >("l1t_eg");
+  vector<ic::L1TMuon*>*   myMuons = iEvent.getByName< vector<ic::L1TMuon*> >  ("l1t_muon");
+  vector<ic::L1TTau*>*    myTaus  = iEvent.getByName< vector<ic::L1TTau*> >   ("l1t_tau");
+  vector<ic::L1TJet*>*    myJets  = iEvent.getByName< vector<ic::L1TJet*> >   ("l1t_jet");
+  vector<ic::L1TSum*>*    mySums  = iEvent.getByName< vector<ic::L1TSum*> >   ("l1t_sum");
   
   if(m_verbose){
-    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T EGamma: %lu =====\n",iEvent.l1tEGammaCollection.size());
+    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T EGamma: %lu =====\n",myEGs->size());
   }
   
-  m_plotsSingleObjects.m_L1TEGamma_N->Fill(iEvent.l1tEGammaCollection.size());
-  for(unsigned i=0; i<iEvent.l1tEGammaCollection.size(); i++){
+  m_plotsSingleObjects.m_L1TEGamma_N->Fill(myEGs->size());
+  for(unsigned i=0; i<myEGs->size(); i++){
     
-    ic::L1TEGamma* iEGamma = &(iEvent.l1tEGammaCollection.at(i));
+    ic::L1TEGamma* iEGamma = myEGs->at(i);
     
     if(m_verbose){printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] L1T EGamma #%i - et=%5.1f eta=%5.2f phi=%5.2f\n",i,iEGamma->pt(),iEGamma->eta(),iEGamma->phi());}
     
@@ -905,15 +768,16 @@ void L1TAlgoAnalysis::doSingleObjectsAnalysis(icTrg::Event &iEvent){
     m_plotsSingleObjects.m_L1TEGamma_Phi->Fill(iEGamma->phi());
   }
   
+  
   if(m_verbose){
     printf("\n");
-    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T Muon: %lu =====\n",iEvent.l1tMuonCollection.size());
+    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T Muon: %lu =====\n",myMuons->size());
   }
   
-  m_plotsSingleObjects.m_L1TMuon_N->Fill(iEvent.l1tMuonCollection.size());
-  for(unsigned i=0; i<iEvent.l1tMuonCollection.size(); i++){
+  m_plotsSingleObjects.m_L1TMuon_N->Fill(myMuons->size());
+  for(unsigned i=0; i<myMuons->size(); i++){
     
-    ic::L1TMuon* iMuon = &(iEvent.l1tMuonCollection.at(i));
+    ic::L1TMuon* iMuon = myMuons->at(i);
     
     if(m_verbose){printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] L1T Muon #%i - et=%5.1f eta=%5.2f phi=%5.2f\n",i,iMuon->pt(),iMuon->eta(),iMuon->phi());}
     
@@ -924,13 +788,13 @@ void L1TAlgoAnalysis::doSingleObjectsAnalysis(icTrg::Event &iEvent){
   
   if(m_verbose){
     printf("\n");
-    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T Tau: %lu =====\n",iEvent.l1tTauCollection.size());
+    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T Tau: %lu =====\n",myTaus->size());
   }
   
-  m_plotsSingleObjects.m_L1TTau_N->Fill(iEvent.l1tTauCollection.size());
-  for(unsigned i=0; i<iEvent.l1tTauCollection.size(); i++){
+  m_plotsSingleObjects.m_L1TTau_N->Fill(myTaus->size());
+  for(unsigned i=0; i<myTaus->size(); i++){
     
-    ic::L1TTau* iTau = &(iEvent.l1tTauCollection.at(i));
+    ic::L1TTau* iTau = myTaus->at(i);
     
     if(m_verbose){printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] L1T Tau #%i - et=%5.1f eta=%5.2f phi=%5.2f\n",i,iTau->pt(),iTau->eta(),iTau->phi());}
     
@@ -941,13 +805,13 @@ void L1TAlgoAnalysis::doSingleObjectsAnalysis(icTrg::Event &iEvent){
   
   if(m_verbose){
     printf("\n");
-    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T Jet: %lu =====\n",iEvent.l1tJetCollection.size());
+    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T Jet: %lu =====\n",myJets->size());
   }
   
-  m_plotsSingleObjects.m_L1TJet_N->Fill(iEvent.l1tJetCollection.size());
-  for(unsigned i=0; i<iEvent.l1tJetCollection.size(); i++){
+  m_plotsSingleObjects.m_L1TJet_N->Fill(myJets->size());
+  for(unsigned i=0; i<myJets->size(); i++){
     
-    ic::L1TJet* iJet = &(iEvent.l1tJetCollection.at(i));
+    ic::L1TJet* iJet = myJets->at(i);
     
     if(m_verbose){printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] L1T Jet #%i - et=%5.1f eta=%5.2f phi=%5.2f\n",i,iJet->pt(),iJet->eta(),iJet->phi());}
     
@@ -959,12 +823,12 @@ void L1TAlgoAnalysis::doSingleObjectsAnalysis(icTrg::Event &iEvent){
   
   if(m_verbose){
     printf("\n");
-    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T Sum: %lu =====\n",iEvent.l1tSumCollection.size());
+    printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] ===== List of L1T Sum: %lu =====\n",mySums->size());
   }
   
-  for(unsigned i=0; i<iEvent.l1tSumCollection.size(); i++){
+  for(unsigned i=0; i<mySums->size(); i++){
     
-    ic::L1TSum *iSum = &(iEvent.l1tSumCollection.at(i));
+    ic::L1TSum *iSum = mySums->at(i);
     if(m_verbose){printf("[L1TAlgoAnalysis::doSingleObjectsAnalysis] L1T Sum #%i - type=%1u et=%5.1f phi=%5.2f\n",i,iSum->sumType,iSum->vector().Et(),iSum->vector().Phi());}
     
     if(iSum->sumType==ic::L1TSum::SumType::kMissingEt){
@@ -979,7 +843,7 @@ void L1TAlgoAnalysis::doSingleObjectsAnalysis(icTrg::Event &iEvent){
   if(m_verbose){printf("\n");}
 }
 
-void L1TAlgoAnalysis::processEvent(icTrg::Event &iEvent){
+void L1TAlgoAnalysis::run(trgfw::Event &iEvent){
   if(m_verbose){printf("[L1TAlgoAnalysis::processEvent] Method called\n");}
   
   m_EventCount->Fill(1);

@@ -4,6 +4,7 @@
 
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TProfile.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 
@@ -13,7 +14,7 @@ int main(int argc, char *argv[]){
   // Setting style
   hepfw::Style myStyle;
   myStyle.setTDRStyle();
-  
+  /*
   const double ratePerBunch     = 11246;
   const double run259721_lumi   = 0.15e34;
   const double run259721_nBunch = 517;
@@ -23,9 +24,10 @@ int main(int argc, char *argv[]){
   // Getting input files
   hepfw::File *fData_METRange3p0 = new hepfw::File("ZeroBias_run259721_METEtaRange3p0.root");
   hepfw::File *fData_METRange5p0 = new hepfw::File("ZeroBias_run259721_METEtaRange5p0.root");
-  
+  */
+  hepfw::File *fInv_METRange3p0 = new hepfw::File("VBF_HToInvisible_METEtaRange3p0.root");
   hepfw::File *fInv_METRange5p0 = new hepfw::File("VBF_HToInvisible_METEtaRange5p0.root");
-  
+  /*
   // Getting Total event number
   TH1D* hData_METRange3p0_EventCount = (TH1D*) fData_METRange3p0->Get("EventCount");
   double nData_METRange3p0_EventCount = hData_METRange3p0_EventCount->GetBinContent(1);
@@ -33,12 +35,15 @@ int main(int argc, char *argv[]){
   TH1D* hData_METRange5p0_EventCount = (TH1D*) fData_METRange5p0->Get("EventCount");
   double nData_METRange5p0_EventCount = hData_METRange5p0_EventCount->GetBinContent(1);
   
+  TH1D* hInv_METRange3p0 = (TH1D*) fInv_METRange3p0->Get("EventCount");
+  double nInv_METRange3p0_EventCount = hInv_METRange3p0->GetBinContent(1);
+  
   TH1D* hInv_METRange5p0 = (TH1D*) fInv_METRange5p0->Get("EventCount");
   double nInv_METRange5p0_EventCount = hInv_METRange5p0->GetBinContent(1);
   
   // Getting MET plots
-  TH1D* hData_METRange3p0 = (TH1D*) fData_METRange3p0->Get("SingleObject/L1TMet_Et");
-  TH1D* hData_METRange5p0 = (TH1D*) fData_METRange5p0->Get("SingleObject/L1TMet_Et");
+  TH1D* hData_METRange3p0 = (TH1D*) fData_METRange3p0->Get("L1TAlgoScan/SingleObject/L1TMet_Et");
+  TH1D* hData_METRange5p0 = (TH1D*) fData_METRange5p0->Get("L1TAlgoScan/SingleObject/L1TMet_Et");
   
   TH1D *effData_METRange3p0 = (TH1D*) hData_METRange3p0->Clone("effData_METRange3p0");
   TH1D *effData_METRange5p0 = (TH1D*) hData_METRange5p0->Clone("effData_METRange5p0");
@@ -48,13 +53,13 @@ int main(int argc, char *argv[]){
   
   effData_METRange3p0->Scale(1/nData_METRange3p0_EventCount);
   effData_METRange5p0->Scale(1/nData_METRange5p0_EventCount);
-  
+  */
   TCanvas c;
   c.SetFillColor(0);
   c.SetGridx();
   c.SetLogy();
   c.SetTicky(false);
-  
+  /*
   effData_METRange3p0->GetYaxis()->SetTitleOffset(1.5);
   effData_METRange3p0->GetXaxis()->SetTitle("L1T MET (GeV)");
   effData_METRange3p0->GetXaxis()->SetRangeUser(0,200);
@@ -68,9 +73,9 @@ int main(int argc, char *argv[]){
   effData_METRange5p0->SetLineWidth(2);
   effData_METRange5p0->Scale(convFactor);
   effData_METRange5p0->Draw("same");
-  
+  */
   TLegend *l = new TLegend(0.50,0.80,0.85,0.95);
-  l->SetBorderSize(1);
+ /* l->SetBorderSize(1);
   l->AddEntry(effData_METRange3p0,"Without HF");
   l->AddEntry(effData_METRange5p0,"With HF");
   l->Draw();
@@ -79,8 +84,8 @@ int main(int argc, char *argv[]){
   c.SaveAs("METComparison_Rate.pdf");
   
   // Getting MET plots
-  TH1D* hData_MHT_METRange3p0 = (TH1D*) fData_METRange3p0->Get("SingleObject/L1TMHT_Et");
-  TH1D* hData_MHT_METRange5p0 = (TH1D*) fData_METRange5p0->Get("SingleObject/L1TMHT_Et");
+  TH1D* hData_MHT_METRange3p0 = (TH1D*) fData_METRange3p0->Get("L1TAlgoScan/SingleObject/L1TMHT_Et");
+  TH1D* hData_MHT_METRange5p0 = (TH1D*) fData_METRange5p0->Get("L1TAlgoScan/SingleObject/L1TMHT_Et");
   
   TH1D *effData_MHT_METRange3p0 = (TH1D*) hData_MHT_METRange3p0->Clone("effData_MHT_METRange3p0");
   TH1D *effData_MHT_METRange5p0 = (TH1D*) hData_MHT_METRange5p0->Clone("effData_MHT_METRange5p0");
@@ -121,8 +126,8 @@ int main(int argc, char *argv[]){
   
   // Getting 
 
-  TH2D* hInv_MET_METRange5p0  = (TH2D*) fInv_METRange5p0 ->Get("Algos/NoClean/DijetAvg30deta25/METvsMjj");
-  TH2D* hData_MET_METRange5p0 = (TH2D*) fData_METRange5p0->Get("Algos/NoClean/DijetAvg30deta25/METvsMjj");
+  TH2D* hInv_MET_METRange5p0  = (TH2D*) fInv_METRange5p0 ->Get("L1TAlgoScan/Algos/NoClean/DijetAvg30deta25/METvsMjj");
+  TH2D* hData_MET_METRange5p0 = (TH2D*) fData_METRange5p0->Get("L1TAlgoScan/Algos/NoClean/DijetAvg30deta25/METvsMjj");
   
   TH2D *effInv_MET_METRange5p0  = (TH2D*) hInv_MET_METRange5p0 ->Clone("effInv_METvsMjj_METRange5p0");
   TH2D *effData_MET_METRange5p0 = (TH2D*) hData_MET_METRange5p0->Clone("effData_METvsMjj_METRange5p0");
@@ -171,6 +176,72 @@ int main(int argc, char *argv[]){
   
   c.SaveAs("rateInv_METvsMjj_METRange5p0.png");
   c.SaveAs("rateInv_METvsMjj_METRange5p0.pdf");
+  */
+  //#################################################################################
+  TH1D* hInv_L1TETM_Resolution_METRange3p0  = (TH1D*) fInv_METRange3p0 ->Get("L1TResolutions/L1TETM_Resolution");
+  TH1D* hInv_L1TETM_Resolution_METRange5p0  = (TH1D*) fInv_METRange5p0 ->Get("L1TResolutions/L1TETM_Resolution");
+  
+  c.SetFillColor(0);
+  c.SetGridx();
+  c.SetLogy(false);
+  c.SetTicky(false);
+
+  hInv_L1TETM_Resolution_METRange3p0->GetXaxis()->SetTitle("#frac{MET_{L1T} - MET_{Gen}}{MET_{Gen}}");
+  hInv_L1TETM_Resolution_METRange3p0->GetXaxis()->SetTitleOffset(1.5);  
+  hInv_L1TETM_Resolution_METRange3p0->GetXaxis()->SetRangeUser(-1.0,1.0);
+  hInv_L1TETM_Resolution_METRange3p0->GetYaxis()->SetTitle("Arbitrary Units");
+  hInv_L1TETM_Resolution_METRange3p0->GetYaxis()->SetTitleOffset(2.0);
+  hInv_L1TETM_Resolution_METRange3p0->Rebin(2);
+  hInv_L1TETM_Resolution_METRange3p0->Scale(1/hInv_L1TETM_Resolution_METRange3p0->GetEntries());
+  hInv_L1TETM_Resolution_METRange3p0->SetLineWidth(2);
+  hInv_L1TETM_Resolution_METRange3p0->GetYaxis()->SetRangeUser(0,0.04);
+  hInv_L1TETM_Resolution_METRange3p0->Draw();
+
+  hInv_L1TETM_Resolution_METRange5p0->Rebin(2);
+  hInv_L1TETM_Resolution_METRange5p0->Scale(1/hInv_L1TETM_Resolution_METRange5p0->GetEntries());
+  hInv_L1TETM_Resolution_METRange5p0->SetLineWidth(2);
+  hInv_L1TETM_Resolution_METRange5p0->SetLineColor(kRed);
+  hInv_L1TETM_Resolution_METRange5p0->Draw("same");
+  
+  l = new TLegend(0.50,0.80,0.85,0.95);
+  l->SetBorderSize(1);
+  l->AddEntry(hInv_L1TETM_Resolution_METRange3p0,"Without HF");
+  l->AddEntry(hInv_L1TETM_Resolution_METRange5p0,"With HF");
+  l->Draw();
+  
+  c.SaveAs("L1TETM_Resolution.png");
+  c.SaveAs("L1TETM_Resolution.pdf");
+  
+  //#################################################################################
+  TProfile* hInv_L1TETM_ResolutionVsGenPt_METRange3p0  = (TProfile*) fInv_METRange3p0 ->Get("L1TResolutions/L1TETM_ResolutionVsEt");
+  TProfile* hInv_L1TETM_ResolutionVsGenPt_METRange5p0  = (TProfile*) fInv_METRange5p0 ->Get("L1TResolutions/L1TETM_ResolutionVsEt");
+  
+  c.SetFillColor(0);
+  c.SetGridx(false);
+  c.SetGridy(true);
+  c.SetLogy(false);
+  c.SetTicky(false);
+
+  hInv_L1TETM_ResolutionVsGenPt_METRange3p0->GetXaxis()->SetTitleOffset(1.5);
+  hInv_L1TETM_ResolutionVsGenPt_METRange3p0->GetXaxis()->SetTitle("GEN MET [GeV]");
+  hInv_L1TETM_ResolutionVsGenPt_METRange3p0->GetYaxis()->SetTitleOffset(1.5);
+  hInv_L1TETM_ResolutionVsGenPt_METRange3p0->GetYaxis()->SetTitle("#frac{L1T ETM - GEN MET}{GEN MET}");
+  hInv_L1TETM_ResolutionVsGenPt_METRange3p0->GetYaxis()->SetRangeUser(-0.4,0.4);
+  hInv_L1TETM_ResolutionVsGenPt_METRange3p0->SetLineWidth(2);
+  hInv_L1TETM_ResolutionVsGenPt_METRange3p0->Draw("E1");
+  
+  hInv_L1TETM_ResolutionVsGenPt_METRange5p0->SetLineWidth(2);
+  hInv_L1TETM_ResolutionVsGenPt_METRange5p0->SetLineColor(kRed);
+  hInv_L1TETM_ResolutionVsGenPt_METRange5p0->Draw("E1 same");
+  
+  l = new TLegend(0.50,0.80,0.85,0.95);
+  l->SetBorderSize(1);
+  l->AddEntry(hInv_L1TETM_ResolutionVsGenPt_METRange3p0,"Without HF");
+  l->AddEntry(hInv_L1TETM_ResolutionVsGenPt_METRange5p0,"With HF");
+  l->Draw();
+  
+  c.SaveAs("L1TETM_ResolutionVsGenPt.png");
+  c.SaveAs("L1TETM_ResolutionVsGenPt.pdf");
   
   return 0;
   

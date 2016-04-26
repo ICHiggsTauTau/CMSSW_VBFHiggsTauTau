@@ -12,11 +12,15 @@
 #include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/MicroGenParticle.h"
 #include "CMSSW_VBFHiggsTauTau/GenParticlesAnalysis/interface/VBFHiggsGenAnalysisDataFormat.h"
 
+// BOOST includes
+#include <boost/any.hpp>
+
+// C++ STD includes
 #include <string>
 #include <vector>
 #include <map>
 
-namespace icTrg{
+namespace trgfw{
   
   typedef std::pair  <const ic::L1TObject*,const ic::L1TObject*> L1TObjectPair;
   typedef std::vector<L1TObjectPair>                             L1TObjectPairCollection;
@@ -28,32 +32,42 @@ namespace icTrg{
     Event();
     ~Event();
     
-    ic::L1TEGammaCollection l1tEGammaCollection;
-    ic::L1TMuonCollection   l1tMuonCollection;
-    ic::L1TTauCollection    l1tTauCollection;
-    ic::L1TTauCollection    l1tIsoTauCollection; // All elements are duplicated from regular taus
-    ic::L1TJetCollection    l1tJetCollection;
-    ic::L1TSumCollection    l1tSumCollection;
-    
     VBFHiggs::GenAnalysisDataFormat *genInfo;
     
     void   printCollections();
-    double getDijetMaxMjj(double pt);
     
-    bool                              add     (std::string name,std::vector<ic::L1TObject>     *objs);
-    const std::vector<ic::L1TObject>* get     (std::string name);
-    bool                              contains(std::string name);
+    template <class Product>
+    void addProduct(std::string productName, Product &product);
     
-    bool                                  addPairs    (std::string name,icTrg::L1TObjectPairCollection *pairs);
-    const icTrg::L1TObjectPairCollection* getPairs    (std::string name);
-    bool                                  containsPair(std::string name);
+    template <class Product>
+    Product* getByName(std::string productName);
+    
+    bool containsProduct(std::string productName);
     
   private:
+
+    std::map<std::string,boost::any>  m_products;
     
-    std::map<double,double>                                m_dijet_maxMjj;
-    std::map<std::string,std::vector<ic::L1TObject>* >     m_collections;
-    std::map<std::string,icTrg::L1TObjectPairCollection* > m_pairs;
   };
+}
+
+
+
+template <class Product> void trgfw::Event::addProduct(std::string productName, Product &product){
+  
+  m_products[productName] = product;
+}
+
+template <class Product> Product* trgfw::Event::getByName(std::string productName){
+  
+  std::map<std::string,boost::any>::iterator it = m_products.find(productName);
+  
+  if(it != m_products.end()){
+    return boost::any_cast<Product>(&it->second);
+  }else{
+    std::cout << "[trgfw::Event::getByName] ERROR: Branch=" << productName << " not found..." << std::endl;
+    return 0;
+  }
 }
 
 #endif
