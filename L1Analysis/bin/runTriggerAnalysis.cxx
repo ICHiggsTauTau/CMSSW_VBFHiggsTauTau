@@ -204,7 +204,7 @@ int main(int argc, char* argv[]){
   cout << endl;
   
   
-  // Stuff
+  // Input file processing
   vector<string> inputFileCollection;
   if(options.inputType=="file"){    
 
@@ -401,7 +401,6 @@ int main(int argc, char* argv[]){
       thisMuon->set_phi   (productL1Upgrade->muonPhi   [i]);
       thisMuon->set_energy(productL1Upgrade->muonEnergy[i]);
       thisMuon->isolation = productL1Upgrade->muonIso  [i];
-      
       //myEvent.l1tMuonCollection.push_back(thisMuon);
       
       l1tMuons.push_back(thisMuon);

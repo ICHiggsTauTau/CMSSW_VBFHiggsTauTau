@@ -24,9 +24,11 @@ public:
   void setVerbose  (bool value);
 
 public:
-  
+
   std::string tag_l1tEG;
+  std::string tag_l1tIsoEG;  
   std::string tag_l1tMuon;
+  std::string tag_l1tIsoMuon;
   std::string tag_l1tTau;
   std::string tag_l1tIsoTau;
   std::string tag_l1tJet;
@@ -45,9 +47,17 @@ private:
   TH1D *m_L1TEGamma1_Eta;
   TH1D *m_L1TEGamma1_Phi;
 
+  TH1D *m_L1TIsoEGamma1_Et;
+  TH1D *m_L1TIsoEGamma1_Eta;
+  TH1D *m_L1TIsoEGamma1_Phi;
+  
   TH1D *m_L1TMuon1_Et;
   TH1D *m_L1TMuon1_Eta;
   TH1D *m_L1TMuon1_Phi;
+  
+  TH1D *m_L1TIsoMuon1_Et;
+  TH1D *m_L1TIsoMuon1_Eta;
+  TH1D *m_L1TIsoMuon1_Phi;
   
   TH1D *m_L1TTau_N;
   TH1D *m_L1TTau1_Et; 
@@ -70,6 +80,7 @@ private:
   TH1D *m_L1TJet_N;
 
   TH1D *m_L1TJet_AvgPt;
+  TH1D *m_L1TJet_VecPt;
   TH1D *m_L1TJet1_Et; 
   TH1D *m_L1TJet1_Eta;
   TH1D *m_L1TJet1_Phi;

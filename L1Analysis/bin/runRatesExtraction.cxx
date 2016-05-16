@@ -1,6 +1,7 @@
-// VBF inc
-#include "CMSSW_VBFHiggsTauTau/Style/interface/Style.h"
+// VBF includes
 #include "CMSSW_VBFHiggsTauTau/IO/interface/File.h"
+#include "CMSSW_VBFHiggsTauTau/Style/interface/Style.h"
+#include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/AlgoWorkingPoint.h"
 
 // ROOT includes
 #include "TFile.h"
@@ -61,17 +62,12 @@ class ProgramOptions{
 public:
   
   ProgramOptions(){
-    valid        = false;
-    verbose      = false;
-    plots        = false;
-    optimisation = false;
-    inputA       = "file";
-    inputB       = "file";
-    outputDir    = "output/";
+    this->init();
   }
   
   ProgramOptions(int argc, char *argv[]){
-    valid=true;
+    
+    this->init();
     
     // Check the number of parameters
     if (argc < 2) {
@@ -88,6 +84,10 @@ public:
         if(i+1<argc){i++; inputA = argv[i];}
         else{printHelpMessage(); valid=false;}
       }
+      else if(arg == "--signal"){
+        if(i+1<argc){i++; signal = argv[i];}
+        else{printHelpMessage(); valid=false;}
+      }
       else if(arg == "--inputB"){
         if(i+1<argc){i++; inputB = argv[i];}
         else{printHelpMessage(); valid=false;}
@@ -97,7 +97,17 @@ public:
         else{printHelpMessage(); valid=false;}
       }
     }
-    
+  }
+  
+  void init(){
+    valid        = true;
+    verbose      = false;
+    plots        = false;
+    optimisation = false;
+    signal       = "tautau";
+    inputA       = "file";
+    inputB       = "file";
+    outputDir    = "output/";
   }
   
   void printHelpMessage(){
@@ -105,42 +115,44 @@ public:
     cerr << " --verbose"                                     << endl;
     cerr << " --plots"                                       << endl;
     cerr << " --optimisation"                                << endl;
+    cerr << " --signal CHANNEL"                              << endl;
     cerr << " --inputA INPUT"                                << endl;
     cerr << " --inputB INPUT"                                << endl;
     cerr << " --outputDir DIR"                               << endl;
+  }
+  
+  void print(){
+    cout << "##### vbftautau_runRatesExtraction #####" << endl;
+    cout << "=> Program parameters:" << endl;
+    cout << "verbose   : " << verbose   << endl;
+    cout << "signal    : " << signal    << endl;
+    cout << "inputA    : " << inputA    << endl;
+    cout << "inputB    : " << inputB    << endl;
+    cout << "outputDir : " << outputDir << endl;
+    cout << "=> Tasks to perform:" << endl;
+    cout << "optimisation : " << optimisation << endl;
+    cout << "plots        : " << plots << endl;
+    cout << endl;
   }
   
   bool   valid;
   bool   verbose;
   bool   plots;
   bool   optimisation;
+  string signal;
   string inputA;
   string inputB;
   string outputDir;
 };
 
-class AlgoWorkingPoint{
-public:
-  
-  AlgoWorkingPoint(){};
-  
-  std::string name;
-  std::string var;
-  double      value;
-  double      rate;
-  double      eff;
-};
 
-struct sortGreaterEff_AlgoWorkingPoint{
-  bool operator() (AlgoWorkingPoint a,AlgoWorkingPoint b) {
-    return (a.eff > b.eff);
-  }
-};
+
+
 
 //#################################################################################
 //#################################################################################
 //#################################################################################
-TCanvas* doCanvas(TH1D* sig,TH1D* bkg,const char* name,const char* path,vector<AlgoWorkingPoint> &resAlgos){
+TCanvas* doCanvas(TH1D* sig,TH1D* bkg,const char* name,const char* path,vector<trgfw::AlgoWorkingPoint> &resAlgos){
   
   double run259721_convFactor = getConvertionFactor(259721);
   
@@ -194,9 +206,9 @@ TCanvas* doCanvas(TH1D* sig,TH1D* bkg,const char* name,const char* path,vector<A
   l->Draw();
   
   for(int i=0; i<=sig->GetNbinsX()+1; i++){
-    if(sig->GetBinContent(i)>=0.2 && rate->GetBinContent(i)<=2100){
+    if(sig->GetBinContent(i)>=0.1 && rate->GetBinContent(i)<=1100){
       
-      AlgoWorkingPoint wp;
+      trgfw::AlgoWorkingPoint wp;
       wp.name  = path;
       wp.var   = sig->GetName();
       wp.value = sig->GetXaxis()->GetBinLowEdge(i);
@@ -213,10 +225,14 @@ TCanvas* doCanvas(TH1D* sig,TH1D* bkg,const char* name,const char* path,vector<A
 
 //#################################################################################
 int main(int argc, char *argv[]){
-
+  
   // Processing command line arguments
   ProgramOptions options(argc,argv);
-  if(!options.valid){return 1;}
+  if(!options.valid){
+    cout << "[main] Options invalid... quiting!" << endl;
+    return 1;
+  }
+  options.print();
   
   // Setting style
   hepfw::Style myStyle;
@@ -235,10 +251,10 @@ int main(int argc, char *argv[]){
   vector<TH1*> hSig = fSig->getHistograms();
   vector<TH1*> hBkg = fBkg->getHistograms();
   
-  TH1D* hSigTotal = (TH1D*) fSig->Get("EventCount");
+  TH1D* hSigTotal = (TH1D*) fSig->Get("L1TAlgoScan/EventCount");
   double nSigEvents = hSigTotal->GetBinContent(1);
   
-  TH1D* hBkgTotal = (TH1D*) fBkg->Get("EventCount");
+  TH1D* hBkgTotal = (TH1D*) fBkg->Get("L1TAlgoScan/EventCount");
   double nBkgEvents = hBkgTotal->GetBinContent(1);
 
   cout << "Sig events: " << nSigEvents << endl;
@@ -246,7 +262,7 @@ int main(int argc, char *argv[]){
   
   
   printf("===== Decay Summary =====\n");
-  TH1D* HiggsDecay = (TH1D*) fSig->Get("GenAnalysis/HiggsDecay");
+  TH1D* HiggsDecay = (TH1D*) fSig->Get("L1TAlgoScan/GenAnalysis/HiggsDecay");
   for(int i=1; i<HiggsDecay->GetNbinsX()+1; i++){
     printf("Decay: %10s - Faction: %6.4f\n",HiggsDecay->GetXaxis()->GetBinLabel(i),HiggsDecay->GetBinContent(i)/nSigEvents);
   }
@@ -257,15 +273,15 @@ int main(int argc, char *argv[]){
   printf("\n");
   
   printf("===== Algo Efficiency Summary =====\n");
-  TH1D* AlgoPass     = (TH1D*) fSig->Get("AlgoPass");
-  TH1D* AlgoPassRate = (TH1D*) fBkg->Get("AlgoPass");
+  TH1D* AlgoPass     = (TH1D*) fSig->Get("L1TAlgoScan/AlgoPass");
+  TH1D* AlgoPassRate = (TH1D*) fBkg->Get("L1TAlgoScan/AlgoPass");
   for(int i=1; i<AlgoPass->GetNbinsX()+1; i++){
     printf("Algo: %40s - Eff: %6.4f rate: %10.1f Hz\n",AlgoPass->GetXaxis()->GetBinLabel(i),AlgoPass->GetBinContent(i)/nSigEvents,run259721_convFactor*AlgoPassRate->GetBinContent(i)/nBkgEvents);
   }
   
   if(options.optimisation || options.plots){
     
-    vector<AlgoWorkingPoint> resAlgos;
+    vector<trgfw::AlgoWorkingPoint> resAlgos;
     
     hepfw::File *fOut = new hepfw::File(Form("%s/L1Algo_eff.root",options.outputDir.c_str()),"RECREATE");
     fOut->copyDirectoryStructure(fSig);
@@ -273,16 +289,28 @@ int main(int argc, char *argv[]){
     
     for(unsigned s=0; s<hSig.size(); s++){
       
+      
       TH1D *pSig = (TH1D*) hSig[s];
       
       string sigTitle = pSig->GetName();
       string sigPath  = pSig->GetDirectory()->GetPath();
 
-      // Histograms to ignore
+      // Generic histograms to ignore
+      if(sigTitle=="EventCount")            {continue;}
+      if(sigTitle=="AlgoPass")              {continue;}
       if(hasEnding(sigTitle,"_N"))          {continue;}
       if(hasEnding(sigTitle,"_Eta"))        {continue;}
       if(hasEnding(sigTitle,"_Phi"))        {continue;}
       if(hasEnding(sigTitle,"_minDRL1TJet")){continue;}
+      if(hasEnding(sigTitle,"_METvsMjj"))   {continue;}
+      
+      // Histograms to ignore for VBF Higgs to Invisible optimisation
+      if(options.signal=="inv"){
+        if(sigTitle.find("L1TEGamma")!=std::string::npos){continue;}
+        if(sigTitle.find("L1TMuon")  !=std::string::npos){continue;}
+        if(sigTitle.find("L1TTau")   !=std::string::npos){continue;}
+        if(sigTitle.find("L1TIsoTau")!=std::string::npos){continue;}
+      }
       
       sigPath  = sigPath.substr(sigPath.find(':')+2,sigPath.size()-1);
       
@@ -295,6 +323,8 @@ int main(int argc, char *argv[]){
         bkgPath = bkgPath.substr(bkgPath.find(':')+2,bkgPath.size()-1);
         
         if(sigTitle == bkgTitle && sigPath == bkgPath && sigPath != ""){
+          
+          std::cout << "Processing histogram (" << s << " out of " << hSig.size() << "): " << sigPath << " " << sigTitle << '\r' << std::flush;
           
           //cout << "Plot: " << sigPath << " name: " << pSig->GetName() << " title: " << pSig->GetTitle() << endl;
           
@@ -353,7 +383,7 @@ int main(int argc, char *argv[]){
     fOut->Write();
     
     if(options.optimisation){
-      sort(resAlgos.begin(),resAlgos.end(),sortGreaterEff_AlgoWorkingPoint());
+      sort(resAlgos.begin(),resAlgos.end(),trgfw::sortGreaterEff_AlgoWorkingPoint());
       printf("===== Algo results =====\n");
       for(unsigned i=0; i<resAlgos.size(); i++){
         printf("Path: %40s Var: %30s Cut: %10.4f Eff: %6.4f Rate: %10.1f\n",

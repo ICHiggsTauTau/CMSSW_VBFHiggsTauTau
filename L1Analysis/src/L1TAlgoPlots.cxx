@@ -21,7 +21,9 @@ L1TAlgoPlots::L1TAlgoPlots(string name, TDirectory* baseBirectory){
   m_plotsDirectory = baseBirectory->mkdir(name.c_str());
 
   tag_l1tEG      = "l1t_eg";
+  tag_l1tIsoEG   = "l1t_isoeg";
   tag_l1tMuon    = "l1t_muon";
+  tag_l1tIsoMuon = "l1t_isomuon";
   tag_l1tTau     = "l1t_tau";
   tag_l1tIsoTau  = "l1t_isotau";
   tag_l1tJet     = "l1t_jet";
@@ -29,49 +31,58 @@ L1TAlgoPlots::L1TAlgoPlots(string name, TDirectory* baseBirectory){
   
   tag_l1tJetPair = "";
   
-  m_L1TEGamma1_Et  = new TH1D("L1TEGamma1_Pt", "L1T EGamma1 Pt", 250,           0,        250); m_L1TEGamma1_Et ->SetDirectory(m_plotsDirectory);
+  m_L1TEGamma1_Et  = new TH1D("L1TEGamma1_Pt", "L1T EGamma1 Pt", 125,           0,        250); m_L1TEGamma1_Et ->SetDirectory(m_plotsDirectory);
   m_L1TEGamma1_Eta = new TH1D("L1TEGamma1_Eta","L1T EGamma1 Eta",100,          -5,          5); m_L1TEGamma1_Eta->SetDirectory(m_plotsDirectory);
   m_L1TEGamma1_Phi = new TH1D("L1TEGamma1_Phi","L1T EGamma1 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TEGamma1_Phi->SetDirectory(m_plotsDirectory);
   
-  m_L1TMuon1_Et  = new TH1D("L1TMuon1_Pt", "L1T Muon1 Pt", 250,           0,        250); m_L1TMuon1_Et ->SetDirectory(m_plotsDirectory);
+  m_L1TIsoEGamma1_Et  = new TH1D("L1TIsoEG1_Pt", "L1T IsoEG1 Pt", 125,           0,        250); m_L1TIsoEGamma1_Et ->SetDirectory(m_plotsDirectory);
+  m_L1TIsoEGamma1_Eta = new TH1D("L1TIsoEG1_Eta","L1T IsoEG1 Eta",100,          -5,          5); m_L1TIsoEGamma1_Eta->SetDirectory(m_plotsDirectory);
+  m_L1TIsoEGamma1_Phi = new TH1D("L1TIsoEG1_Phi","L1T IsoEG1 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TIsoEGamma1_Phi->SetDirectory(m_plotsDirectory);
+  
+  m_L1TMuon1_Et  = new TH1D("L1TMuon1_Pt", "L1T Muon1 Pt", 125,           0,        250); m_L1TMuon1_Et ->SetDirectory(m_plotsDirectory);
   m_L1TMuon1_Eta = new TH1D("L1TMuon1_Eta","L1T Muon1 Eta",100,          -5,          5); m_L1TMuon1_Eta->SetDirectory(m_plotsDirectory);
   m_L1TMuon1_Phi = new TH1D("L1TMuon1_Phi","L1T Muon1 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TMuon1_Phi->SetDirectory(m_plotsDirectory);
   
+  m_L1TIsoMuon1_Et  = new TH1D("L1TIsoMuon1_Pt", "L1T IsoMu1 Pt", 125,           0,        250); m_L1TIsoMuon1_Et ->SetDirectory(m_plotsDirectory);
+  m_L1TIsoMuon1_Eta = new TH1D("L1TIsoMuon1_Eta","L1T IsoMu1 Eta",100,          -5,          5); m_L1TIsoMuon1_Eta->SetDirectory(m_plotsDirectory);
+  m_L1TIsoMuon1_Phi = new TH1D("L1TIsoMuon1_Phi","L1T IsoMu1 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TIsoMuon1_Phi->SetDirectory(m_plotsDirectory);
+  
   m_L1TTau_N    = new TH1D("L1TTau_N",     "L1T Tau N",  21,        -0.5,       20.5); m_L1TTau_N   ->SetDirectory(m_plotsDirectory);
-  m_L1TTau1_Et  = new TH1D("L1TTau1_Pt", "L1T Tau1 Pt", 250,           0,        250); m_L1TTau1_Et ->SetDirectory(m_plotsDirectory);
+  m_L1TTau1_Et  = new TH1D("L1TTau1_Pt", "L1T Tau1 Pt", 125,           0,        250); m_L1TTau1_Et ->SetDirectory(m_plotsDirectory);
   m_L1TTau1_Eta = new TH1D("L1TTau1_Eta","L1T Tau1 Eta",100,          -5,          5); m_L1TTau1_Eta->SetDirectory(m_plotsDirectory);
   m_L1TTau1_Phi = new TH1D("L1TTau1_Phi","L1T Tau1 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TTau1_Phi->SetDirectory(m_plotsDirectory);
   
-  m_L1TTau2_Et  = new TH1D("L1TTau2_Pt", "L1T Tau2 Pt", 250,           0,        250); m_L1TTau2_Et ->SetDirectory(m_plotsDirectory);
+  m_L1TTau2_Et  = new TH1D("L1TTau2_Pt", "L1T Tau2 Pt", 125,           0,        250); m_L1TTau2_Et ->SetDirectory(m_plotsDirectory);
   m_L1TTau2_Eta = new TH1D("L1TTau2_Eta","L1T Tau2 Eta",100,          -5,          5); m_L1TTau2_Eta->SetDirectory(m_plotsDirectory);
   m_L1TTau2_Phi = new TH1D("L1TTau2_Phi","L1T Tau2 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TTau2_Phi->SetDirectory(m_plotsDirectory);
   
   m_L1TIsoTau_N    = new TH1D("L1TIsoTau_N",   "L1T IsoTau N",    21,        -0.5,       20.5); m_L1TIsoTau_N   ->SetDirectory(m_plotsDirectory);
-  m_L1TIsoTau1_Et  = new TH1D("L1TIsoTau1_Pt", "L1T IsoTau1 Pt", 250,           0,        250); m_L1TIsoTau1_Et ->SetDirectory(m_plotsDirectory);
+  m_L1TIsoTau1_Et  = new TH1D("L1TIsoTau1_Pt", "L1T IsoTau1 Pt", 125,           0,        250); m_L1TIsoTau1_Et ->SetDirectory(m_plotsDirectory);
   m_L1TIsoTau1_Eta = new TH1D("L1TIsoTau1_Eta","L1T IsoTau1 Eta",100,          -5,          5); m_L1TIsoTau1_Eta->SetDirectory(m_plotsDirectory);
   m_L1TIsoTau1_Phi = new TH1D("L1TIsoTau1_Phi","L1T IsoTau1 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TIsoTau1_Phi->SetDirectory(m_plotsDirectory);
   
-  m_L1TIsoTau2_Et  = new TH1D("L1TIsoTau2_Pt", "L1T IsoTau2 Pt", 250,           0,        250); m_L1TIsoTau2_Et ->SetDirectory(m_plotsDirectory);
+  m_L1TIsoTau2_Et  = new TH1D("L1TIsoTau2_Pt", "L1T IsoTau2 Pt", 125,           0,        250); m_L1TIsoTau2_Et ->SetDirectory(m_plotsDirectory);
   m_L1TIsoTau2_Eta = new TH1D("L1TIsoTau2_Eta","L1T IsoTau2 Eta",100,          -5,          5); m_L1TIsoTau2_Eta->SetDirectory(m_plotsDirectory);
   m_L1TIsoTau2_Phi = new TH1D("L1TIsoTau2_Phi","L1T IsoTau2 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TIsoTau2_Phi->SetDirectory(m_plotsDirectory);
   
-  m_L1TJet_N     = new TH1D("L1TJet_N",   "L1T Jet N",       21,        -0.5,       20.5); m_L1TJet_N    ->SetDirectory(m_plotsDirectory);
-  m_L1TJet_AvgPt = new TH1D("L1TJet_Avg", "L1T Dijet AvgPt",250,           0,        250); m_L1TJet_AvgPt->SetDirectory(m_plotsDirectory);
-  m_L1TJet1_Et   = new TH1D("L1TJet1_Pt", "L1T Jet1 Pt",    250,           0,        250); m_L1TJet1_Et  ->SetDirectory(m_plotsDirectory);
-  m_L1TJet1_Eta  = new TH1D("L1TJet1_Eta","L1T Jet1 Eta",   100,          -5,          5); m_L1TJet1_Eta ->SetDirectory(m_plotsDirectory);
-  m_L1TJet1_Phi  = new TH1D("L1TJet1_Phi","L1T Jet1 Phi",   100,-TMath::Pi(),TMath::Pi()); m_L1TJet1_Phi ->SetDirectory(m_plotsDirectory);
+  m_L1TJet_N     = new TH1D("L1TJet_N",    "L1T Jet N",       21,        -0.5,       20.5); m_L1TJet_N    ->SetDirectory(m_plotsDirectory);
+  m_L1TJet_AvgPt = new TH1D("L1TJet_Avg",  "L1T Dijet AvgPt",125,           0,        250); m_L1TJet_AvgPt->SetDirectory(m_plotsDirectory);
+  m_L1TJet_VecPt = new TH1D("L1TJet_VecPt","L1T Dijet VecPt",125,           0,        250); m_L1TJet_AvgPt->SetDirectory(m_plotsDirectory);
+  m_L1TJet1_Et   = new TH1D("L1TJet1_Pt",  "L1T Jet1 Pt",    125,           0,        250); m_L1TJet1_Et  ->SetDirectory(m_plotsDirectory);
+  m_L1TJet1_Eta  = new TH1D("L1TJet1_Eta", "L1T Jet1 Eta",   100,          -5,          5); m_L1TJet1_Eta ->SetDirectory(m_plotsDirectory);
+  m_L1TJet1_Phi  = new TH1D("L1TJet1_Phi", "L1T Jet1 Phi",   100,-TMath::Pi(),TMath::Pi()); m_L1TJet1_Phi ->SetDirectory(m_plotsDirectory);
   
-  m_L1TJet2_Et  = new TH1D("L1TJet2_Pt", "L1T Jet2 Pt", 250,           0,        250); m_L1TJet2_Et ->SetDirectory(m_plotsDirectory);
+  m_L1TJet2_Et  = new TH1D("L1TJet2_Pt", "L1T Jet2 Pt", 125,           0,        250); m_L1TJet2_Et ->SetDirectory(m_plotsDirectory);
   m_L1TJet2_Eta = new TH1D("L1TJet2_Eta","L1T Jet2 Eta",100,          -5,          5); m_L1TJet2_Eta->SetDirectory(m_plotsDirectory);
   m_L1TJet2_Phi = new TH1D("L1TJet2_Phi","L1T Jet2 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TJet2_Phi->SetDirectory(m_plotsDirectory);
   
-  m_L1TJet_maxMjj  = new TH1D("L1TJet_maxMjj", "L1TJet maxMjj", 1000,   0,1000); m_L1TJet_maxMjj ->SetDirectory(m_plotsDirectory);
+  m_L1TJet_maxMjj  = new TH1D("L1TJet_maxMjj", "L1TJet maxMjj",  100,   0,1000); m_L1TJet_maxMjj ->SetDirectory(m_plotsDirectory);
   m_L1TJet_maxDEta = new TH1D("L1TJet_maxDEta","L1TJet maxDEta", 150,   0,  15); m_L1TJet_maxDEta->SetDirectory(m_plotsDirectory);
   
   m_L1TTau1_minDRL1TJet = new TH1D("L1TTau1_minDRL1TJet","minDR(L1TTau1,L1TJet)",150, 0, 15); m_L1TTau1_minDRL1TJet->SetDirectory(m_plotsDirectory);
   
-  m_L1TMET_Et = new TH1D("L1TMET_Et","L1T MET Et",512,0,512); m_L1TMET_Et->SetDirectory(m_plotsDirectory);
-  m_L1TMHT_Et = new TH1D("L1TMHT_Et","L1T MHT Et",512,0,512); m_L1TMHT_Et->SetDirectory(m_plotsDirectory);
+  m_L1TMET_Et = new TH1D("L1TMET_Et","L1T MET Et",256,0,512); m_L1TMET_Et->SetDirectory(m_plotsDirectory);
+  m_L1TMHT_Et = new TH1D("L1TMHT_Et","L1T MHT Et",256,0,512); m_L1TMHT_Et->SetDirectory(m_plotsDirectory);
   
   m_METvsMjj  = new TH2D("METvsMjj",      "MET vs Mjj",   100,0,200, 100,0,1000);       m_METvsMjj     ->SetDirectory(m_plotsDirectory);
 }
@@ -127,11 +138,25 @@ void L1TAlgoPlots::fill(trgfw::Event &iEvent){
     m_L1TEGamma1_Phi->Fill(myEGs->at(0)->eta());
   }
   
+  vector<ic::L1TEGamma*>* myIsoEGs = iEvent.getByName< vector<ic::L1TEGamma*> >(tag_l1tIsoEG);
+  if(myIsoEGs->size()>0){
+    m_L1TIsoEGamma1_Et ->Fill(myEGs->at(0)->pt());
+    m_L1TIsoEGamma1_Eta->Fill(myEGs->at(0)->phi());
+    m_L1TIsoEGamma1_Phi->Fill(myEGs->at(0)->eta());
+  }
+  
   vector<ic::L1TMuon*>* myMuons = iEvent.getByName< vector<ic::L1TMuon*> >(tag_l1tMuon);
   if(myMuons->size()>0){
     m_L1TMuon1_Et ->Fill(myMuons->at(0)->pt());
     m_L1TMuon1_Eta->Fill(myMuons->at(0)->phi());
     m_L1TMuon1_Phi->Fill(myMuons->at(0)->eta());
+  }
+  
+  vector<ic::L1TMuon*>* myIsoMuons = iEvent.getByName< vector<ic::L1TMuon*> >(tag_l1tIsoMuon);
+  if(myIsoMuons->size()>0){
+    m_L1TIsoMuon1_Et ->Fill(myMuons->at(0)->pt());
+    m_L1TIsoMuon1_Eta->Fill(myMuons->at(0)->phi());
+    m_L1TIsoMuon1_Phi->Fill(myMuons->at(0)->eta());
   }
   
   vector<ic::L1TTau*>* myTaus = iEvent.getByName< vector<ic::L1TTau*> >(tag_l1tTau);
@@ -185,6 +210,7 @@ void L1TAlgoPlots::fill(trgfw::Event &iEvent){
     double maxObj1Pt = 0.;
     double maxObj2Pt = 0.;
     double maxAvgPt  = 0.;
+    double maxVecPt  = 0.;
     double maxDEta   = 0.;
     double maxMjj    = 0.;
     
@@ -206,16 +232,22 @@ void L1TAlgoPlots::fill(trgfw::Event &iEvent){
       double thisDEta = fabs(iPair.first->eta()-iPair.second->eta());
       if(maxDEta<thisDEta){maxDEta=thisDEta;}
       
-      // Checking dijet mjj
+      // Getting dijet vector
       ROOT::Math::PtEtaPhiEVector vec = iPair.first->vector() + iPair.second->vector();
+
+      // Checking dijet mjj
       double thisMjj = vec.mass();
       if(maxMjj<thisMjj){maxMjj=thisMjj;}
+      
+      // Checking dijet vector pt
+      if(maxVecPt<vec.pt()){maxVecPt=vec.pt();}
     }
     
     // Now filling the maxs
     m_L1TJet1_Et    ->Fill(maxObj1Pt);
     m_L1TJet2_Et    ->Fill(maxObj2Pt);
     m_L1TJet_AvgPt  ->Fill(maxAvgPt);
+    m_L1TJet_VecPt  ->Fill(maxVecPt);
     m_L1TJet_maxDEta->Fill(maxDEta);
     m_L1TJet_maxMjj ->Fill(maxMjj);
     

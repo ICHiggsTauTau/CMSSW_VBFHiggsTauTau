@@ -1,19 +1,34 @@
 #!/bin/sh
 
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_METEtaRange3p0.sh
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_METEtaRange5p0.sh
 
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_EleMuo_METEtaRange3p0.sh
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_EleMuo_METEtaRange5p0.sh
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_EleTau_METEtaRange3p0.sh
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_EleTau_METEtaRange5p0.sh
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_MuoTau_METEtaRange3p0.sh
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_MuoTau_METEtaRange5p0.sh
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_TauTau_METEtaRange3p0.sh
-qsub -q hepshort.q -t 1-76:1 runJob_VBFHiggsToTau_TauTau_METEtaRange5p0.sh
+cd task_VBFHToInvisible_METEtaRange3p0
+./submit.sh
+cd ../
 
-qsub -q hepshort.q -t 1-6:1 runJob_VBFHiggsToInv_METEtaRange3p0.sh
-qsub -q hepshort.q -t 1-6:1 runJob_VBFHiggsToInv_METEtaRange5p0.sh
+cd task_VBFHToInvisible_METEtaRange5p0
+./submit.sh
+cd ../
 
-qsub -q hepshort.q -t 1-430:1 runJob_ZeroBias_run259721_METEtaRange3p0.sh
-qsub -q hepshort.q -t 1-430:1 runJob_ZeroBias_run259721_METEtaRange5p0.sh
+cd task_VBFHToTauTau_EleHad_METEtaRange3p0
+./submit.sh
+cd ../
+
+cd task_VBFHToTauTau_EleMuo_METEtaRange3p0
+./submit.sh
+cd ../
+
+cd task_VBFHToTauTau_HadHad_METEtaRange3p0
+./submit.sh
+cd ../
+
+cd task_VBFHToTauTau_MuoHad_METEtaRange3p0
+./submit.sh
+cd ../
+
+cd task_ZeroBias_METEtaRange3p0
+./submit.sh
+cd ../
+
+cd task_ZeroBias_METEtaRange5p0
+./submit.sh
+cd ../

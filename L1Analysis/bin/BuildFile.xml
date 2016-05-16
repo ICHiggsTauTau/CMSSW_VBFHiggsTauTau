@@ -1,10 +1,12 @@
 <use name="root"/>
 <use name="rootgraphics"/>
+<use name="boost"/>
 <use name="CMSSW_VBFHiggsTauTau/GenParticlesAnalysis"/>
 <use name="CMSSW_VBFHiggsTauTau/L1Analysis"/>
 <use name="CMSSW_VBFHiggsTauTau/IO"/>
 <use name="CMSSW_VBFHiggsTauTau/Style"/>
 <bin name="vbftautau_runTriggerAnalysis" file="runTriggerAnalysis.cxx"/>
 <bin name="vbftautau_runRatesExtraction" file="runRatesExtraction.cxx"/>
+<bin name="vbftautau_runTriggerOptimisation" file="runOptimisation.cxx"/>
 <bin name="vbfinv_runMETAnalysis" file="runMETAnalysis.cxx"/>
 <flags CXXFLAGS="-g"/> 
