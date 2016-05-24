@@ -5,8 +5,10 @@
 <use name="CMSSW_VBFHiggsTauTau/L1Analysis"/>
 <use name="CMSSW_VBFHiggsTauTau/IO"/>
 <use name="CMSSW_VBFHiggsTauTau/Style"/>
-<bin name="vbftautau_runTriggerAnalysis" file="runTriggerAnalysis.cxx"/>
-<bin name="vbftautau_runRatesExtraction" file="runRatesExtraction.cxx"/>
+<bin name="vbftautau_runTriggerAnalysis"     file="runTriggerAnalysis.cxx"/>
+<bin name="vbftautau_runAlgoAnalysis"        file="runAlgoAnalysis.cxx"/>
+<bin name="vbftautau_mergeOptimisationTrees" file="mergeOptimisationTrees.cxx"/>
+<bin name="vbftautau_runRatesExtraction"     file="runRatesExtraction.cxx"/>
 <bin name="vbftautau_runTriggerOptimisation" file="runOptimisation.cxx"/>
-<bin name="vbfinv_runMETAnalysis" file="runMETAnalysis.cxx"/>
+<bin name="vbfinv_runMETAnalysis"            file="runMETAnalysis.cxx"/>
 <flags CXXFLAGS="-g"/> 

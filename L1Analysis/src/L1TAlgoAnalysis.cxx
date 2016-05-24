@@ -2,6 +2,8 @@
 
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/src/L1TFunctions.cxx"
 
+#include "TTree.h"
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -23,7 +25,6 @@ L1TAlgoAnalysis::L1TAlgoAnalysis(std::string name,TDirectory* baseDirector){
 
 L1TAlgoAnalysis::~L1TAlgoAnalysis(){
   
-  if(m_verbose){printf("[L1TAlgoAnalysis::~L1TAlgoAnalysis] Method called\n");}
 }
 
 void L1TAlgoAnalysis::init(){
@@ -42,17 +43,21 @@ void L1TAlgoAnalysis::init(){
 
 void L1TAlgoAnalysis::beginJob(){
   
+  if(m_verbose){cout << "[L1TAlgoAnalysis::beginJob] Method called" << endl;}
+  
   using namespace std::placeholders; 
   
   // ===== Histograms =====
   m_EventCount = new TH1D("EventCount","EventCount",1, 0.5,1.5); m_EventCount->SetDirectory(m_dir);
   
   if(m_doGenAnalysis){
+    if(m_verbose){cout << "[L1TAlgoAnalysis::beginJob] Generator level analysis will be performed" << endl;}
     TDirectory* dirGenAnalysis = m_dir->mkdir("GenAnalysis");
     m_plotsGenAnalysis.create(dirGenAnalysis);
   }
   
   if(m_doSingleObjectsAnalysis){
+    if(m_verbose){cout << "[L1TAlgoAnalysis::beginJob] Single object analysis will be performed" << endl;}
     TDirectory* dirSingleObjects = m_dir->mkdir("SingleObject");
     m_plotsSingleObjects.create(dirSingleObjects);
   }
@@ -71,14 +76,16 @@ void L1TAlgoAnalysis::beginJob(){
   // ########### Single Objects ############
   // #######################################
 
+  //#############################################################
   // Algo: EG
+  //#############################################################
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("EG%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
     string name_egCol = Form("l1t_eg_pt%.0f",i);
     pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,_1,"l1t_eg",i,name_egCol));
     pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,     _1,name_egCol,1));
-    pAlgo->plots.tag_l1tEG = name_egCol;
+    pAlgo->results->tag_l1tEG = name_egCol;
     m_algos.push_back(pAlgo);
     
     
@@ -100,19 +107,19 @@ void L1TAlgoAnalysis::beginJob(){
       pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,0,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tEG      = name_eg1Col;
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tEG      = name_eg1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
         
         pAlgo = new L1TAlgo(Form("Dijet%.0fmjj%.0f_EG%.0f",jetPt,jetMjj,i),dirOverlapClean_LeptonFirst);
         pAlgo->setVerbose(m_verbose);
-        string name_egCol       = Form("l1t_eg_pt%.0f",i);
-        string name_eg1Col      = Form("l1t_eg1_pt%.0f",i);
+        string name_egCol        = Form("l1t_eg_pt%.0f",i);
+        string name_eg1Col       = Form("l1t_eg1_pt%.0f",i);
         string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
         string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanEG1Pt%.0f",jetPt,i);
-        string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanEG1Pt%.0f",jetPt,i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0fmjj%.0f_cleanEG1Pt%.0f",jetPt,jetMjj,i);
         pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,           _1,"l1t_eg",i,name_egCol));
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                _1,name_egCol,1));
         pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,        _1,name_egCol,name_eg1Col));
@@ -121,19 +128,19 @@ void L1TAlgoAnalysis::beginJob(){
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tEG      = name_eg1Col;
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tEG      = name_eg1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
         
         for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
           
           pAlgo = new L1TAlgo(Form("Dijet%.0fdeta%2.0fmjj%.0f_EG%.0f",jetPt,jetDEta*10,jetMjj,i),dirOverlapClean_LeptonFirst);
           pAlgo->setVerbose(m_verbose);
-          string name_egCol       = Form("l1t_eg_pt%.0f",i);
-          string name_eg1Col      = Form("l1t_eg1_pt%.0f",i);
+          string name_egCol        = Form("l1t_eg_pt%.0f",i);
+          string name_eg1Col       = Form("l1t_eg1_pt%.0f",i);
           string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
           string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanEG1Pt%.0f",jetPt,i);
-          string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanEG1Pt%.0f",jetPt,i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0fdEta%2.0fmjj%.0f_cleanEG1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
           pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,           _1,"l1t_eg",i,name_egCol));
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                _1,name_egCol,1));
           pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,        _1,name_egCol,name_eg1Col));
@@ -142,22 +149,151 @@ void L1TAlgoAnalysis::beginJob(){
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
           pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetDEta,jetMjj,name_dijetCol));
           pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-          pAlgo->plots.tag_l1tEG      = name_eg1Col;
-          pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+          pAlgo->results->tag_l1tEG      = name_eg1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
           m_algos.push_back(pAlgo);
+        }
+      }
+    }
+    
+    
+    // Algo: Double Jet asymmetric pT
+    for(double jetPt1=10; jetPt1<=100; jetPt1+=10){
+      for(double jetPt2=10; jetPt2<=jetPt1; jetPt2+=10){
+        
+        pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0f_EG%.0f",jetPt1,jetPt2,i),dirNoClean);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_eg_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_eg1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanEG1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0f_cleanEG1Pt%.0f",jetPt1,jetPt2,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,               _1,"l1t_eg",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                    _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,            _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,0,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tEG  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+          
+          pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fmjj%.0f_EG%.0f",jetPt1,jetPt2,jetMjj,i),dirNoClean);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_eg_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_eg1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanEG1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fmjj%.0f_cleanEG1Pt%.0f",jetPt1,jetPt2,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,               _1,"l1t_eg",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                    _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,            _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tEG  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
+          for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+            
+            pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fdeta%2.0fmjj%.0f_EG%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i),dirNoClean);
+            pAlgo->setVerbose(m_verbose);
+            string name_tauCol       = Form("l1t_eg_pt%.0f",i);
+            string name_tau1Col      = Form("l1t_eg1_pt%.0f",i);
+            string name_jetCol_clean = Form("l1t_jet_cleanEG1Pt%.0f",i);
+            string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fdeta%2.0fmjj%.0f_cleanEG1Pt%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i);
+            pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,               _1,"l1t_eg",i,name_tauCol));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                    _1,name_tauCol,1));
+            pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,            _1,name_tauCol,name_tau1Col));
+            pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+            pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
+            pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+            pAlgo->results->tag_l1tEG  = name_tau1Col;
+            pAlgo->results->tag_l1tJetPair = name_dijetCol;
+            m_algos.push_back(pAlgo);
+          }
+        }
+      }
+    }
+    
+    
+    // Algo: Double Jet Avg Pt
+    for(double jetPt=20; jetPt<=60; jetPt+=10){
+      
+      pAlgo = new L1TAlgo(Form("DijetAvg%.0f_EG%.0f",jetPt,i),dirOverlapClean_LeptonFirst);
+      pAlgo->setVerbose(m_verbose);
+      string name_tauCol       = Form("l1t_eg_pt%.0f",i);
+      string name_tau1Col      = Form("l1t_eg1_pt%.0f",i);
+      string name_jetCol_clean = Form("l1t_jet_cleanEG1Pt%.0f",i);
+      string name_dijetCol     = Form("l1t_dijetAvgPt%.0f_cleanEG1Pt%.0f",jetPt,i);
+      pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,            _1,"l1t_eg",i,name_tauCol));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                 _1,name_tauCol,1));
+      pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,         _1,name_tauCol,name_tau1Col));
+      pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,0,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+      pAlgo->results->tag_l1tEG  = name_tau1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
+      m_algos.push_back(pAlgo);
+      
+      for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+        
+        pAlgo = new L1TAlgo(Form("DijetAvg%.0fmjj%.0f_EG%.0f",jetPt,jetMjj,i),dirOverlapClean_LeptonFirst);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_eg_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_eg1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanEG1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetAvgPt%.0fmjj%.0f_cleanEG1Pt%.0f",jetPt,jetMjj,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,            _1,"l1t_eg",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                 _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,         _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tEG  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+          
+          pAlgo = new L1TAlgo(Form("DijetAvg%.0fdeta%2.0fmjj%.0f_EG%.0f",jetPt,jetDEta*10,jetMjj,i),dirOverlapClean_LeptonFirst);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_eg_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_eg1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanEG1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetAvgPt%.0fdeta%2.0fmjj%.0f_cleanEG1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,            _1,"l1t_eg",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                 _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,         _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,jetDEta,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tEG  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
         }
       }
     }
   }
   
+  //#############################################################
   // Algo: IsoEG
+  //#############################################################
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("IsoEG%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
     string name_egCol = Form("l1t_isoeg_pt%.0f",i);
     pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,_1,"l1t_isoeg",i,name_egCol));
     pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,     _1,name_egCol,1));
-    pAlgo->plots.tag_l1tIsoEG = name_egCol;
+    pAlgo->results->tag_l1tIsoEG = name_egCol;
     m_algos.push_back(pAlgo);
     
     
@@ -179,19 +315,19 @@ void L1TAlgoAnalysis::beginJob(){
       pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,0,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tIsoEG  = name_eg1Col;
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tIsoEG  = name_eg1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
         
         pAlgo = new L1TAlgo(Form("Dijet%.0fmjj%.0f_IsoEG%.0f",jetPt,jetMjj,i),dirOverlapClean_LeptonFirst);
         pAlgo->setVerbose(m_verbose);
-        string name_egCol       = Form("l1t_isoeg_pt%.0f",i);
-        string name_eg1Col      = Form("l1t_isoeg1_pt%.0f",i);
+        string name_egCol        = Form("l1t_isoeg_pt%.0f",i);
+        string name_eg1Col       = Form("l1t_isoeg1_pt%.0f",i);
         string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
         string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanIsoEG1Pt%.0f",jetPt,i);
-        string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanIsoEG1Pt%.0f",jetPt,i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0fmjj%.0f_cleanIsoEG1Pt%.0f",jetPt,jetMjj,i);
         pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,           _1,"l1t_isoeg",i,name_egCol));
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                _1,name_egCol,1));
         pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,        _1,name_egCol,name_eg1Col));
@@ -200,8 +336,8 @@ void L1TAlgoAnalysis::beginJob(){
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tIsoEG   = name_eg1Col;
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tIsoEG   = name_eg1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
         
         for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
@@ -212,7 +348,7 @@ void L1TAlgoAnalysis::beginJob(){
           string name_eg1Col      = Form("l1t_isoeg1_pt%.0f",i);
           string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
           string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanIsoEG1Pt%.0f",jetPt,i);
-          string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanIsoEG1Pt%.0f",jetPt,i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0fdEta%2.0fmjj%.0f_cleanIsoEG1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
           pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,           _1,"l1t_isoeg",i,name_egCol));
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                _1,name_egCol,1));
           pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,        _1,name_egCol,name_eg1Col));
@@ -221,22 +357,151 @@ void L1TAlgoAnalysis::beginJob(){
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
           pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetDEta,jetMjj,name_dijetCol));
           pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-          pAlgo->plots.tag_l1tIsoEG  = name_eg1Col;
-          pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+          pAlgo->results->tag_l1tIsoEG  = name_eg1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
           m_algos.push_back(pAlgo);
+        }
+      }
+    }
+    
+    
+    // Algo: Double Jet asymmetric pT
+    for(double jetPt1=10; jetPt1<=100; jetPt1+=10){
+      for(double jetPt2=10; jetPt2<=jetPt1; jetPt2+=10){
+        
+        pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0f_IsoEG%.0f",jetPt1,jetPt2,i),dirNoClean);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_isoeg_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_isoeg1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanIsoEG1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0f_cleanIsoEG1Pt%.0f",jetPt1,jetPt2,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,               _1,"l1t_isoeg",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                    _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,            _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,0,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tIsoEG  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+          
+          pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fmjj%.0f_IsoEG%.0f",jetPt1,jetPt2,jetMjj,i),dirNoClean);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_isoeg_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_isoeg1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanIsoEG1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fmjj%.0f_cleanIsoEG1Pt%.0f",jetPt1,jetPt2,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,            _1,"l1t_isoeg",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                 _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,         _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tIsoEG  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
+          for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+            
+            pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fdeta%2.0fmjj%.0f_IsoEG%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i),dirNoClean);
+            pAlgo->setVerbose(m_verbose);
+            string name_tauCol       = Form("l1t_isoeg_pt%.0f",i);
+            string name_tau1Col      = Form("l1t_isoeg1_pt%.0f",i);
+            string name_jetCol_clean = Form("l1t_jet_cleanIsoEG1Pt%.0f",i);
+            string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fdeta%2.0fmjj%.0f_cleanIsoEG1Pt%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i);
+            pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,            _1,"l1t_isoeg",i,name_tauCol));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                 _1,name_tauCol,1));
+            pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,         _1,name_tauCol,name_tau1Col));
+            pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+            pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
+            pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+            pAlgo->results->tag_l1tIsoEG  = name_tau1Col;
+            pAlgo->results->tag_l1tJetPair = name_dijetCol;
+            m_algos.push_back(pAlgo);
+          }
+        }
+      }
+    }
+    
+    
+    // Algo: Double Jet Avg Pt
+    for(double jetPt=20; jetPt<=60; jetPt+=10){
+      
+      pAlgo = new L1TAlgo(Form("DijetAvg%.0f_IsoEG%.0f",jetPt,i),dirOverlapClean_LeptonFirst);
+      pAlgo->setVerbose(m_verbose);
+      string name_tauCol       = Form("l1t_isoeg_pt%.0f",i);
+      string name_tau1Col      = Form("l1t_isoeg1_pt%.0f",i);
+      string name_jetCol_clean = Form("l1t_jet_cleanIsoEG1Pt%.0f",i);
+      string name_dijetCol     = Form("l1t_dijetAvgPt%.0f_cleanIsoEG1Pt%.0f",jetPt,i);
+      pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,           _1,"l1t_isoeg",i,name_tauCol));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                _1,name_tauCol,1));
+      pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,        _1,name_tauCol,name_tau1Col));
+      pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>,_1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,  _1,name_jetCol_clean,false,jetPt,0,0,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
+      pAlgo->results->tag_l1tIsoEG  = name_tau1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
+      m_algos.push_back(pAlgo);
+      
+      for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+        
+        pAlgo = new L1TAlgo(Form("DijetAvg%.0fmjj%.0f_IsoEG%.0f",jetPt,jetMjj,i),dirOverlapClean_LeptonFirst);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_isoeg_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_isoeg1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanIsoEG1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetAvgPt%.0fmjj%.0f_cleanIsoEG1Pt%.0f",jetPt,jetMjj,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,            _1,"l1t_isoeg",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                 _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,         _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tIsoEG  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+          
+          pAlgo = new L1TAlgo(Form("DijetAvg%.0fdeta%2.0fmjj%.0f_IsoEG%.0f",jetPt,jetDEta*10,jetMjj,i),dirOverlapClean_LeptonFirst);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_isoeg_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_isoeg1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanIsoEG1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetAvgPt%.0fdeta%2.0fmjj%.0f_cleanIsoEG1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TEGamma>,            _1,"l1t_isoeg",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TEGamma>,                 _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TEGamma>,         _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TEGamma,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,jetDEta,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tIsoEG  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
         }
       }
     }
   }
   
+  //#############################################################
   // Algo: Mu
+  //#############################################################
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("Mu%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
     string name_muCol = Form("l1t_muon_pt%.0f",i);
     pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,_1,"l1t_muon",i,name_muCol));
     pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,     _1,name_muCol,1));
-    pAlgo->plots.tag_l1tMuon = name_muCol;
+    pAlgo->results->tag_l1tMuon = name_muCol;
     m_algos.push_back(pAlgo);
     
     
@@ -258,19 +523,19 @@ void L1TAlgoAnalysis::beginJob(){
       pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,0,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tMuon    = name_muon1Col;
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tMuon    = name_muon1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
         
         pAlgo = new L1TAlgo(Form("Dijet%.0fmjj%.0f_Muon%.0f",jetPt,jetMjj,i),dirOverlapClean_LeptonFirst);
         pAlgo->setVerbose(m_verbose);
-        string name_muonCol       = Form("l1t_muon_pt%.0f",i);
-        string name_muon1Col      = Form("l1t_muon1_pt%.0f",i);
+        string name_muonCol      = Form("l1t_muon_pt%.0f",i);
+        string name_muon1Col     = Form("l1t_muon1_pt%.0f",i);
         string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
         string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanMuon1Pt%.0f",jetPt,i);
-        string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanMuon1Pt%.0f",jetPt,i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0fmjj%.0f_cleanMuon1Pt%.0f",jetPt,jetMjj,i);
         pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,             _1,"l1t_muon",i,name_muonCol));
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                  _1,name_muonCol,1));
         pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,          _1,name_muonCol,name_muon1Col));
@@ -279,19 +544,19 @@ void L1TAlgoAnalysis::beginJob(){
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tMuon    = name_muon1Col;
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tMuon    = name_muon1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
         
         for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
           
           pAlgo = new L1TAlgo(Form("Dijet%.0fdeta%2.0fmjj%.0f_Muon%.0f",jetPt,jetDEta*10,jetMjj,i),dirOverlapClean_LeptonFirst);
           pAlgo->setVerbose(m_verbose);
-          string name_muonCol       = Form("l1t_muon_pt%.0f",i);
-          string name_muon1Col      = Form("l1t_muon1_pt%.0f",i);
+          string name_muonCol      = Form("l1t_muon_pt%.0f",i);
+          string name_muon1Col     = Form("l1t_muon1_pt%.0f",i);
           string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
           string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanMuon1Pt%.0f",jetPt,i);
-          string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanMuon1Pt%.0f",jetPt,i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0fdEta%2.0fmjj%.0f_cleanMuon1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
           pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,             _1,"l1t_muon",i,name_muonCol));
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                  _1,name_muonCol,1));
           pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,          _1,name_muonCol,name_muon1Col));
@@ -300,22 +565,151 @@ void L1TAlgoAnalysis::beginJob(){
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
           pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetDEta,jetMjj,name_dijetCol));
           pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-          pAlgo->plots.tag_l1tMuon    = name_muon1Col;
-          pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+          pAlgo->results->tag_l1tMuon    = name_muon1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
           m_algos.push_back(pAlgo);
+        }
+      }
+    }
+    
+    
+    // Algo: Double Jet asymmetric pT
+    for(double jetPt1=10; jetPt1<=100; jetPt1+=10){
+      for(double jetPt2=10; jetPt2<=jetPt1; jetPt2+=10){
+        
+        pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0f_Muon%.0f",jetPt1,jetPt2,i),dirNoClean);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_muon_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_muon1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanMuon1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0f_cleanMuon1Pt%.0f",jetPt1,jetPt2,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,              _1,"l1t_muon",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                   _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,           _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>,   _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,0,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tMuon  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+          
+          pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fmjj%.0f_Muon%.0f",jetPt1,jetPt2,jetMjj,i),dirNoClean);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_muon_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_muon1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanMuon1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fmjj%.0f_cleanMuon1Pt%.0f",jetPt1,jetPt2,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,               _1,"l1t_muon",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                    _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,            _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                     _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tMuon  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
+          for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+            
+            pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fdeta%2.0fmjj%.0f_Muon%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i),dirNoClean);
+            pAlgo->setVerbose(m_verbose);
+            string name_tauCol       = Form("l1t_muon_pt%.0f",i);
+            string name_tau1Col      = Form("l1t_muon1_pt%.0f",i);
+            string name_jetCol_clean = Form("l1t_jet_cleanMuon1Pt%.0f",i);
+            string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fdeta%2.0fmjj%.0f_cleanMuon1Pt%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i);
+            pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,               _1,"l1t_muon",i,name_tauCol));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                    _1,name_tauCol,1));
+            pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,            _1,name_tauCol,name_tau1Col));
+            pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+            pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
+            pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+            pAlgo->results->tag_l1tMuon  = name_tau1Col;
+            pAlgo->results->tag_l1tJetPair = name_dijetCol;
+            m_algos.push_back(pAlgo);
+          }
+        }
+      }
+    }
+    
+    
+    // Algo: Double Jet Avg Pt
+    for(double jetPt=20; jetPt<=60; jetPt+=10){
+      
+      pAlgo = new L1TAlgo(Form("DijetAvg%.0f_Muon%.0f",jetPt,i),dirOverlapClean_LeptonFirst);
+      pAlgo->setVerbose(m_verbose);
+      string name_tauCol       = Form("l1t_muon_pt%.0f",i);
+      string name_tau1Col      = Form("l1t_muon1_pt%.0f",i);
+      string name_jetCol_clean = Form("l1t_jet_cleanMuon1Pt%.0f",i);
+      string name_dijetCol     = Form("l1t_dijetAvgPt%.0f_cleanMuon1Pt%.0f",jetPt,i);
+      pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,            _1,"l1t_muon",i,name_tauCol));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                 _1,name_tauCol,1));
+      pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,         _1,name_tauCol,name_tau1Col));
+      pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,0,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+      pAlgo->results->tag_l1tMuon  = name_tau1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
+      m_algos.push_back(pAlgo);
+      
+      for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+        
+        pAlgo = new L1TAlgo(Form("DijetAvg%.0fmjj%.0f_Muon%.0f",jetPt,jetMjj,i),dirOverlapClean_LeptonFirst);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_muon_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_muon1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanMuon1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetAvgPt%.0fmjj%.0f_cleanMuon1Pt%.0f",jetPt,jetMjj,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,            _1,"l1t_muon",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                 _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,         _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tMuon  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+          
+          pAlgo = new L1TAlgo(Form("DijetAvg%.0fdeta%2.0fmjj%.0f_Muon%.0f",jetPt,jetDEta*10,jetMjj,i),dirOverlapClean_LeptonFirst);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_muon_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_muon1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanMuon1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetAvgPt%.0fdeta%2.0fmjj%.0f_cleanMuon1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,            _1,"l1t_muon",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                 _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,         _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,jetDEta,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tMuon  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
         }
       }
     }
   }
   
+  //#############################################################
   // Algo: IsoMu
+  //#############################################################
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("IsoMu%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
     string name_muCol = Form("l1t_isomuon_pt%.0f",i);
     pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,_1,"l1t_isomuon",i,name_muCol));
     pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,     _1,name_muCol,1));
-    pAlgo->plots.tag_l1tMuon = name_muCol;
+    pAlgo->results->tag_l1tMuon = name_muCol;
     m_algos.push_back(pAlgo);
     
     
@@ -337,8 +731,8 @@ void L1TAlgoAnalysis::beginJob(){
       pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,0,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tIsoMuon = name_muon1Col;
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tIsoMuon = name_muon1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
@@ -349,7 +743,7 @@ void L1TAlgoAnalysis::beginJob(){
         string name_muon1Col     = Form("l1t_isomuon1_pt%.0f",i);
         string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
         string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanIsoMuon1Pt%.0f",jetPt,i);
-        string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanIsoMuon1Pt%.0f",jetPt,i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0fmjj%.0f_cleanIsoMuon1Pt%.0f",jetPt,jetMjj,i);
         pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,             _1,"l1t_isomuon",i,name_muonCol));
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                  _1,name_muonCol,1));
         pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,          _1,name_muonCol,name_muon1Col));
@@ -358,8 +752,8 @@ void L1TAlgoAnalysis::beginJob(){
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tIsoMuon = name_muon1Col;
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tIsoMuon = name_muon1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
         
         for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
@@ -370,7 +764,7 @@ void L1TAlgoAnalysis::beginJob(){
           string name_muon1Col     = Form("l1t_isomuon1_pt%.0f",i);
           string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
           string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanIsoMuon1Pt%.0f",jetPt,i);
-          string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanIsoMuon1Pt%.0f",jetPt,i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0fdEta%2.0fmjj%.0f_cleanIsoMuon1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
           pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,             _1,"l1t_isomuon",i,name_muonCol));
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                  _1,name_muonCol,1));
           pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,          _1,name_muonCol,name_muon1Col));
@@ -379,22 +773,149 @@ void L1TAlgoAnalysis::beginJob(){
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
           pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetDEta,jetMjj,name_dijetCol));
           pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-          pAlgo->plots.tag_l1tIsoMuon = name_muon1Col;
-          pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+          pAlgo->results->tag_l1tIsoMuon = name_muon1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
           m_algos.push_back(pAlgo);
+        }
+      }
+    }
+    
+    // Algo: Double Jet asymmetric pT
+    for(double jetPt1=10; jetPt1<=100; jetPt1+=10){
+      for(double jetPt2=10; jetPt2<=jetPt1; jetPt2+=10){
+        
+        pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0f_IsoMuon%.0f",jetPt1,jetPt2,i),dirNoClean);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_isomuon_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_isomuon1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanIsoMuon1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0f_cleanIsoMuon1Pt%.0f",jetPt1,jetPt2,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,               _1,"l1t_isomuon",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                    _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,            _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,0,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tIsoMuon  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+          
+          pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fmjj%.0f_IsoMuon%.0f",jetPt1,jetPt2,jetMjj,i),dirNoClean);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_isomuon_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_isomuon1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanIsoMuon1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fmjj%.0f_cleanIsoMuon1Pt%.0f",jetPt1,jetPt2,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,               _1,"l1t_isomuon",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                    _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,            _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tIsoMuon  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
+          for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+            
+            pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fdeta%2.0fmjj%.0f_IsoMuon%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i),dirNoClean);
+            pAlgo->setVerbose(m_verbose);
+            string name_tauCol       = Form("l1t_isomuon_pt%.0f",i);
+            string name_tau1Col      = Form("l1t_isomuon1_pt%.0f",i);
+            string name_jetCol_clean = Form("l1t_jet_cleanIsoMuon1Pt%.0f",i);
+            string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fdeta%2.0fmjj%.0f_cleanIsoMuon1Pt%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i);
+            pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,               _1,"l1t_isomuon",i,name_tauCol));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                    _1,name_tauCol,1));
+            pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,            _1,name_tauCol,name_tau1Col));
+            pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+            pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
+            pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+            pAlgo->results->tag_l1tIsoMuon  = name_tau1Col;
+            pAlgo->results->tag_l1tJetPair = name_dijetCol;
+            m_algos.push_back(pAlgo);
+          }
+        }
+      }
+    }
+    
+    // Algo: Double Jet Avg Pt
+    for(double jetPt=20; jetPt<=60; jetPt+=10){
+      
+      pAlgo = new L1TAlgo(Form("DijetAvg%.0f_IsoMuon%.0f",jetPt,i),dirOverlapClean_LeptonFirst);
+      pAlgo->setVerbose(m_verbose);
+      string name_tauCol       = Form("l1t_isomuon_pt%.0f",i);
+      string name_tau1Col      = Form("l1t_isomuon1_pt%.0f",i);
+      string name_jetCol_clean = Form("l1t_jet_cleanIsoMuon1Pt%.0f",i);
+      string name_dijetCol     = Form("l1t_dijetAvgPt%.0f_cleanIsoMuon1Pt%.0f",jetPt,i);
+      pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,            _1,"l1t_isomuon",i,name_tauCol));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                 _1,name_tauCol,1));
+      pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,         _1,name_tauCol,name_tau1Col));
+      pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,0,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+      pAlgo->results->tag_l1tIsoMuon  = name_tau1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
+      m_algos.push_back(pAlgo);
+      
+      for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+        
+        pAlgo = new L1TAlgo(Form("DijetAvg%.0fmjj%.0f_IsoMuon%.0f",jetPt,jetMjj,i),dirOverlapClean_LeptonFirst);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_isomuon_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_isomuon1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanIsoMuon1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetAvgPt%.0fmjj%.0f_cleanIsoMuon1Pt%.0f",jetPt,jetMjj,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,            _1,"l1t_isomuon",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                 _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,         _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tIsoMuon  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+          
+          pAlgo = new L1TAlgo(Form("DijetAvg%.0fdeta%2.0fmjj%.0f_IsoMuon%.0f",jetPt,jetDEta*10,jetMjj,i),dirOverlapClean_LeptonFirst);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_isomuon_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_isomuon1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanIsoMuon1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetAvgPt%.0fdeta%2.0fmjj%.0f_cleanIsoMuon1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TMuon>,           _1,"l1t_isomuon",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TMuon>,                _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TMuon>,        _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TMuon,ic::L1TJet>,_1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,jetDEta,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tIsoMuon = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
         }
       }
     }
   }
   
+  //#############################################################
   // Algo: Tau
+  //#############################################################
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("Tau%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
     string name_tauCol = Form("l1t_tau_pt%.0f",i);
     pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,_1,"l1t_tau",i,name_tauCol));
     pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,     _1,name_tauCol,1));
-    pAlgo->plots.tag_l1tTau = name_tauCol;
+    pAlgo->results->tag_l1tTau = name_tauCol;
     m_algos.push_back(pAlgo);
     
     // Algo: Double Jet
@@ -415,8 +936,8 @@ void L1TAlgoAnalysis::beginJob(){
       pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,0,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tTau  = name_tau1Col;
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tTau  = name_tau1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
@@ -427,7 +948,7 @@ void L1TAlgoAnalysis::beginJob(){
         string name_tau1Col      = Form("l1t_tau1_pt%.0f",i);
         string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
         string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanTau1Pt%.0f",jetPt,i);
-        string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanTau1Pt%.0f",jetPt,i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0fmjj%.0f_cleanTau1Pt%.0f",jetPt,jetMjj,i);
         pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,              _1,"l1t_tau",i,name_tauCol));
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                   _1,name_tauCol,1));
         pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,           _1,name_tauCol,name_tau1Col));
@@ -436,8 +957,8 @@ void L1TAlgoAnalysis::beginJob(){
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tTau  = name_tau1Col;
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tTau  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
         
         for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
@@ -448,7 +969,7 @@ void L1TAlgoAnalysis::beginJob(){
           string name_tau1Col      = Form("l1t_tau1_pt%.0f",i);
           string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
           string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanTau1Pt%.0f",jetPt,i);
-          string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanTau1Pt%.0f",jetPt,i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0fdEta%2.0fmjj%.0f_cleanTau1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
           pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,              _1,"l1t_tau",i,name_tauCol));
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                   _1,name_tauCol,1));
           pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,           _1,name_tauCol,name_tau1Col));
@@ -457,22 +978,150 @@ void L1TAlgoAnalysis::beginJob(){
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
           pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetDEta,jetMjj,name_dijetCol));
           pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-          pAlgo->plots.tag_l1tTau     = name_tau1Col;
-          pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+          pAlgo->results->tag_l1tTau     = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
           m_algos.push_back(pAlgo);
+        }
+      }
+    }
+    
+    // Algo: Double Jet asymmetric pT
+    for(double jetPt1=10; jetPt1<=100; jetPt1+=10){
+      for(double jetPt2=10; jetPt2<=jetPt1; jetPt2+=10){
+        
+        pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0f_Tau%.0f",jetPt1,jetPt2,i),dirNoClean);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_tau_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_tau1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanTau1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0f_cleanTau1Pt%.0f",jetPt1,jetPt2,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,               _1,"l1t_tau",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                    _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,            _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,0,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tTau  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+          
+          pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fmjj%.0f_Tau%.0f",jetPt1,jetPt2,jetMjj,i),dirNoClean);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_tau_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_tau1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanTau1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fmjj%.0f_cleanTau1Pt%.0f",jetPt1,jetPt2,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,               _1,"l1t_tau",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                    _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,            _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tTau  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
+          for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+            
+            pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fdeta%2.0fmjj%.0f_Tau%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i),dirNoClean);
+            pAlgo->setVerbose(m_verbose);
+            string name_tauCol       = Form("l1t_tau_pt%.0f",i);
+            string name_tau1Col      = Form("l1t_tau1_pt%.0f",i);
+            string name_jetCol_clean = Form("l1t_jet_cleanTau1Pt%.0f",i);
+            string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fdeta%2.0fmjj%.0f_cleanTau1Pt%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i);
+            pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,               _1,"l1t_tau",i,name_tauCol));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                    _1,name_tauCol,1));
+            pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,            _1,name_tauCol,name_tau1Col));
+            pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+            pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
+            pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+            pAlgo->results->tag_l1tTau  = name_tau1Col;
+            pAlgo->results->tag_l1tJetPair = name_dijetCol;
+            m_algos.push_back(pAlgo);
+          }
+        }
+      }
+    }
+    
+    
+    // Algo: Double Jet Avg Pt
+    for(double jetPt=20; jetPt<=60; jetPt+=10){
+      
+      pAlgo = new L1TAlgo(Form("DijetAvg%.0f_Tau%.0f",jetPt,i),dirOverlapClean_LeptonFirst);
+      pAlgo->setVerbose(m_verbose);
+      string name_tauCol       = Form("l1t_tau_pt%.0f",i);
+      string name_tau1Col      = Form("l1t_tau1_pt%.0f",i);
+      string name_jetCol_clean = Form("l1t_jet_cleanTau1Pt%.0f",i);
+      string name_dijetCol     = Form("l1t_dijetAvgPt%.0f_cleanTau1Pt%.0f",jetPt,i);
+      pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,            _1,"l1t_tau",i,name_tauCol));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                 _1,name_tauCol,1));
+      pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,         _1,name_tauCol,name_tau1Col));
+      pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,0,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+      pAlgo->results->tag_l1tTau  = name_tau1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
+      m_algos.push_back(pAlgo);
+      
+      for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+        
+        pAlgo = new L1TAlgo(Form("DijetAvg%.0fmjj%.0f_Tau%.0f",jetPt,jetMjj,i),dirOverlapClean_LeptonFirst);
+        pAlgo->setVerbose(m_verbose);
+        string name_tauCol       = Form("l1t_tau_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_tau1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanTau1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetAvgPt%.0fmjj%.0f_cleanTau1Pt%.0f",jetPt,jetMjj,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,            _1,"l1t_tau",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                 _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,         _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tTau  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
+        m_algos.push_back(pAlgo);
+        
+        for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+          
+          pAlgo = new L1TAlgo(Form("DijetAvg%.0fdeta%2.0fmjj%.0f_Tau%.0f",jetPt,jetDEta*10,jetMjj,i),dirOverlapClean_LeptonFirst);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_tau_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_tau1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanTau1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetAvgPt%.0fdeta%2.0fmjj%.0f_cleanTau1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,            _1,"l1t_tau",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                 _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,         _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,jetDEta,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tTau  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
         }
       }
     }
   }
   
+  //#############################################################
   // Algo: IsoTau
+  //#############################################################
   for(double i=10; i<=40; i+=5){
     pAlgo = new L1TAlgo(Form("IsoTau%.0f",i),dirNoClean);
     pAlgo->setVerbose(m_verbose);
     string name_tauCol = Form("l1t_isotau_pt%.0f",i);
     pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,_1,"l1t_isotau",i,name_tauCol));
     pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,     _1,name_tauCol,1));
-    pAlgo->plots.tag_l1tIsoTau = name_tauCol;
+    pAlgo->results->tag_l1tIsoTau = name_tauCol;
     m_algos.push_back(pAlgo);
     
     // Algo: Double Jet
@@ -493,8 +1142,8 @@ void L1TAlgoAnalysis::beginJob(){
       pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,0,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tIsoTau  = name_tau1Col;
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tIsoTau  = name_tau1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
@@ -505,7 +1154,7 @@ void L1TAlgoAnalysis::beginJob(){
         string name_tau1Col      = Form("l1t_isotau1_pt%.0f",i);
         string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
         string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanIsoTau1Pt%.0f",jetPt,i);
-        string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanIsoTau1Pt%.0f",jetPt,i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0fmjj%.0f_cleanIsoTau1Pt%.0f",jetPt,jetMjj,i);
         pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,              _1,"l1t_isotau",i,name_tauCol));
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                   _1,name_tauCol,1));
         pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,           _1,name_tauCol,name_tau1Col));
@@ -514,8 +1163,8 @@ void L1TAlgoAnalysis::beginJob(){
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,0,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tIsoTau  = name_tau1Col;
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tIsoTau  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
         
         for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
@@ -526,7 +1175,7 @@ void L1TAlgoAnalysis::beginJob(){
           string name_tau1Col      = Form("l1t_isotau1_pt%.0f",i);
           string name_jetCol       = Form("l1t_jet_pt%.0f",jetPt);
           string name_jetCol_clean = Form("l1t_jet_pt%.0f_cleanIsoTau1Pt%.0f",jetPt,i);
-          string name_dijetCol     = Form("l1t_dijet_pt%.0f_cleanIsoTau1Pt%.0f",jetPt,i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0fdEta%2.0fmjj%.0f_cleanIsoTau1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
           pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,              _1,"l1t_isotau",i,name_tauCol));
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                   _1,name_tauCol,1));
           pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,           _1,name_tauCol,name_tau1Col));
@@ -535,340 +1184,139 @@ void L1TAlgoAnalysis::beginJob(){
           pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol_clean, 2));
           pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetDEta,jetMjj,name_dijetCol));
           pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-          pAlgo->plots.tag_l1tIsoTau  = name_tau1Col;
-          pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+          pAlgo->results->tag_l1tIsoTau  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
           m_algos.push_back(pAlgo);
         }
       }
     }
-  }
-  
-
-  
-  // ########### New algo scheme ###########
-  //pAlgo = new L1TAlgo("Dijet30_Tau30",dirOverlapClean);
-  //pAlgo->setVerbose(m_verbose);
-  //pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,           _1,"l1t_tau",30,"l1t_tau_pt30"));
-  //pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                _1,"l1t_tau_pt30",1));
-  //pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,        _1,"l1t_tau_pt30","l1t_tau_pt30_leading1"));
-  //pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>,_1,"l1t_tau_pt30_leading1","l1t_jet",0.4,"l1t_jet_cleanTauPt30Leading1"));
-  //pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,           _1,"l1t_jet_cleanTauPt30Leading1",30,"l1t_jet_cleanTauPt30Leading1_pt30"));
-  //pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                _1,"l1t_jet_cleanTauPt30Leading1_pt30", 2));
-  //pAlgo->plots.tag_l1tTau = "l1t_tau_pt30";
-  //pAlgo->plots.tag_l1tJet = "l1t_jet_cleanTauPt30Leading1_pt30";
-  //m_algos.push_back(pAlgo);
-
-
-  /*
-  // #######################################
-  // ########### Double Objects ############
-  // #######################################
-  
-  // Algo: Double Jet
-  for(double jetPt=20; jetPt<=60; jetPt+=10){
     
-    pAlgo = new L1TAlgo(Form("Dijet%.0f",jetPt),dirNoClean);
-    pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt,_1,jetPt,jetPt));
-    m_algos.push_back(pAlgo);
-    
-    for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
-      
-      pAlgo = new L1TAlgo(Form("Dijet%.0fmjj%.0f",jetPt,jetMjj),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,jetPt,jetMjj,0));
-      m_algos.push_back(pAlgo);
-      
-      for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
-      
-        pAlgo = new L1TAlgo(Form("Dijet%.0fdeta%0.fmjj%.0f",jetPt,jetDEta,jetMjj),dirNoClean);
-        pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,jetPt,jetDEta,jetMjj,0,0));
-        m_algos.push_back(pAlgo);
-      }
-    }
-  }
-
-  // Algo: EG + Muon
-  for(double eg=10; eg<=30; eg+=5){
-    for(double mu=10; mu<=30; mu+=5){
-      pAlgo = new L1TAlgo(Form("EG%.0f_Mu%.0f",eg,mu),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,_1,eg));
-      pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,   _1,mu));
-      m_algos.push_back(pAlgo);
-    }
-  }
-  
-  // Algo: EG + Tau
-  for(double eg=10; eg<=30; eg+=5){
-    for(double ta=10; ta<=30; ta+=5){
-      pAlgo = new L1TAlgo(Form("EG%.0f_Tau%.0f",eg,ta),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,_1,eg));
-      pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt,    _1,ta));
-      m_algos.push_back(pAlgo);
-    }
-  }
-  
-  // Algo: EG + IsoTau
-  for(double eg=10; eg<=30; eg+=5){
-    for(double ta=10; ta<=30; ta+=5){
-      pAlgo = new L1TAlgo(Form("EG%.0f_IsoTau%.0f",eg,ta),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,_1,eg));
-      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt, _1,ta));
-      m_algos.push_back(pAlgo);
-    }
-  }
-  
-  // Algo: Muon + Tau
-  for(double mu=10; mu<=30; mu+=5){
-    for(double ta=10; ta<=30; ta+=5){
-      pAlgo = new L1TAlgo(Form("Mu%.0f_Tau%.0f",mu,ta),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt ,_1,mu));
-      pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt,  _1,ta));
-      m_algos.push_back(pAlgo);
-    }
-  }
-  
-  // Algo: Muon + IsoTau
-  for(double mu=10; mu<=30; mu+=5){
-    for(double ta=10; ta<=30; ta+=5){
-      pAlgo = new L1TAlgo(Form("Mu%.0f_IsoTau%.0f",mu,ta),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,  _1,mu));
-      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,_1,ta));
-      m_algos.push_back(pAlgo);
-    }
-  }
-  
-  // Algo: Double Tau
-  for(double ta=10; ta<=50; ta+=5){
-    pAlgo = new L1TAlgo(Form("DiTau%.0f",ta),dirNoClean);
-    pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(trgfw::testL1TTau2Pt,_1,ta,ta));
-    m_algos.push_back(pAlgo);
-  }
-  
-  // Algo: Double IsoTau
-  for(double ta=10; ta<=50; ta+=5){
-    pAlgo = new L1TAlgo(Form("DiIsoTau%.0f",ta),dirNoClean);
-    pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(trgfw::testL1TTau2Pt,_1,ta,ta));
-    m_algos.push_back(pAlgo);
-  }
-  
-  // #######################################
-  // ###### Dijet + Single Objects #########
-  // #######################################
-
-  // Algo: Dijet + EG
-  pAlgo = new L1TAlgo("Dijet30_EG20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt   ,_1,30.,30.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt,_1,20.));
-  m_algos.push_back(pAlgo);
-  
-  pAlgo = new L1TAlgo("Dijet30mjj300_EG20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,300.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,_1,20.));
-  m_algos.push_back(pAlgo);
-  
-  pAlgo = new L1TAlgo("Dijet30deta3p0mjj300_EG20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt ,     _1,20.));
-  m_algos.push_back(pAlgo);
-  
-  // Algo: Dijet + Muon
-  pAlgo = new L1TAlgo("Dijet30_Mu20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt ,_1,30.,30.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,_1,20.));
-  m_algos.push_back(pAlgo);
-  
-  pAlgo = new L1TAlgo("Dijet30mjj300_Mu20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,300.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,   _1,20.));
-  m_algos.push_back(pAlgo);
-  
-  pAlgo = new L1TAlgo("Dijet30deta3p0mjj300_Mu20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt ,       _1,20.));
-  m_algos.push_back(pAlgo);
-  
-  // Algo: Dijet + Tau
-  pAlgo = new L1TAlgo("Dijet30_Tau20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt ,_1,30.,30.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt, _1,20.));
-  m_algos.push_back(pAlgo);
-  
-  pAlgo = new L1TAlgo("Dijet30mjj300_Tau20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,300.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt,    _1,20.));
-  m_algos.push_back(pAlgo);
-  
-  pAlgo = new L1TAlgo("Dijet30deta3p0mjj300_Tau20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt ,        _1,20.));
-  m_algos.push_back(pAlgo);
-  
-  // Algo: Dijet + IsoTau
-  pAlgo = new L1TAlgo("Dijet30_IsoTau20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt,   _1,30.,30.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,_1,20.));
-  m_algos.push_back(pAlgo);
-  
-  pAlgo = new L1TAlgo("Dijet30mjj300_IsoTau20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,300.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt, _1,20.));
-  m_algos.push_back(pAlgo);
-  
-  pAlgo = new L1TAlgo("Dijet30deta3p0mjj300_IsoTau20",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,300.));
-  pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,      _1,20.));
-  m_algos.push_back(pAlgo);
-  
-  // #######################################
-  // ###### Dijet + Double Objects #########
-  // #######################################
-  
-  // Dijet Dijet + Electron + Muon 
-  for(double elePt=10; elePt<=20; elePt+=10){
-    for(double muoPt=10; muoPt<=20; muoPt+=10){
-    for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
-      pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_EG%.0f_Mu%.0f",jetMjj,elePt,muoPt),dirNoClean);
-        pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,jetMjj));
-        pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt,      _1,elePt));
-        pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,        _1,muoPt));
-        m_algos.push_back(pAlgo);
-      }
-    }
-  }
-  
-  
-  // Algo: Dijet + Electron + Tau 
-  for(double elePt=10; elePt<=20; elePt+=10){
-    for(double tauPt=10; tauPt<=20; tauPt+=10){
-      for(double mjj=200; mjj<=400; mjj+=100){
+    // Algo: Double Jet asymmetric pT
+    for(double jetPt1=10; jetPt1<=100; jetPt1+=10){
+      for(double jetPt2=10; jetPt2<=jetPt1; jetPt2+=10){
         
-        pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_EG%.0f_Tau%.0f",mjj,elePt,tauPt),dirNoClean);
+        pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0f_IsoTau%.0f",jetPt1,jetPt2,i),dirNoClean);
         pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-        pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt,      _1,elePt));
-        pAlgo->addCondition(std::bind(trgfw::testL1TTau1Pt,         _1,tauPt));
+        string name_tauCol       = Form("l1t_isotau_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_isotau1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanIsoTau1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0f_cleanIsoTau1Pt%.0f",jetPt1,jetPt2,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,               _1,"l1t_isotau",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                    _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,            _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,0,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tIsoTau  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
-      }
-    }
-  }
-  
-  // Algo: Dijet + Electron + IsoTau 
-  for(double elePt=10; elePt<=20; elePt+=10){
-    for(double tauPt=10; tauPt<=20; tauPt+=10){
-      for(double mjj=200; mjj<=400; mjj+=100){
         
-        pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_EG%.0f_IsoTau%.0f",mjj,elePt,tauPt),dirNoClean);
-        pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-        pAlgo->addCondition(std::bind(trgfw::testL1TEGamma1Pt,      _1,elePt));
-        pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,      _1,tauPt));
-        m_algos.push_back(pAlgo);
+        for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
+          
+          pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fmjj%.0f_IsoTau%.0f",jetPt1,jetPt2,jetMjj,i),dirNoClean);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_isotau_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_isotau1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanIsoTau1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fmjj%.0f_cleanIsoTau1Pt%.0f",jetPt1,jetPt2,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,               _1,"l1t_isotau",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                    _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,            _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tIsoTau  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
+          for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+            
+            pAlgo = new L1TAlgo(Form("Dijet%.0f-%.0fdeta%2.0fmjj%.0f_IsoTau%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i),dirNoClean);
+            pAlgo->setVerbose(m_verbose);
+            string name_tauCol       = Form("l1t_isotau_pt%.0f",i);
+            string name_tau1Col      = Form("l1t_isotau1_pt%.0f",i);
+            string name_jetCol_clean = Form("l1t_jet_cleanIsoTau1Pt%.0f",i);
+            string name_dijetCol     = Form("l1t_dijetPt%.0f-%.0fdeta%2.0fmjj%.0f_cleanIsoTau1Pt%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj,i);
+            pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,               _1,"l1t_isotau",i,name_tauCol));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                    _1,name_tauCol,1));
+            pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,            _1,name_tauCol,name_tau1Col));
+            pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>,    _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+            pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                    _1,name_jetCol_clean, 2));
+            pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
+            pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
+            pAlgo->results->tag_l1tIsoTau  = name_tau1Col;
+            pAlgo->results->tag_l1tJetPair = name_dijetCol;
+            m_algos.push_back(pAlgo);
+          }
+        }
       }
     }
-  }
-  
-  // Algo: Dijet + Muon + Tau
-  for(double muoPt=10; muoPt<=20; muoPt+=10){
-    for(double tauPt=10; tauPt<=20; tauPt+=10){
-      for(double mjj=200; mjj<=400; mjj+=100){
+    
+    
+    // Algo: Double Jet Avg Pt
+    for(double jetPt=20; jetPt<=60; jetPt+=10){
+      
+      pAlgo = new L1TAlgo(Form("DijetAvg%.0f_IsoTau%.0f",jetPt,i),dirOverlapClean_LeptonFirst);
+      pAlgo->setVerbose(m_verbose);
+      string name_tauCol       = Form("l1t_isotau_pt%.0f",i);
+      string name_tau1Col      = Form("l1t_isotau1_pt%.0f",i);
+      string name_jetCol_clean = Form("l1t_jet_cleanIsoTau1Pt%.0f",i);
+      string name_dijetCol     = Form("l1t_dijetAvgPt%.0f_cleanIsoTau1Pt%.0f",jetPt,i);
+      pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,            _1,"l1t_isotau",i,name_tauCol));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                 _1,name_tauCol,1));
+      pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,         _1,name_tauCol,name_tau1Col));
+      pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+      pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+      pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,0,name_dijetCol));
+      pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+      pAlgo->results->tag_l1tIsoTau  = name_tau1Col;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
+      m_algos.push_back(pAlgo);
+      
+      for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
         
-        pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_Mu%.0f_Tau%.0f",mjj,muoPt,tauPt),dirNoClean);
+        pAlgo = new L1TAlgo(Form("DijetAvg%.0fmjj%.0f_IsoTau%.0f",jetPt,jetMjj,i),dirOverlapClean_LeptonFirst);
         pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-        pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,        _1,muoPt));
-        pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,      _1,tauPt));
+        string name_tauCol       = Form("l1t_isotau_pt%.0f",i);
+        string name_tau1Col      = Form("l1t_isotau1_pt%.0f",i);
+        string name_jetCol_clean = Form("l1t_jet_cleanIsoTau1Pt%.0f",i);
+        string name_dijetCol     = Form("l1t_dijetAvgPt%.0fmjj%.0f_cleanIsoTau1Pt%.0f",jetPt,jetMjj,i);
+        pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,            _1,"l1t_isotau",i,name_tauCol));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                 _1,name_tauCol,1));
+        pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,         _1,name_tauCol,name_tau1Col));
+        pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+        pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+        pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,0,jetMjj,name_dijetCol));
+        pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+        pAlgo->results->tag_l1tIsoTau  = name_tau1Col;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
+        
+        for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
+          
+          pAlgo = new L1TAlgo(Form("DijetAvg%.0fdeta%2.0fmjj%.0f_IsoTau%.0f",jetPt,jetDEta*10,jetMjj,i),dirOverlapClean_LeptonFirst);
+          pAlgo->setVerbose(m_verbose);
+          string name_tauCol       = Form("l1t_isotau_pt%.0f",i);
+          string name_tau1Col      = Form("l1t_isotau1_pt%.0f",i);
+          string name_jetCol_clean = Form("l1t_jet_cleanIsoTau1Pt%.0f",i);
+          string name_dijetCol     = Form("l1t_dijetAvgPt%.0fdeta%2.0fmjj%.0f_cleanIsoTau1Pt%.0f",jetPt,jetDEta*10,jetMjj,i);
+          pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,            _1,"l1t_isotau",i,name_tauCol));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,                 _1,name_tauCol,1));
+          pAlgo->addCondition(std::bind(trgfw::filterByLeading1<ic::L1TTau>,         _1,name_tauCol,name_tau1Col));
+          pAlgo->addCondition(std::bind(trgfw::filterByMinDR<ic::L1TTau,ic::L1TJet>, _1,name_tau1Col,"l1t_jet",0.4,name_jetCol_clean));
+          pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                 _1,name_jetCol_clean, 2));
+          pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,name_jetCol_clean,false,jetPt,jetDEta,jetMjj,name_dijetCol));
+          pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+          pAlgo->results->tag_l1tIsoTau  = name_tau1Col;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
+          m_algos.push_back(pAlgo);
+          
+        }
       }
     }
   }
-  
-  // Algo: Dijet - Muon + IsoTau
-  for(double muoPt=10; muoPt<=20; muoPt+=10){
-    for(double tauPt=10; tauPt<=20; tauPt+=10){
-      for(double mjj=200; mjj<=400; mjj+=100){
-        pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_Mu%.0f_IsoTau%.0f",mjj,muoPt,tauPt),dirNoClean);
-        pAlgo->setVerbose(m_verbose);
-        pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-        pAlgo->addCondition(std::bind(trgfw::testL1TMuon1Pt,        _1,muoPt));
-        pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau1Pt,      _1,tauPt));
-        m_algos.push_back(pAlgo);
-      }
-    }
-  }
-  
-  // Algo: Dijet - DiTau
-  for(double lep=10; lep<=20; lep+=10){
-    
-    pAlgo = new L1TAlgo(Form("Dijet30_DiTau%.0f",lep),dirNoClean);
-    pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt,_1,30.,30.));
-    pAlgo->addCondition(std::bind(trgfw::testL1TTau2Pt,_1,lep,lep));
-    m_algos.push_back(pAlgo);
-    
-    for(double mjj=200; mjj<=400; mjj+=100){
-      
-      pAlgo = new L1TAlgo(Form("Dijet30mjj%.0f_DiTau%.0f",mjj,lep),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,mjj));
-      pAlgo->addCondition(std::bind(trgfw::testL1TTau2Pt,    _1,lep,lep));
-      m_algos.push_back(pAlgo);
-      
-      pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_DiTau%.0f",mjj,lep),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0,mjj));
-      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau2Pt,      _1,lep,lep));
-      m_algos.push_back(pAlgo);
-    }
-  }
-
-  // Algo: Dijet - DiIsoTau
-  for(double lep=10; lep<=20; lep+=10){
-
-    pAlgo = new L1TAlgo(Form("Dijet30_DiIsoTau%.0f",lep),dirNoClean);
-    pAlgo->setVerbose(m_verbose);
-    pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt,   _1,30.,30.));
-    pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau2Pt,_1,lep,lep));
-    m_algos.push_back(pAlgo);
-
-    for(double mjj=200; mjj<=400; mjj+=100){
-
-      pAlgo = new L1TAlgo(Form("Dijet30mjj%.0f_DiIsoTau%.0f",mjj,lep),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_Mjj,_1,30.,mjj));
-      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau2Pt,      _1,lep,lep));
-      m_algos.push_back(pAlgo);
-      
-      pAlgo = new L1TAlgo(Form("Dijet30deta3p0mjj%.0f_DiIsoTau%.0f",mjj,lep),dirNoClean);
-      pAlgo->setVerbose(m_verbose);
-      pAlgo->addCondition(std::bind(trgfw::testL1TJet2Pt_DEta_Mjj,_1,30.,3.0));
-      pAlgo->addCondition(std::bind(trgfw::testL1TIsoTau2Pt,      _1,lep,lep));
-      m_algos.push_back(pAlgo);
-    }
-  }
-  
-  */
   
   // Algo: Double Jet
   for(double jetPt=20; jetPt<=60; jetPt+=10){
@@ -881,7 +1329,7 @@ void L1TAlgoAnalysis::beginJob(){
     pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
     pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,false,0,0,name_dijetCol));
     pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-    pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+    pAlgo->results->tag_l1tJetPair = name_dijetCol;
     m_algos.push_back(pAlgo);
     
     for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
@@ -894,7 +1342,7 @@ void L1TAlgoAnalysis::beginJob(){
       pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,false,0,jetMjj,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
@@ -907,7 +1355,7 @@ void L1TAlgoAnalysis::beginJob(){
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,false,jetDEta,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
       }
     }
@@ -924,7 +1372,7 @@ void L1TAlgoAnalysis::beginJob(){
     pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
     pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,true,0,0,name_dijetCol));
     pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-    pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+    pAlgo->results->tag_l1tJetPair = name_dijetCol;
     m_algos.push_back(pAlgo);
     
     for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
@@ -937,7 +1385,7 @@ void L1TAlgoAnalysis::beginJob(){
       pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,true,0,jetMjj,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
@@ -950,7 +1398,7 @@ void L1TAlgoAnalysis::beginJob(){
         pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,                   _1,name_jetCol, 2));
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeSymmetric<ic::L1TJet>,_1,name_jetCol,true,jetDEta,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                          _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
       }
     }
@@ -965,7 +1413,7 @@ void L1TAlgoAnalysis::beginJob(){
       string name_dijetCol = Form("l1t_dijet_pt%.0f-%.0f",jetPt1,jetPt2);
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,"l1t_jet",false,jetPt1,jetPt2,0,0,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
@@ -975,7 +1423,7 @@ void L1TAlgoAnalysis::beginJob(){
         string name_dijetCol = Form("l1t_dijet_pt%.0f-%.0f_mjj%.0f",jetPt1,jetPt2,jetMjj);
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,"l1t_jet",false,jetPt1,jetPt2,0,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
         
         for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
@@ -985,7 +1433,7 @@ void L1TAlgoAnalysis::beginJob(){
           string name_dijetCol = Form("l1t_dijet_pt%.0f-%.0f_deta%3.1f_mjj%.0f",jetPt1,jetPt2,jetDEta*10,jetMjj);
           pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAsymmetric<ic::L1TJet>,_1,"l1t_jet",false,jetPt1,jetPt2,jetDEta,jetMjj,name_dijetCol));
           pAlgo->addCondition(std::bind(trgfw::pairTest_size,                           _1,name_dijetCol,1));
-          pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+          pAlgo->results->tag_l1tJetPair = name_dijetCol;
           m_algos.push_back(pAlgo);
         }
       }
@@ -1000,7 +1448,7 @@ void L1TAlgoAnalysis::beginJob(){
     string name_dijetCol = Form("l1t_dijet_avgpt%.0f",jetPt);
     pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,"l1t_jet",false,jetPt,0,0,name_dijetCol));
     pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
-    pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+    pAlgo->results->tag_l1tJetPair = name_dijetCol;
     m_algos.push_back(pAlgo);
     
     for(double jetMjj=200; jetMjj<=400; jetMjj+=100){
@@ -1010,7 +1458,7 @@ void L1TAlgoAnalysis::beginJob(){
       string name_dijetCol = Form("l1t_dijet_avgpt%.0f_mjj%.0f",jetPt,jetMjj);
       pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,"l1t_jet",false,jetPt,0,jetMjj,name_dijetCol));
       pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
-      pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+      pAlgo->results->tag_l1tJetPair = name_dijetCol;
       m_algos.push_back(pAlgo);
       
       for(double jetDEta=2.5; jetDEta<=3.5; jetDEta+=0.5){
@@ -1020,32 +1468,11 @@ void L1TAlgoAnalysis::beginJob(){
         string name_dijetCol = Form("l1t_dijet_avgpt%.0f_deta%3.1f_mjj%.0f",jetPt,jetDEta*10,jetMjj);
         pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,"l1t_jet",false,jetPt,jetDEta,jetMjj,name_dijetCol));
         pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
-        pAlgo->plots.tag_l1tJetPair = name_dijetCol;
+        pAlgo->results->tag_l1tJetPair = name_dijetCol;
         m_algos.push_back(pAlgo);
       }
     }
   }
-  
-  pAlgo = new L1TAlgo("DijetAvg30deta25",dirNoClean);
-  pAlgo->setVerbose(m_verbose);
-  string name_dijetCol = "l1t_dijet_avgpt30_deta25";
-  pAlgo->addCondition(std::bind(trgfw::pairFilter_vbfLikeAverage<ic::L1TJet>,_1,"l1t_jet",false,30,2.5,0,name_dijetCol));
-  pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
-  pAlgo->plots.tag_l1tJetPair = name_dijetCol;
-  m_algos.push_back(pAlgo);
-  
-  
-//   pAlgo = new L1TAlgo("Dijet30_Tau30",dirNoClean);
-//   pAlgo->setVerbose(m_verbose);
-//   pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TTau>,_1,"l1t_tau",30,"l1t_tau_pt30"));
-//   pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TTau>,     _1,"l1t_tau_pt30",1));
-//   pAlgo->addCondition(std::bind(trgfw::filterByMinPt<ic::L1TJet>,_1,"l1t_jet",30,"l1t_jet_pt30"));
-//   pAlgo->addCondition(std::bind(trgfw::testSize<ic::L1TJet>,     _1,"l1t_jet_pt30", 2));
-//   pAlgo->plots.tag_l1tTau = "l1t_tau_pt30";
-//   pAlgo->plots.tag_l1tJet = "l1t_jet_pt30";
-//   m_algos.push_back(pAlgo);
-  
-  
   
   // ########### MET based ###########
   for(double i=10; i<=250; i+=10){
@@ -1073,9 +1500,9 @@ void L1TAlgoAnalysis::beginJob(){
     m_AlgoPass->GetXaxis()->SetBinLabel(i+1,m_algos[i]->getName().c_str());
   }
   
+  if(m_verbose){cout << "[L1TAlgoAnalysis::beginJob] Finished creating algos" << endl;}
+  
 }
-
-
 
 void L1TAlgoAnalysis::resetEvent(){
   
@@ -1310,35 +1737,71 @@ void L1TAlgoAnalysis::run(trgfw::Event &iEvent){
   
 }
 
-// Stuff
-// TFile *fOut         = new TFile(options.outputFilename.c_str(),"RECREATE");
-// TH1D  *m_EventCount = new TH1D("EventCount","EventCount",1, 0.5,1.5); m_EventCount->SetDirectory(fOut);
-// TH1D  *m_HiggsDecay = new TH1D("HiggsDecay","HiggsDecay",6, 0.5,6.5); m_HiggsDecay->SetDirectory(fOut);
-// m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::EleEle,"EleEle");
-// m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::EleMuo,"EleMuo");
-// m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::EleHad,"EleHad");
-// m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::MuoMuo,"MuoMuo");
-// m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::MuoHad,"MuoHad");
-// m_HiggsDecay->GetXaxis()->SetBinLabel(VBFHiggsToTauTau::HiggsDecay::HadHad,"HadHad");
-
-
-
-// string strHiggsDecay="";
-// if     (genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::EleEle){strHiggsDecay="EleEle";}
-// else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::EleMuo){strHiggsDecay="EleMuo";}
-// else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::EleHad){strHiggsDecay="EleHad";}
-// else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::MuoMuo){strHiggsDecay="MuoMuo";}
-// else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::MuoHad){strHiggsDecay="MuoHad";}
-// else if(genInfo->higgs_decayType==VBFHiggsToTauTau::HiggsDecay::HadHad){strHiggsDecay="HadHad";}
-// 
-// m_HiggsDecay->Fill(genInfo->higgs_decayType);
-// 
-// if(options.verbose){
-//   printf("Higgs decay type: %s (%u)\n",strHiggsDecay.c_str(),genInfo->higgs_decayType);
-//   printf("Tau decay 1     : %u\n", genInfo->tau1_decayType);
-//   printf("Tau decay 1 size: %lu\n",genInfo->tau1_stableDecayProducts.size());
-//   printf("Tau decay 2     : %u\n", genInfo->tau2_decayType);
-//   printf("Tau decay 2 size: %lu\n",genInfo->tau2_stableDecayProducts.size());
-// }
-
-//   fOut->Write();
+void L1TAlgoAnalysis::endJob(){
+  
+  if(m_verbose){printf("[L1TAlgoAnalysis::endJob] Method called\n");}
+  
+  TDirectory* dirScan = m_dir->mkdir("Scan");
+  
+  TTree *myTree = new TTree("L1TAlgoResults","L1TAlgoResults");
+  myTree->SetDirectory(dirScan);
+  
+  myTree->Branch("L1TEGamma1_Et"      ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TEGamma1_Eta"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TEGamma1_Phi"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TIsoEGamma1_Et"   ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TIsoEGamma1_Eta"  ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TIsoEGamma1_Phi"  ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TMuon1_Et"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TMuon1_Eta"       ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TMuon1_Phi"       ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TIsoMuon1_Et"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TIsoMuon1_Eta"    ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TIsoMuon1_Phi"    ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TTau_N"           ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TTau1_Et"         ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TTau1_Eta"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TTau1_Phi"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TTau2_Et"         ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TTau2_Eta"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TTau2_Phi"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TIsoTau_N"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TIsoTau1_Et"      ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TIsoTau1_Eta"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TIsoTau1_Phi"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TIsoTau2_Et"      ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TIsoTau2_Eta"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TIsoTau2_Phi"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TJet_N"           ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet_AvgPt"       ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet_VecPt"       ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet1_Et"         ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet1_Eta"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet1_Phi"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TJet2_Et"         ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet2_Eta"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet2_Phi"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TJet_maxMjj"      ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet_maxDEta"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TTau1_minDRL1TJet","trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TMHT_Et"          ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TMET_Et"          ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  
+  for(unsigned i=0; i<m_algos.size(); i++){
+    m_algos[i]->results->updateAdress(myTree);
+    myTree->Fill();
+  }
+}

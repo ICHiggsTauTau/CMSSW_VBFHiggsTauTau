@@ -3,11 +3,11 @@
 #include "DataFormats/Math/interface/deltaR.h"
 
 // L1T Objects
-#include "UserCode/ICHiggsTauTau/interface/L1TObject.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TEGamma.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TMuon.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TTau.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TJet.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TObject.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TEGamma.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TMuon.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TTau.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TJet.hh"
 
 #include "TMath.h"
 
@@ -67,7 +67,7 @@ L1TAlgoPlots::L1TAlgoPlots(string name, TDirectory* baseBirectory){
   
   m_L1TJet_N     = new TH1D("L1TJet_N",    "L1T Jet N",       21,        -0.5,       20.5); m_L1TJet_N    ->SetDirectory(m_plotsDirectory);
   m_L1TJet_AvgPt = new TH1D("L1TJet_Avg",  "L1T Dijet AvgPt",125,           0,        250); m_L1TJet_AvgPt->SetDirectory(m_plotsDirectory);
-  m_L1TJet_VecPt = new TH1D("L1TJet_VecPt","L1T Dijet VecPt",125,           0,        250); m_L1TJet_AvgPt->SetDirectory(m_plotsDirectory);
+  m_L1TJet_VecPt = new TH1D("L1TJet_VecPt","L1T Dijet VecPt",125,           0,        250); m_L1TJet_VecPt->SetDirectory(m_plotsDirectory);
   m_L1TJet1_Et   = new TH1D("L1TJet1_Pt",  "L1T Jet1 Pt",    125,           0,        250); m_L1TJet1_Et  ->SetDirectory(m_plotsDirectory);
   m_L1TJet1_Eta  = new TH1D("L1TJet1_Eta", "L1T Jet1 Eta",   100,          -5,          5); m_L1TJet1_Eta ->SetDirectory(m_plotsDirectory);
   m_L1TJet1_Phi  = new TH1D("L1TJet1_Phi", "L1T Jet1 Phi",   100,-TMath::Pi(),TMath::Pi()); m_L1TJet1_Phi ->SetDirectory(m_plotsDirectory);

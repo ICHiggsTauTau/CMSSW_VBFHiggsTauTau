@@ -3,6 +3,7 @@
 
 // VBF includes
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/WorkerHelpers.h"
+#include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/AlgoWorkingPoint.h"
 
 // ROOT includes
 #include "TFile.h"
@@ -59,11 +60,11 @@ namespace trgfw{
     }
     ~WorkerOptimiser(){}
     
-    void run(){
-      
+    void runInputTypeHistogram(){
+
       if(m_verbose){
         std::lock_guard<std::mutex> lock(*m_command_line_mutex);
-        printf("[WorkerOptimiser #%u] Started running...\n",m_nWorker);
+        printf("[WorkerOptimiser #%u] Started running with input type histograms\n",m_nWorker);
       }
       
       while(!taskDone){
@@ -81,20 +82,20 @@ namespace trgfw{
         // TIMING ANALYSIS: Histogram retrieval starts
         auto time_histogram_retrieve_start = std::chrono::high_resolution_clock::now();
         
-        m_inputHistograms_mutex->lock();
-        if(!m_inputHistograms->empty()){
+        m_input_mutex->lock();
+        if(!m_input_histograms->empty()){
           
-          iHists = m_inputHistograms->back();
-          m_inputHistograms->pop_back();
-          (*m_inputHistograms_processed)++;
-          m_inputHistograms_mutex->unlock();
+          iHists = m_input_histograms->back();
+          m_input_histograms->pop_back();
+          (*m_input_processed)++;
+          m_input_mutex->unlock();
         }else{
           
           if(m_verbose){
             std::lock_guard<std::mutex> lock(*m_command_line_mutex);
             printf("[WorkerOptimiser #%u] Input queue is empty \n",m_nWorker);
           }
-          m_inputHistograms_mutex->unlock();
+          m_input_mutex->unlock();
           
           if(m_verbose){
             std::lock_guard<std::mutex> lock(*m_command_line_mutex);
@@ -317,28 +318,32 @@ namespace trgfw{
         m_time_histogram_scaling          += std::chrono::duration_cast<std::chrono::microseconds>(time_histogram_scaling_end         -time_histogram_scaling_start);
         m_time_workingPoint_determination += std::chrono::duration_cast<std::chrono::microseconds>(time_workingPoint_determination_end-time_workingPoint_determination_start);
         m_time_histogram_delete           += std::chrono::duration_cast<std::chrono::microseconds>(time_histogram_delete_end          -time_histogram_delete_start);
-        
       }
     }
     
-    void start(){
-      
-      if(m_verbose){
-        std::lock_guard<std::mutex> lock(*m_command_line_mutex);
-        printf("[WorkerOptimiser #%u] Called start()\n",m_nWorker);
-      }
-      
-      m_thread = std::thread(&WorkerOptimiser::run,this);
-    }
+    void runInputTypeTree();
+    
+    void start();
     
     void setVerbose(bool value){
       m_verbose=value;
     }
     
-    void setInputHistograms(std::mutex* mutex,std::list<trgfw::InputHistograms*>* obj,unsigned *nProcessed){
-      m_inputHistograms_mutex     = mutex;
-      m_inputHistograms_processed = nProcessed;
-      m_inputHistograms           = obj;
+    void setInput(std::mutex* mutex,std::list<trgfw::InputHistograms*> *obj_h,list<trgfw::InputScan*> *obj_s,unsigned *nProcessed){
+      m_input_mutex      = mutex;
+      m_input_processed  = nProcessed;
+      m_input_histograms = obj_h;
+      m_input_scans      = obj_s;
+    }
+    
+    enum InputType{
+      None=0,
+      Histogram=1,
+      Tree=2
+    };
+    
+    void setInputType(trgfw::WorkerOptimiser::InputType type){
+      m_input_type=type;
     }
     
     void setOutputWorkingPoints(std::mutex* mutex,std::vector<trgfw::AlgoWorkingPoint>* obj){
@@ -398,7 +403,7 @@ namespace trgfw{
     void join(){
       
       double faction_time_histogram_retrieve         = 100.*m_time_histogram_retrieve.count()        /m_time_total.count();
-      double faction_time_histogram_clone            = 100.*m_time_histogram_clone.count()           /m_time_total.count();
+//       double faction_time_histogram_clone            = 100.*m_time_histogram_clone.count()           /m_time_total.count();
       double faction_time_histogram_integration      = 100.*m_time_histogram_integration.count()     /m_time_total.count();
       double faction_time_histogram_scaling          = 100.*m_time_histogram_scaling.count()         /m_time_total.count();
       double faction_time_workingPoint_determination = 100.*m_time_workingPoint_determination.count()/m_time_total.count();
@@ -406,7 +411,7 @@ namespace trgfw{
       
       double ev_time_total                      = m_time_total.count()                     /m_numberEventsProcessed;
       double ev_time_histogram_retrieve         = m_time_histogram_retrieve.count()        /m_numberEventsProcessed;
-      double ev_time_histogram_clone            = m_time_histogram_clone.count()           /m_numberEventsProcessed;
+//       double ev_time_histogram_clone            = m_time_histogram_clone.count()           /m_numberEventsProcessed;
       double ev_time_histogram_integration      = m_time_histogram_integration.count()     /m_numberEventsProcessed;
       double ev_time_histogram_scaling          = m_time_histogram_scaling.count()         /m_numberEventsProcessed;
       double ev_time_workingPoint_determination = m_time_workingPoint_determination.count()/m_numberEventsProcessed;
@@ -416,7 +421,7 @@ namespace trgfw{
       printf("[WorkerOptimiser #%u] ===== TIMMING SUMMARY (per histogram processed) =====\n",m_nWorker);
       printf("[WorkerOptimiser #%u] Total                       : %8.0f ms \n",         m_nWorker,ev_time_total);
       printf("[WorkerOptimiser #%u] Histogram retrieve          : %8.0f ms (%7.3f%%)\n",m_nWorker,ev_time_histogram_retrieve        ,faction_time_histogram_retrieve        );
-      printf("[WorkerOptimiser #%u] Histogram clone             : %8.0f ms (%7.3f%%)\n",m_nWorker,ev_time_histogram_clone           ,faction_time_histogram_clone           );
+      //printf("[WorkerOptimiser #%u] Histogram clone             : %8.0f ms (%7.3f%%)\n",m_nWorker,ev_time_histogram_clone           ,faction_time_histogram_clone           );
       printf("[WorkerOptimiser #%u] Histogram integration       : %8.0f ms (%7.3f%%)\n",m_nWorker,ev_time_histogram_integration     ,faction_time_histogram_integration     );
       printf("[WorkerOptimiser #%u] Histogram scaling           : %8.0f ms (%7.3f%%)\n",m_nWorker,ev_time_histogram_scaling         ,faction_time_histogram_scaling         );
       printf("[WorkerOptimiser #%u] Working Point determination : %8.0f ms (%7.3f%%)\n",m_nWorker,ev_time_workingPoint_determination,faction_time_workingPoint_determination);
@@ -439,9 +444,11 @@ namespace trgfw{
     std::mutex *m_command_line_mutex;
     std::mutex *m_root_mutex;
     
-    std::mutex                         *m_inputHistograms_mutex;
-    unsigned                           *m_inputHistograms_processed;
-    std::list<trgfw::InputHistograms*> *m_inputHistograms;
+    std::mutex                         *m_input_mutex;
+    unsigned                           *m_input_processed;
+    trgfw::WorkerOptimiser::InputType   m_input_type;
+    std::list<trgfw::InputHistograms*> *m_input_histograms;
+    std::list<trgfw::InputScan*>       *m_input_scans;
     
     std::mutex                      *m_workingPoints_mutex;
     vector<trgfw::AlgoWorkingPoint> *m_workingPoints;

@@ -2,14 +2,15 @@
 #define VBFHiggsToTauTau_L1Analysis_L1TAlgo
 
 // L1T Objects
-#include "UserCode/ICHiggsTauTau/interface/L1TObject.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TEGamma.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TMuon.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TTau.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TJet.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TObject.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TEGamma.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TMuon.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TTau.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TJet.hh"
 
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/Event.h"
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/L1TAlgoPlots.h"
+#include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/L1TAlgoResults.h"
 
 #include "TDirectory.h"
 #include "TFile.h"
@@ -25,6 +26,7 @@ public:
     
   L1TAlgo();
   L1TAlgo(std::string name, TDirectory* baseDirector);
+  L1TAlgo(std::string path, std::string name);
   ~L1TAlgo();
   
   void init();
@@ -46,7 +48,8 @@ private:
   
 public:
   
-  L1TAlgoPlots plots;
+  //L1TAlgoPlots          plots;
+  trgfw::L1TAlgoResults *results;
   
  };
  

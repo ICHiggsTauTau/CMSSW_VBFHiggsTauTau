@@ -44,11 +44,17 @@ namespace trgfw{
       
       while(!taskDone){
         
-        // Getting data from base histograms
-        m_base_histograms_mutex->lock();
-        unsigned base_histograms_size_efficiency = m_base_histograms_efficiency->size();
-        unsigned base_histograms_size_rates      = m_base_histograms_rates->size();
-        m_base_histograms_mutex->unlock();
+        unsigned base_histograms_size_efficiency = 0;
+        unsigned base_histograms_size_rates      = 0;
+        
+        if(m_input_type==trgfw::WorkerCLOutput::InputType::Histogram){
+        
+          // Getting data from base histograms
+          m_base_histograms_mutex->lock();
+          base_histograms_size_efficiency = m_base_histograms_efficiency->size();
+          base_histograms_size_rates      = m_base_histograms_rates     ->size();
+          m_base_histograms_mutex->unlock();
+        }
         
         m_command_line_mutex->lock();
         // Printing 
@@ -57,7 +63,7 @@ namespace trgfw{
         printf("##### Input Histograms to be paired #####\n");
         printf("Intial  histograms efficiency: %5u\n",m_base_histograms_initial_size_efficiency);
         printf("Current histograms efficiency: %5u\n",base_histograms_size_efficiency);
-        printf("Inital  histograms rate      : %5u\n",m_base_histograms_initial_size_rate);        
+        printf("Initial histograms rate      : %5u\n",m_base_histograms_initial_size_rate);        
         printf("Current histograms rate      : %5u\n",base_histograms_size_rates);
         
         printf("\n");
@@ -71,19 +77,38 @@ namespace trgfw{
         }
         m_command_line_mutex->unlock();
         
-        m_inputHistograms_mutex->lock();
-        unsigned inputHistograms_total     = (*m_inputHistograms_total);
-        unsigned inputHistograms_processed = (*m_inputHistograms_processed);
-        unsigned inputHistograms_size      = m_inputHistograms->size();
-        m_inputHistograms_mutex->unlock();
+        if(m_input_type==trgfw::WorkerCLOutput::InputType::Histogram){
         
-        m_command_line_mutex->lock();
-        printf("\n");
-        printf("##### Global processing #####\n");
-        printf("Total histograms pairs found : %8u\n",inputHistograms_total);
-        printf("Histograms to be analysed    : %8u\n",inputHistograms_size);
-        printf("Histograms processed         : %8u\n",inputHistograms_processed);
-        m_command_line_mutex->unlock();
+          m_input_mutex->lock();
+          unsigned inputHistograms_total     = (*m_input_total);
+          unsigned inputHistograms_processed = (*m_input_processed);
+          unsigned inputHistograms_size      = m_input_histograms->size();
+          m_input_mutex->unlock();
+        
+          m_command_line_mutex->lock();
+          printf("\n");
+          printf("##### Global processing #####\n");
+          printf("Total histograms pairs found : %8u\n",inputHistograms_total);
+          printf("Histograms to be analysed    : %8u\n",inputHistograms_size);
+          printf("Histograms processed         : %8u\n",inputHistograms_processed);
+          m_command_line_mutex->unlock();
+
+        }if(m_input_type==trgfw::WorkerCLOutput::InputType::Tree){
+          
+          m_input_mutex->lock();
+          unsigned input_total     = (*m_input_total);
+          unsigned input_processed = (*m_input_processed);
+          unsigned input_scan_size           = m_input_scans->size();
+          m_input_mutex->unlock();
+          
+          m_command_line_mutex->lock();
+          printf("\n");
+          printf("##### Global processing #####\n");
+          printf("Total scans pairs found : %8u\n",input_total);
+          printf("Scans to be analysed    : %8u\n",input_processed);
+          printf("Scans processed         : %8u\n",input_scan_size);
+          m_command_line_mutex->unlock();
+        }
         
         // Getting data from working points
         m_workingPoints_mutex->lock();
@@ -102,11 +127,22 @@ namespace trgfw{
       }
     }
     
-    void setInputHistograms(std::mutex* mutex,std::list<trgfw::InputHistograms*>* obj,unsigned *nTotal,unsigned *nProcessed){
-      m_inputHistograms_mutex     = mutex;
-      m_inputHistograms_total     = nTotal;
-      m_inputHistograms_processed = nProcessed;
-      m_inputHistograms           = obj;
+    void setInput(std::mutex* mutex,std::list<trgfw::InputHistograms*> *obj_h,list<trgfw::InputScan*> *obj_s,unsigned *nTotal,unsigned *nProcessed){
+      m_input_mutex      = mutex;
+      m_input_total      = nTotal;
+      m_input_processed  = nProcessed;
+      m_input_histograms = obj_h;
+      m_input_scans      = obj_s;
+    }
+    
+    enum InputType{
+      None=0,
+      Histogram=1,
+      Tree=2
+    };
+    
+    void setInputType(trgfw::WorkerCLOutput::InputType type){
+      m_input_type=type;
     }
     
     void setPtrWorkerOptimisers(std::vector<trgfw::WorkerOptimiser*>* vec){
@@ -150,7 +186,7 @@ namespace trgfw{
     // Global mutex
     std::mutex *m_command_line_mutex;
 
-    // Base histograms (direct )
+    // Base histograms (cached at begining)
     unsigned m_base_histograms_initial_size_efficiency;
     unsigned m_base_histograms_initial_size_rate;
 
@@ -160,10 +196,12 @@ namespace trgfw{
     std::vector<TH1*> *m_base_histograms_rates;
     
     // Pointers to histograms related stuff
-    std::mutex                         *m_inputHistograms_mutex;
-    unsigned                           *m_inputHistograms_total;
-    unsigned                           *m_inputHistograms_processed;
-    std::list<trgfw::InputHistograms*> *m_inputHistograms;
+    std::mutex                         *m_input_mutex;
+    trgfw::WorkerCLOutput::InputType    m_input_type;
+    unsigned                           *m_input_total;
+    unsigned                           *m_input_processed;
+    std::list<trgfw::InputHistograms*> *m_input_histograms;
+    std::list<trgfw::InputScan*>       *m_input_scans;
     
     // Pointers to working points related stuff
     std::mutex                      *m_workingPoints_mutex;

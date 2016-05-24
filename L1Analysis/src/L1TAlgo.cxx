@@ -7,18 +7,27 @@
 
 using namespace std;
 
-L1TAlgo::L1TAlgo() : plots("",0) {
+L1TAlgo::L1TAlgo() :
+  m_verbose(false){
   init();
   if(m_verbose){printf("[L1TAlgo::L1TAlgo] Method called\n");}
 }
 
-L1TAlgo::L1TAlgo(string name, TDirectory* baseBirectory) : plots(name,baseBirectory){
+L1TAlgo::L1TAlgo(string name,TDirectory* baseBirectory){
+  
   init();
+  string basePath = baseBirectory->GetPath();
+  basePath = basePath.substr(basePath.find(':')+2,basePath.size()-1); // Removing file name for the path
+  results  = new trgfw::L1TAlgoResults(Form("%s/%s",basePath.c_str(),name.c_str()),name);
+  
   if(m_verbose){printf("[L1TAlgo::L1TAlgo] Method called. (name=%s)\n",name.c_str());}
-  m_name           = name;
+  m_name = name;
 }
 
-L1TAlgo::~L1TAlgo(){}
+L1TAlgo::~L1TAlgo(){
+  
+  if(results){delete results;}
+}
 
 void L1TAlgo::setVerbose(bool value){
   m_verbose = value;
@@ -33,7 +42,8 @@ void L1TAlgo::init(){
   m_verbose = false;
   if(m_verbose){printf("[L1TAlgo::init] Method called\n");}
   
-  m_name = "";
+  results = 0;
+  m_name  = "";
 }
 
 void L1TAlgo::addCondition(std::function<bool(trgfw::Event &iEvent)> function){
@@ -45,7 +55,9 @@ bool L1TAlgo::run(trgfw::Event &iEvent){
   if(m_verbose){printf("[L1TAlgo::run] Method called for L1TAlgo name=%s\n",m_name.c_str());}
   
   for(unsigned i=0; i<m_conditions.size(); i++){
+    
     if(m_verbose){printf("[L1TAlgo::run] Testing condition #%u : ",i);}
+    
     if(!(m_conditions[i])(iEvent)){
       if(m_verbose){printf("failed\n");}
       return false;
@@ -54,7 +66,8 @@ bool L1TAlgo::run(trgfw::Event &iEvent){
     }
   }
   
-  plots.fill(iEvent);
+  results->fill(iEvent);
+  //plots  .fill(iEvent);
   
   return true;
 }

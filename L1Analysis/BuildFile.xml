@@ -22,7 +22,7 @@
 <use name="TrackingTools/GeomPropagators"/>
 <use name="DataFormats/HepMCCandidate"/>
 <use name="DataFormats/JetReco"/>
-<use name="UserCode/ICHiggsTauTau"/>
+<use name="CMSSW_VBFHiggsTauTau/DataFormats"/>
 <export>
   <lib name="1"/>
 </export>

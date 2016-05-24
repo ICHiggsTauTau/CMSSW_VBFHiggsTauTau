@@ -3,11 +3,11 @@
 #include "DataFormats/Math/interface/deltaR.h"
 
 // L1T Objects
-#include "UserCode/ICHiggsTauTau/interface/L1TObject.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TEGamma.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TMuon.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TTau.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TJet.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TObject.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TEGamma.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TMuon.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TTau.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TJet.hh"
 
 #include <iostream>
 

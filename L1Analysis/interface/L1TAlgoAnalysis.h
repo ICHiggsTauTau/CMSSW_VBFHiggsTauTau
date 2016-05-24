@@ -2,11 +2,11 @@
 #define VBFHiggsToTauTau_L1Analysis_L1TAlgoAnalysis
 
 // L1T Objects
-#include "UserCode/ICHiggsTauTau/interface/L1TObject.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TEGamma.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TMuon.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TTau.hh"
-#include "UserCode/ICHiggsTauTau/interface/L1TJet.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TObject.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TEGamma.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TMuon.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TTau.hh"
+#include "CMSSW_VBFHiggsTauTau/DataFormats/interface/L1TJet.hh"
 
 // This algos
 #include "CMSSW_VBFHiggsTauTau/L1Analysis/interface/L1TAlgo.h"
@@ -40,6 +40,7 @@ public:
   
   void beginJob();
   void run(trgfw::Event &iEvent);
+  void endJob();
   
   void resetEvent();
   
