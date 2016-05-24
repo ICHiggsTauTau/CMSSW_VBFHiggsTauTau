@@ -1,0 +1,13 @@
+Enter GRID pass phrase for this identity:Contacting voms2.cern.ch:15002 [/DC=ch/DC=cern/OU=computers/CN=voms2.cern.ch] "cms"...
+Remote VOMS server contacted succesfully.
+
+
+Created proxy in /home/hep/jca10/.MyProxy.
+
+Your proxy is valid until Sat Apr 30 11:37:39 BST 2016
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange3p0_v3/160419_150915/0000/L1Ntuple_3.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange3p0_v3/160419_150915/0000/L1Ntuple_4.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange3p0_v3/160419_150915/0000/L1Ntuple_2.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange3p0_v3/160419_150915/0000/L1Ntuple_1.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange3p0_v3/160419_150915/0000/L1Ntuple_5.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange3p0_v3/160419_150915/0000/L1Ntuple_6.root

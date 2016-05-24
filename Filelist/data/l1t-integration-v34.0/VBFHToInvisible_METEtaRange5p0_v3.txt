@@ -1,0 +1,6 @@
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange5p0_v3/160419_151107/0000/L1Ntuple_3.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange5p0_v3/160419_151107/0000/L1Ntuple_1.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange5p0_v3/160419_151107/0000/L1Ntuple_4.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange5p0_v3/160419_151107/0000/L1Ntuple_5.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange5p0_v3/160419_151107/0000/L1Ntuple_2.root
+root://cms-xrd-global.cern.ch//store/user/pela/VBF_HToInvisible_M125_13TeV_powheg_pythia8/L1NTuplesV2_l1t-integration-v34p0_METEtaRange5p0_v3/160419_151107/0000/L1Ntuple_6.root
