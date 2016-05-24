@@ -1,0 +1,10 @@
+#!/bin/bash
+
+vbftautau_mergeOptimisationTrees task_VBFHToInvisible_METEtaRange3p0.root     task_VBFHToInvisible_METEtaRange3p0/output/*.root
+vbftautau_mergeOptimisationTrees task_VBFHToInvisible_METEtaRange5p0.root     task_VBFHToInvisible_METEtaRange5p0/output/*.root
+vbftautau_mergeOptimisationTrees task_VBFHToTauTau_EleHad_METEtaRange3p0.root task_VBFHToTauTau_EleHad_METEtaRange3p0/output/*.root
+vbftautau_mergeOptimisationTrees task_VBFHToTauTau_EleMuo_METEtaRange3p0.root task_VBFHToTauTau_EleMuo_METEtaRange3p0/output/*.root
+vbftautau_mergeOptimisationTrees task_VBFHToTauTau_HadHad_METEtaRange3p0.root task_VBFHToTauTau_HadHad_METEtaRange3p0/output/*.root
+vbftautau_mergeOptimisationTrees task_VBFHToTauTau_MuoHad_METEtaRange3p0.root task_VBFHToTauTau_MuoHad_METEtaRange3p0/output/*.root
+vbftautau_mergeOptimisationTrees task_ZeroBias_METEtaRange3p0.root            task_ZeroBias_METEtaRange3p0/output/*.root
+vbftautau_mergeOptimisationTrees task_ZeroBias_METEtaRange5p0.root            task_ZeroBias_METEtaRange5p0/output/*.root
