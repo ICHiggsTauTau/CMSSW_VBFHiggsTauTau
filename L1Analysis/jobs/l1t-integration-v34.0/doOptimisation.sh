@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+vbftautau_runTriggerOptimisation --optimisation --inputType tree --inputA task_VBFHToInvisible_METEtaRange3p0.root     --inputB task_ZeroBias_METEtaRange3p0.root --targetRate 5100 --nThread 2 --outputDir results_5kHz_VBFHToInvisible_METEtaRange3p0
+vbftautau_runTriggerOptimisation --optimisation --inputType tree --inputA task_VBFHToInvisible_METEtaRange5p0.root     --inputB task_ZeroBias_METEtaRange3p0.root --targetRate 5100 --nThread 2 --outputDir results_5kHz_VBFHToInvisible_METEtaRange5p0
+vbftautau_runTriggerOptimisation --optimisation --inputType tree --inputA task_VBFHToTauTau_EleMuo_METEtaRange3p0.root --inputB task_ZeroBias_METEtaRange3p0.root --targetRate 5100 --nThread 2 --outputDir results_5kHz_VBFHToTauTau_EleMuo_METEtaRange3p0
+vbftautau_runTriggerOptimisation --optimisation --inputType tree --inputA task_VBFHToTauTau_EleHad_METEtaRange3p0.root --inputB task_ZeroBias_METEtaRange3p0.root --targetRate 5100 --nThread 2 --outputDir results_5kHz_VBFHToTauTau_EleHad_METEtaRange3p0
+vbftautau_runTriggerOptimisation --optimisation --inputType tree --inputA task_VBFHToTauTau_MuoHad_METEtaRange3p0.root --inputB task_ZeroBias_METEtaRange3p0.root --targetRate 5100 --nThread 2 --outputDir results_5kHz_VBFHToTauTau_MuoHad_METEtaRange3p0
+vbftautau_runTriggerOptimisation --optimisation --inputType tree --inputA task_VBFHToTauTau_HadHad_METEtaRange3p0.root --inputB task_ZeroBias_METEtaRange3p0.root --targetRate 5100 --nThread 2 --outputDir results_5kHz_VBFHToTauTau_HadHad_METEtaRange3p0
+
+
+
+
