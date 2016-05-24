@@ -1,0 +1,26 @@
+<lcgdict>
+  <class name="ic::Candidate"/>
+  <class name="std::vector<ic::Candidate>"/>
+  <class name="std::map<unsigned long, float>"/>
+  <class name="std::pair<unsigned long,float>"/> 
+  <class name="std::vector<std::pair<unsigned long,float> >"/> 
+  <class name="ic::EventInfo"/>
+  <class name="ic::PileupInfo"/>
+  <class name="std::vector<ic::PileupInfo>"/>
+  <class name="ic::GenParticle"/>
+  <class name="std::vector<ic::GenParticle>"/>
+  <class name="ic::GenJet"/>
+  <class name="std::vector<ic::GenJet>"/>
+  <class name="ic::L1TObject"/>
+  <class name="std::vector<ic::L1TObject>"/>
+  <class name="ic::L1TEGamma"/>
+  <class name="std::vector<ic::L1TEGamma>"/>
+  <class name="ic::L1TMuon"/>
+  <class name="std::vector<ic::L1TMuon>"/>
+  <class name="ic::L1TTau"/>
+  <class name="std::vector<ic::L1TTau>"/>
+  <class name="ic::L1TJet"/>
+  <class name="std::vector<ic::L1TJet>"/>
+  <class name="ic::L1TSum"/>
+  <class name="std::vector<ic::L1TSum>"/>
+</lcgdict>
