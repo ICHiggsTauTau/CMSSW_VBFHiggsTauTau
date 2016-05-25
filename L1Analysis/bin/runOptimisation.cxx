@@ -152,7 +152,7 @@ public:
   }
   
   void printHelpMessage(){
-    cerr << "Usage: vbftautau_mergeOptimisationTrees [commands]" << endl;
+    cerr << "Usage: vbftautau_runOptimisation [commands]" << endl;
     cerr << " --verbose"                                             << endl;
     cerr << " --plots                - Save plots"                   << endl;
     cerr << " --optimisation         - Do optimisation scan"         << endl;
@@ -166,7 +166,7 @@ public:
   }
   
   void print(){
-    cout << "##### vbftautau_mergeOptimisationTrees #####" << endl;
+    cout << "##### vbftautau_runOptimisation #####" << endl;
     cout << "=> Program parameters:" << endl;
     cout << "verbose    : " << verbose    << endl;
     cout << "signal     : " << signal     << endl;
