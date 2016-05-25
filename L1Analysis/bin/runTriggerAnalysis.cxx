@@ -244,10 +244,11 @@ int main(int argc, char* argv[]){
     moduleSequence.push_back(myL1TRes);
   }
   
+  L1TAlgoAnalysis *myAnalysis = 0;
   if(options.doAnalysisL1TAlgoScan){
     TDirectory *dir = fileOut->mkdir("L1TAlgoScan");
 
-    L1TAlgoAnalysis *myAnalysis = new L1TAlgoAnalysis("L1TAlgoAnalysis",dir);
+    myAnalysis = new L1TAlgoAnalysis("L1TAlgoAnalysis",dir);
     myAnalysis->setVerbose                (options.verbose);
     myAnalysis->setDoSingleObjectsAnalysis(true);
     if(options.jobType=="mc"){
@@ -350,6 +351,10 @@ int main(int argc, char* argv[]){
     }
     
     eventsEffective++;
+    
+    if(options.doAnalysisL1TAlgoScan){
+      myAnalysis->incrementEventTotal();
+    }
     
     trgfw::Event myEvent;
 

@@ -108,6 +108,7 @@ public:
       if     (arg == "--verbose")                {verbose  = true;}
       else if(arg == "--doAnalysisL1TResolution"){doAnalysisL1TResolution = true;}
       else if(arg == "--doAnalysisL1TAlgoScan")  {doAnalysisL1TAlgoScan   = true;}
+      else if(arg == "--doOfflineFilter")        {doOfflineFilter         = true;}
       else if(arg == "--inputType"){
         if(i+1<argc){i++; inputType = argv[i];} 
         else{valid=false;}
@@ -164,6 +165,7 @@ public:
     
     doAnalysisL1TAlgoScan   = false;
     doAnalysisL1TResolution = false;
+    doOfflineFilter         = false;
   }
   
   void printHelpMessage(){
@@ -176,11 +178,12 @@ public:
     cerr << " --maxEvents N"                                                                     << endl;
     cerr << " --jobType TYPE            options: mc, data"                                       << endl;
     cerr << " --decay DECAY             options: EleEle, EleMuo, EleHad, MuoMuo, MuoHad, HadHad" << endl;
+    cerr << " --outputFilename NAME"                                                             << endl;
     cerr << endl;
     cerr << "ANALYSIS OPTIONS:" << endl;
     cerr << " --doAnalysisL1TAlgoScan"                                                           << endl;
     cerr << " --doAnalysisL1TResolution"                                                         << endl;
-    cerr << " --outputFilename NAME"                                                             << endl;
+    cerr << " --doOfflineFilter"                                                                 << endl;
   }
   
   void print(){
@@ -197,9 +200,10 @@ public:
     cout << endl;
     cout << "jobType                 = " << jobType        << endl;
     cout << "decay                   = " << decay          << endl;  
+    cout << "outputFilename          = " << outputFilename << endl;
     cout << "doAnalysisL1TResolution = " << doAnalysisL1TResolution << endl;
     cout << "doAnalysisL1TAlgoScan   = " << doAnalysisL1TAlgoScan << endl;
-    cout << "outputFilename          = " << outputFilename << endl;
+    cout << "doOfflineFilter         = " << doOfflineFilter << endl;
     cout << endl;
     
   }
@@ -217,7 +221,7 @@ public:
   // Analysis options
   bool doAnalysisL1TAlgoScan;
   bool doAnalysisL1TResolution;
-  
+  bool doOfflineFilter;
 };
 
 // Here is the application code
@@ -271,10 +275,11 @@ int main(int argc, char* argv[]){
     moduleSequence.push_back(myL1TRes);
   }
   
+  L1TAlgoAnalysis *myAnalysis = 0;
   if(options.doAnalysisL1TAlgoScan){
     TDirectory *dir = fileOut->mkdir("L1TAlgoScan");
     
-    L1TAlgoAnalysis *myAnalysis = new L1TAlgoAnalysis("L1TAlgoAnalysis",dir);
+    myAnalysis = new L1TAlgoAnalysis("L1TAlgoAnalysis",dir);
     myAnalysis->setVerbose(options.verbose);
     myAnalysis->setDoSingleObjectsAnalysis(true);
     if(options.jobType=="mc"){
@@ -386,6 +391,18 @@ int main(int argc, char* argv[]){
     }
     
     eventsEffective++;
+    
+    if(options.doAnalysisL1TAlgoScan){
+      myAnalysis->incrementEventTotal();
+    }
+    
+    // If we are running over MC and we want to filter on offline selection...
+    if(options.doOfflineFilter && options.jobType=="mc"){
+      
+      // If the event has failed the offine selection we skip it
+      // NOTE: This only effects the numerator of the efficiency
+      if( (*product_passed_offline)==0){continue;}
+    }
     
     trgfw::Event myEvent;
     

@@ -1719,10 +1719,13 @@ void L1TAlgoAnalysis::doSingleObjectsAnalysis(trgfw::Event &iEvent){
   if(m_verbose){printf("\n");}
 }
 
+void L1TAlgoAnalysis::incrementEventTotal(){
+  m_EventCount->Fill(1);
+}
+
 void L1TAlgoAnalysis::run(trgfw::Event &iEvent){
   if(m_verbose){printf("[L1TAlgoAnalysis::processEvent] Method called\n");}
   
-  m_EventCount->Fill(1);
   
   // Do single object analysis
   if(m_doGenAnalysis)          {doGenAnalysis          (iEvent);}

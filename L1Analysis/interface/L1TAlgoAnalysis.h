@@ -50,7 +50,7 @@ public:
   // Task setters
   void setDoGenAnalysis          (bool value);
   void setDoSingleObjectsAnalysis(bool value);
-  
+  void incrementEventTotal    ();
   
 private:
   
