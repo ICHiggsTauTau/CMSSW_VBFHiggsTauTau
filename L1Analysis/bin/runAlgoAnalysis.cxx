@@ -149,6 +149,8 @@ public:
       }else if(arg == "--outputFilename"){
         if(i+1<argc){i++; outputFilename = argv[i];}
         else{valid=false;}
+      }else if (arg == "--sumRange"){
+        if(i+1<argc){i++; sumRange = atoi(argv[i]);}
       }
     }
   }
@@ -162,6 +164,7 @@ public:
     jobType        = "mc";
     decay          = 0;
     outputFilename = "L1Analysis.root";
+    sumRange       = 5;
     
     doAnalysisL1TAlgoScan   = false;
     doAnalysisL1TResolution = false;
@@ -170,7 +173,7 @@ public:
   
   void printHelpMessage(){
     
-    cerr << "Usage: vbftautau_runAlgoAnalysis [commands]"                                     << endl;
+    cerr << "Usage: vbftautau_runAlgoAnalysis [commands]"                                        << endl;
     cerr << " --verbose         "                                                                << endl;
     cerr << " --inputType TYPE          options: file, filelist"                                 << endl;
     cerr << " --input INPUT"                                                                     << endl;
@@ -184,6 +187,7 @@ public:
     cerr << " --doAnalysisL1TAlgoScan"                                                           << endl;
     cerr << " --doAnalysisL1TResolution"                                                         << endl;
     cerr << " --doOfflineFilter"                                                                 << endl;
+    cerr << " --sumRange MAX-ETA        options: 3, 5"                                           << endl;
   }
   
   void print(){
@@ -204,6 +208,7 @@ public:
     cout << "doAnalysisL1TResolution = " << doAnalysisL1TResolution << endl;
     cout << "doAnalysisL1TAlgoScan   = " << doAnalysisL1TAlgoScan << endl;
     cout << "doOfflineFilter         = " << doOfflineFilter << endl;
+    cout << "sumRange                = " << sumRange        << endl;
     cout << endl;
     
   }
@@ -217,6 +222,7 @@ public:
   string           jobType;
   unsigned char    decay;
   string           outputFilename;
+  unsigned         sumRange;  
   
   // Analysis options
   bool doAnalysisL1TAlgoScan;
@@ -421,8 +427,6 @@ int main(int argc, char* argv[]){
       printf("[main] L1T Sums (|eta|<5) : %lu\n",product_l1t_sums_range5p0->size());
     }
     
-    if(product_l1t_sums_range5p0->size()!=4){continue;} //TODO: Remove! Protection for Daniel's "1st event is never there bug"
-    
     // Making vectors of pointer for L1T EG 
     vector<ic::L1TEGamma*> l1tEG;
     vector<ic::L1TEGamma*> l1tIsoEG;
@@ -466,10 +470,18 @@ int main(int argc, char* argv[]){
     
     // Making vectors of pointer for L1T Sums (for now taking 5.0 range sums)
     vector<ic::L1TSum*> l1tSums;
-    for(unsigned i=0; i<product_l1t_sums_range5p0->size(); i++){
+    if      (options.sumRange == 5){
+      for(unsigned i=0; i<product_l1t_sums_range5p0->size(); i++){
       
-      ic::L1TSum *thisSum = &(product_l1t_sums_range5p0->at(i));
-      l1tSums.push_back(thisSum);
+        ic::L1TSum *thisSum = &(product_l1t_sums_range5p0->at(i));
+        l1tSums.push_back(thisSum);
+      }
+    }else if(options.sumRange == 3){
+      for(unsigned i=0; i<product_l1t_sums_range3p0->size(); i++){
+      
+        ic::L1TSum *thisSum = &(product_l1t_sums_range3p0->at(i));
+        l1tSums.push_back(thisSum);
+      } 
     }
     
     // This should not be needed but... just to be sure
