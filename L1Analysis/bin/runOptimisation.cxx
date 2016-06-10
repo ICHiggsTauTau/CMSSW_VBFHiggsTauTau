@@ -148,7 +148,7 @@ public:
     outputDir    = "output/";
     targetRate   = 1100.;
     nThread      = 1;
-    inputType    = "histogram";
+    inputType    = "tree";
   }
   
   void printHelpMessage(){
