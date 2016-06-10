@@ -62,7 +62,7 @@ fJob.write("#!/bin/bash\n")
 fJob.write("\n")
 fJob.write("cd "+taskFolder+"\n")
 fJob.write("eval `scramv1 runtime -sh`\n")
-fJob.write("vbftautau_runTriggerAnalysis --inputType filelist --input "+jobsFolder+"inputFileList_${SGE_TASK_ID}.txt --outputFilename "+outputFolder+"results_${SGE_TASK_ID}.root --maxEvents -1 "+options.options+"\n")
+fJob.write("vbftautau_runAlgoAnalysis --inputType filelist --input "+jobsFolder+"inputFileList_${SGE_TASK_ID}.txt --outputFilename "+outputFolder+"results_${SGE_TASK_ID}.root --maxEvents -1 "+options.options+"\n")
 
 os.chmod(taskFolder+'jobs.sh', stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 

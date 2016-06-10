@@ -1,0 +1,6 @@
+#!/bin/bash
+
+vbftautau_mergeOptimisationTrees task_offline_VBFHToTauTau_EleHad.root task_offline_VBFHToTauTau_EleHad/output/*.root
+vbftautau_mergeOptimisationTrees task_offline_VBFHToTauTau_EleMuo.root task_offline_VBFHToTauTau_EleMuo/output/*.root
+vbftautau_mergeOptimisationTrees task_offline_VBFHToTauTau_HadHad.root task_offline_VBFHToTauTau_HadHad/output/*.root
+vbftautau_mergeOptimisationTrees task_offline_VBFHToTauTau_MuoHad.root task_offline_VBFHToTauTau_MuoHad/output/*.root
