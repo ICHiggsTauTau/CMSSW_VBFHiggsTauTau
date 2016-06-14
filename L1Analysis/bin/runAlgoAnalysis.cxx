@@ -138,12 +138,12 @@ public:
         else{valid=false;}
       }else if(arg == "--decay"){
         if(i+1<argc){i++; 
-          if     (std::string(argv[i]) == "EleEle"){decay = VBFHiggs::HiggsDecay::EleEle;}
-          else if(std::string(argv[i]) == "EleMuo"){decay = VBFHiggs::HiggsDecay::EleMuo;}
-          else if(std::string(argv[i]) == "EleHad"){decay = VBFHiggs::HiggsDecay::EleHad;}
-          else if(std::string(argv[i]) == "MuoMuo"){decay = VBFHiggs::HiggsDecay::MuoMuo;}
-          else if(std::string(argv[i]) == "MuoHad"){decay = VBFHiggs::HiggsDecay::MuoHad;}
-          else if(std::string(argv[i]) == "HadHad"){decay = VBFHiggs::HiggsDecay::HadHad;}        
+          if     (std::string(argv[i]) == "EleEle"){decay = VBFHiggs::HiggsDecay::EleEle; decayName="EleEle";}
+          else if(std::string(argv[i]) == "EleMuo"){decay = VBFHiggs::HiggsDecay::EleMuo; decayName="EleMuo";}
+          else if(std::string(argv[i]) == "EleHad"){decay = VBFHiggs::HiggsDecay::EleHad; decayName="EleHad";}
+          else if(std::string(argv[i]) == "MuoMuo"){decay = VBFHiggs::HiggsDecay::MuoMuo; decayName="MuoMuo";}
+          else if(std::string(argv[i]) == "MuoHad"){decay = VBFHiggs::HiggsDecay::MuoHad; decayName="MuoHad";}
+          else if(std::string(argv[i]) == "HadHad"){decay = VBFHiggs::HiggsDecay::HadHad; decayName="HadHad";}        
         }
         else{valid=false;}
       }else if(arg == "--outputFilename"){
@@ -203,7 +203,7 @@ public:
     }
     cout << endl;
     cout << "jobType                 = " << jobType        << endl;
-    cout << "decay                   = " << decay          << endl;  
+    cout << "decay                   = " << decayName      << endl;  
     cout << "outputFilename          = " << outputFilename << endl;
     cout << "doAnalysisL1TResolution = " << doAnalysisL1TResolution << endl;
     cout << "doAnalysisL1TAlgoScan   = " << doAnalysisL1TAlgoScan << endl;
@@ -221,6 +221,7 @@ public:
   Long64_t         maxEvents;
   string           jobType;
   unsigned char    decay;
+  string           decayName;
   string           outputFilename;
   unsigned         sumRange;  
   
@@ -313,7 +314,7 @@ int main(int argc, char* argv[]){
   ic::L1TSumCollection      *product_l1t_sums_range3p0 = 0;
   ic::L1TSumCollection      *product_l1t_sums_range5p0 = 0;
   ic::GenParticleCollection *product_gen_particles     = 0; // Only available in MC
-  bool                      *product_passed_offline    = 0; // Only available in MC
+  bool                      *product_passed_offline    = false; // Only available in MC
   
   // Allocating space for branches content
   product_event_info        = new ic::EventInfo();
@@ -336,7 +337,7 @@ int main(int argc, char* argv[]){
   // If we are processing MC events get addition data
   if(options.jobType=="mc"){
 
-    product_passed_offline = new bool;
+    product_passed_offline = new bool();
     tree_event.SetBranchAddress("PassedOffline",&product_passed_offline);
     
     product_gen_particles = new ic::GenParticleCollection();
@@ -383,7 +384,6 @@ int main(int argc, char* argv[]){
       for(unsigned i=0; i<options.runs.size(); i++){
         if(options.runs[i]==product_event_info->run()){passRun=true;}
       }
-      
       if(!passRun){continue;}
     }
     
@@ -396,18 +396,19 @@ int main(int argc, char* argv[]){
       if(options.decay!=thisDecay){continue;}
     }
     
-    eventsEffective++;
-    
-    if(options.doAnalysisL1TAlgoScan){
-      myAnalysis->incrementEventTotal();
-    }
-    
     // If we are running over MC and we want to filter on offline selection...
     if(options.doOfflineFilter && options.jobType=="mc"){
       
       // If the event has failed the offine selection we skip it
       // NOTE: This only effects the numerator of the efficiency
-      if( (*product_passed_offline)==0){continue;}
+
+      if( !(*product_passed_offline)){continue;}
+    }
+        
+    eventsEffective++;
+    
+    if(options.doAnalysisL1TAlgoScan){
+      myAnalysis->incrementEventTotal();
     }
     
     trgfw::Event myEvent;
@@ -445,8 +446,11 @@ int main(int argc, char* argv[]){
       
       ic::L1TMuon *thisMuon = &(product_l1t_muons->at(i));
       
-      l1tMuons.push_back(thisMuon);
-      if(thisMuon->isolation!=0){l1tIsoMuons.push_back(thisMuon);}
+      //Only use muons with quality >= 12 - this is what is used for all single muon L1 seeds!
+      if(thisMuon->quality>=12){
+          l1tMuons.push_back(thisMuon);
+          if(thisMuon->isolation!=0){l1tIsoMuons.push_back(thisMuon);}
+      }
     }
     
     // Making vectors of pointer for L1T Tau

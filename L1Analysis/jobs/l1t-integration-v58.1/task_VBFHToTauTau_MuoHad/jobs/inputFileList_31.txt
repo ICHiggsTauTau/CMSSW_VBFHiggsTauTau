@@ -1,0 +1,3 @@
+root://gfe02.grid.hep.ph.ic.ac.uk:1097//store/user/dwinterb/ICNtuples_L1TStage2_Merged_v5_V3/HiggsTauTau/EventTree_22.root
+root://gfe02.grid.hep.ph.ic.ac.uk:1097//store/user/dwinterb/ICNtuples_L1TStage2_Merged_v5_V3/HiggsTauTau/EventTree_14.root
+root://gfe02.grid.hep.ph.ic.ac.uk:1097//store/user/dwinterb/ICNtuples_L1TStage2_Merged_v5_V3/HiggsTauTau/EventTree_94.root
