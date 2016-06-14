@@ -61,6 +61,7 @@ fJob = open(taskFolder+'jobs.sh','w')
 fJob.write("#!/bin/bash\n")
 fJob.write("\n")
 fJob.write("cd "+taskFolder+"\n")
+fJob.write("source /vols/grid/cms/setup.sh\n")
 fJob.write("eval `scramv1 runtime -sh`\n")
 fJob.write("vbftautau_runAlgoAnalysis --inputType filelist --input "+jobsFolder+"inputFileList_${SGE_TASK_ID}.txt --outputFilename "+outputFolder+"results_${SGE_TASK_ID}.root --maxEvents -1 "+options.options+"\n")
 
@@ -69,6 +70,6 @@ os.chmod(taskFolder+'jobs.sh', stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat
 fJob = open(taskFolder+'submit.sh','w')
 fJob.write("#!/bin/bash\n")
 fJob.write("\n")
-fJob.write("qsub -q hepmedium.q -t 1-"+options.numberOfJobs+":1 jobs.sh\n")
+fJob.write("qsub -q hep.q -l h_rt=6:0:0 -t 1-"+options.numberOfJobs+":1 jobs.sh\n")
 
 os.chmod(taskFolder+'submit.sh', stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
