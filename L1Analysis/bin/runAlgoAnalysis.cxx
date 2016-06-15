@@ -314,7 +314,7 @@ int main(int argc, char* argv[]){
   ic::L1TSumCollection      *product_l1t_sums_range3p0 = 0;
   ic::L1TSumCollection      *product_l1t_sums_range5p0 = 0;
   ic::GenParticleCollection *product_gen_particles     = 0; // Only available in MC
-  bool                      *product_passed_offline    = false; // Only available in MC
+  bool                      product_passed_offline    = false; // Only available in MC
   
   // Allocating space for branches content
   product_event_info        = new ic::EventInfo();
@@ -337,8 +337,8 @@ int main(int argc, char* argv[]){
   // If we are processing MC events get addition data
   if(options.jobType=="mc"){
 
-    product_passed_offline = new bool();
-    tree_event.SetBranchAddress("PassedOffline",&product_passed_offline);
+    //product_passed_offline = new bool();
+    product_passed_offline = tree_event.SetBranchAddress("PassedOffline",&product_passed_offline);
     
     product_gen_particles = new ic::GenParticleCollection();
     tree_event.SetBranchAddress("genParticles",&product_gen_particles);
@@ -402,7 +402,7 @@ int main(int argc, char* argv[]){
       // If the event has failed the offine selection we skip it
       // NOTE: This only effects the numerator of the efficiency
 
-      if( !(*product_passed_offline)){continue;}
+      if( !product_passed_offline){continue;}
     }
         
     eventsEffective++;
