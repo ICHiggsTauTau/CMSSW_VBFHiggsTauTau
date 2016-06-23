@@ -233,11 +233,11 @@ int main ( int argc , char * argv []){
   cout << "Signal    events: " << nSigEvents << endl;
   cout << "Zero Bias events: " << nBkgEvents << endl;
   
-  printf("===== Decay Summary =====\n");
+  /*printf("===== Decay Summary =====\n");
   TH1D* HiggsDecay = (TH1D*) fSig->Get("L1TAlgoScan/GenAnalysis/HiggsDecay");
   for(int i=1; i<HiggsDecay->GetNbinsX()+1; i++){
     printf("Decay: %10s - Faction: %6.4f\n",HiggsDecay->GetXaxis()->GetBinLabel(i),HiggsDecay->GetBinContent(i)/nSigEvents);
-  }
+  }*/
   
   printf("===== Convertion factor =====\n");
   double run259721_convFactor = getConvertionFactor(259721);
