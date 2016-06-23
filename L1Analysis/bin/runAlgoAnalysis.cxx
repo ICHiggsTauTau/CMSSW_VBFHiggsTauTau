@@ -337,8 +337,8 @@ int main(int argc, char* argv[]){
   // If we are processing MC events get addition data
   if(options.jobType=="mc"){
 
-    //product_passed_offline = new bool();
-    product_passed_offline = tree_event.SetBranchAddress("PassedOffline",&product_passed_offline);
+    if(options.decay == VBFHiggs::HiggsDecay::HadHad) product_passed_offline = tree_event.SetBranchAddress("PassedOfflineHadHad",&product_passed_offline);
+    else product_passed_offline = tree_event.SetBranchAddress("PassedOffline",&product_passed_offline);
     
     product_gen_particles = new ic::GenParticleCollection();
     tree_event.SetBranchAddress("genParticles",&product_gen_particles);

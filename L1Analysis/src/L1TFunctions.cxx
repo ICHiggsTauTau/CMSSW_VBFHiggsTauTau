@@ -282,6 +282,71 @@ namespace trgfw {
     return true;
   }
   
+    
+  template <class Product>
+  inline bool pairFilter_vbfLike(trgfw::Event &iEvent,std::string input,double pt_1, double pt_2, double pt_avg, double pt_vec, double dEta,double mjj,std::string output){
+    
+    // If this collection was already made return true
+    if(iEvent.containsProduct(output)){return true;}
+    
+    // Get the input collection from the event
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
+    if(colIn==0){
+      cout << "[pairFilter_vbfLike] Failed to found input collection: " << input << endl;
+      return false;
+    }
+    
+    L1TObjectPairCollection colOut;
+    
+    // If we do not have at least 2 jets we stop here
+    // NOTE: Protecting going into the cycle with less that 2 elements
+    //       this will give trouble with the unsigned vs. signed int
+    if(colIn->size()<2){return false;}
+    
+    for(unsigned a=0; a<colIn->size()-1; a++){
+      Product *objA = colIn->at(a);
+      for(unsigned b=a+1; b<colIn->size(); b++){
+        Product *objB = colIn->at(b);
+        
+        if(pt_1>0){
+          double valPt1 = objA->pt();
+          if(pt_1>valPt1){continue;}
+        }
+        
+        if(pt_2>0){
+          double valPt2 = objB->pt();
+          if(pt_2>valPt2){continue;}
+        }
+        
+        if(pt_avg>0){
+          double valAvgPt = (objA->pt()+objB->pt())/2;
+          if(pt_avg>valAvgPt){continue;}
+        }
+        
+        if(pt_vec>0){
+          double valVecPt = (objA->vector()+objB->vector()).pt();
+          if(pt_vec>valVecPt){continue;}
+        }
+        
+        if(dEta>0){
+          double valDEta = fabs(objA->eta()-objB->eta());
+          if(dEta>valDEta){continue;}
+        }
+        
+        if(mjj>0){
+          ROOT::Math::PtEtaPhiEVector vec = objA->vector() + objB->vector();
+          if(mjj>vec.mass()){continue;}
+        }
+        
+        L1TObjectPair thisPair(objA,objB);
+        colOut.push_back(thisPair);
+      }
+    }
+    
+    iEvent.addProduct<L1TObjectPairCollection>(output,colOut);
+    return true;
+  }
+  
   
   //##############################################
   // Test collections

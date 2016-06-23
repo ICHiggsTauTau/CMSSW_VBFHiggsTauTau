@@ -33,48 +33,48 @@ trgfw::L1TAlgoResults::L1TAlgoResults(string path,string name) :
   
   tag_l1tJetPair = "";
   
-  m_L1TEGamma1_Et       = new trgfw::L1TVariableScanDataFormat(m_path,"L1TEGamma1_Pt",      125,           0,        250);
+  m_L1TEGamma1_Et       = new trgfw::L1TVariableScanDataFormat(m_path,"L1TEGamma1_Pt",      25,           0,        25);
   m_L1TEGamma1_Eta      = new trgfw::L1TVariableScanDataFormat(m_path,"L1TEGamma1_Eta",     100,          -5,          5);
   m_L1TEGamma1_Phi      = new trgfw::L1TVariableScanDataFormat(m_path,"L1TEGamma1_Phi",     100,-TMath::Pi(),TMath::Pi());
   
-  m_L1TIsoEGamma1_Et    = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoEG1_Pt",       125,           0,        250);
+  m_L1TIsoEGamma1_Et    = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoEG1_Pt",       25,           0,        25);
   m_L1TIsoEGamma1_Eta   = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoEG1_Eta",      100,          -5,          5);
   m_L1TIsoEGamma1_Phi   = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoEG1_Phi",      100,-TMath::Pi(),TMath::Pi());
   
-  m_L1TMuon1_Et         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TMuon1_Pt",        125,           0,        250);
+  m_L1TMuon1_Et         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TMuon1_Pt",        25,           0,        25);
   m_L1TMuon1_Eta        = new trgfw::L1TVariableScanDataFormat(m_path,"L1TMuon1_Eta",       100,          -5,          5);
   m_L1TMuon1_Phi        = new trgfw::L1TVariableScanDataFormat(m_path,"L1TMuon1_Phi",       100,-TMath::Pi(),TMath::Pi());
   
-  m_L1TIsoMuon1_Et      = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoMuon1_Pt",     125,           0,        250);
+  m_L1TIsoMuon1_Et      = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoMuon1_Pt",     25,           0,        25);
   m_L1TIsoMuon1_Eta     = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoMuon1_Eta",    100,          -5,          5);
   m_L1TIsoMuon1_Phi     = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoMuon1_Phi",    100,-TMath::Pi(),TMath::Pi());
   
   m_L1TTau_N            = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau_N",            21,        -0.5,       20.5);
-  m_L1TTau1_Et          = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau1_Pt",         125,           0,        250);
+  m_L1TTau1_Et          = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau1_Pt",         100,           0,        100);
   m_L1TTau1_Eta         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau1_Eta",        100,          -5,          5);
   m_L1TTau1_Phi         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau1_Phi",        100,-TMath::Pi(),TMath::Pi());
   
-  m_L1TTau2_Et          = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau2_Pt",         125,           0,        250);
+  m_L1TTau2_Et          = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau2_Pt",         100,           0,        100);
   m_L1TTau2_Eta         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau2_Eta",        100,          -5,          5);
   m_L1TTau2_Phi         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau2_Phi",        100,-TMath::Pi(),TMath::Pi());
   
   m_L1TIsoTau_N         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoTau_N",         21,        -0.5,       20.5);
-  m_L1TIsoTau1_Et       = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoTau1_Pt",      125,           0,        250);
+  m_L1TIsoTau1_Et       = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoTau1_Pt",      100,           0,        100);
   m_L1TIsoTau1_Eta      = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoTau1_Eta",     100,          -5,          5);
   m_L1TIsoTau1_Phi      = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoTau1_Phi",     100,-TMath::Pi(),TMath::Pi());
   
-  m_L1TIsoTau2_Et       = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoTau2_Pt",      125,           0,        250);
+  m_L1TIsoTau2_Et       = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoTau2_Pt",      100,           0,        100);
   m_L1TIsoTau2_Eta      = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoTau2_Eta",     100,          -5,          5);
   m_L1TIsoTau2_Phi      = new trgfw::L1TVariableScanDataFormat(m_path,"L1TIsoTau2_Phi",     100,-TMath::Pi(),TMath::Pi());
   
   m_L1TJet_N            = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet_N",            21,        -0.5,       20.5);
-  m_L1TJet_AvgPt        = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet_Avg",         125,           0,        250);
-  m_L1TJet_VecPt        = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet_VecPt",       125,           0,        250);
-  m_L1TJet1_Et          = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet1_Pt",         125,           0,        250);
+  m_L1TJet_AvgPt        = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet_Avg",         150,           0,        150);
+  m_L1TJet_VecPt        = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet_VecPt",       150,           0,        150);
+  m_L1TJet1_Et          = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet1_Pt",         100,           0,        100);
   m_L1TJet1_Eta         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet1_Eta",        100,          -5,          5);
   m_L1TJet1_Phi         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet1_Phi",        100,-TMath::Pi(),TMath::Pi());
   
-  m_L1TJet2_Et          = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet2_Pt",         125,           0,        250);
+  m_L1TJet2_Et          = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet2_Pt",         100,           0,        100);
   m_L1TJet2_Eta         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet2_Eta",        100,          -5,          5);
   m_L1TJet2_Phi         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet2_Phi",        100,-TMath::Pi(),TMath::Pi());
   
@@ -83,8 +83,8 @@ trgfw::L1TAlgoResults::L1TAlgoResults(string path,string name) :
   
   m_L1TTau1_minDRL1TJet = new trgfw::L1TVariableScanDataFormat(m_path,"L1TTau1_minDRL1TJet",150,           0,         15);
   
-  m_L1TMHT_Et           = new trgfw::L1TVariableScanDataFormat(m_path,"L1TMHT_Et",          256,           0,        512);
-  m_L1TMET_Et           = new trgfw::L1TVariableScanDataFormat(m_path,"L1TMET_Et",          256,           0,        512);
+  m_L1TMHT_Et           = new trgfw::L1TVariableScanDataFormat(m_path,"L1TMHT_Et",          200,           0,        200);
+  m_L1TMET_Et           = new trgfw::L1TVariableScanDataFormat(m_path,"L1TMET_Et",          200,           0,        200);
   
   //m_METvsMjj  = new TH2D("METvsMjj",      "MET vs Mjj",   100,0,200, 100,0,1000);       m_METvsMjj     ->SetDirectory(m_plotsDirectory);
 }
