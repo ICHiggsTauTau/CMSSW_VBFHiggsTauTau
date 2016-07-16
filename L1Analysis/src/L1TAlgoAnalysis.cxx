@@ -487,9 +487,9 @@ void L1TAlgoAnalysis::endJob(){
   myTree->Branch("L1TJet2_Eta"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
   myTree->Branch("L1TJet2_Phi"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
   
-  myTree->Branch("L1TJet3_Et"         ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
-  myTree->Branch("L1TJet3_Eta"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
-  myTree->Branch("L1TJet3_Phi"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  //myTree->Branch("L1TJet3_Et"         ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  //myTree->Branch("L1TJet3_Eta"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  //myTree->Branch("L1TJet3_Phi"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
   
   myTree->Branch("L1TJet_maxMjj"      ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
   myTree->Branch("L1TJet_maxDEta"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
