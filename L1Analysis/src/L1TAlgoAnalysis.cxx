@@ -82,11 +82,13 @@ void L1TAlgoAnalysis::beginJob(){
         //for(double jetAvgPt=20; jetAvgPt <=70; jetAvgPt+=10){
           //for(double jetVecPt=0; jetVecPt<=100 && jetVecPt <=2*jetAvgPt; jetVecPt+=5){
   for(double jetPt1=20; jetPt1<=100; jetPt1+=10){
-      for(double jetPt2=20; jetPt2<=jetPt1 && jetPt2 <=20; jetPt2+=10){
+      for(double jetPt2=20; jetPt2<=jetPt1 && jetPt2<=70; jetPt2+=10){
         for(double jetAvgPt=0; jetAvgPt <=0; jetAvgPt+=10){
-          for(double jetVecPt=0; jetVecPt<=0 && jetVecPt <=2*jetAvgPt; jetVecPt+=5){
-           for(double jetDEta=0; jetDEta<=3.5; jetDEta+=0.5){
-            for(double jetMjj=0; jetMjj<=600; jetMjj+=10){
+          for(double jetVecPt=0; jetVecPt<=0 && jetVecPt < jetPt1+jetPt2; jetVecPt+=5){
+           //for(double jetDEta=0; jetDEta<=3.5; jetDEta+=0.5){
+            for(double jetDEta=0; jetDEta<=0.; jetDEta+=0.5){
+            //for(double jetMjj=0; jetMjj<=600; jetMjj+=10){
+            for(double jetMjj=0; jetMjj<=800; jetMjj+=50){
               
               bool UseAlgo = true;
               //if(jetPt1>0 && jetPt1 <20)    UseAlgo=false;
@@ -94,7 +96,7 @@ void L1TAlgoAnalysis::beginJob(){
               //if(jetVecPt>0 && jetVecPt<50) UseAlgo=false;
               //if(2*jetAvgPt <= jetPt1+jetPt2) UseAlgo=false;
               if(jetDEta>0 && jetDEta<2.5)    UseAlgo=false;
-              if(jetMjj>0 && jetMjj<400)      UseAlgo=false;
+              if(jetMjj>0 && jetMjj<350)      UseAlgo=false;
                                                                              
               if(UseAlgo){
                 string algoname = Form("Dijet%.0f-%.0fAvg%.0fVec%.0fdeta%.0fmjj%.0f",jetPt1,jetPt2,jetAvgPt,jetVecPt,jetDEta*10,jetMjj);
@@ -143,6 +145,43 @@ void L1TAlgoAnalysis::beginJob(){
       }
     }
   }
+  
+   /* for(double jetPt1=20; jetPt1<=100; jetPt1+=10){
+      for(double jetPt2=20; jetPt2<=jetPt1 && jetPt2<=70; jetPt2+=10){
+        for(double jetPt3=20; jetPt3<=jetPt2 && jetPt3<=40; jetPt3+=10){
+          for(double jetAvgPt=0; jetAvgPt <=0; jetAvgPt+=10){
+            for(double jetVecPt=0; jetVecPt<=0 && jetVecPt < jetPt1+jetPt2; jetVecPt+=5){
+             //for(double jetDEta=0; jetDEta<=3.5; jetDEta+=0.5){
+              for(double jetDEta=0; jetDEta<=0.; jetDEta+=0.5){
+              //for(double jetMjj=0; jetMjj<=600; jetMjj+=10){
+              for(double jetMjj=0; jetMjj<=800; jetMjj+=50){
+                
+                bool UseAlgo = true;
+                //if(jetPt1>0 && jetPt1 <20)    UseAlgo=false;
+                //if(jetPt2>0 && jetPt2 <20)    UseAlgo=false;
+                //if(jetVecPt>0 && jetVecPt<50) UseAlgo=false;
+                //if(2*jetAvgPt <= jetPt1+jetPt2) UseAlgo=false;
+                if(jetDEta>0 && jetDEta<2.5)    UseAlgo=false;
+                if(jetMjj>0 && jetMjj<350)      UseAlgo=false;
+                                                                               
+                if(UseAlgo){
+                  string algoname = Form("Trijet%.0f-%.0f-%.0fAvg%.0fVec%.0fdeta%.0fmjj%.0f",jetPt1,jetPt2,jetPt3,jetAvgPt,jetVecPt,jetDEta*10,jetMjj);
+                  string name_dijetCol = Form("l1t_trijet_pt%.0f-%.0f-%.0f_avg%.0f_vecpt%.0f_deta%.0f_mjj%.0f",jetPt1,jetPt2,jetPt3,jetAvgPt,jetVecPt,jetDEta*10,jetMjj);
+                  cout << algoname << endl;
+                  pAlgo = new L1TAlgo(algoname,dirNoClean);
+                  pAlgo->setVerbose(m_verbose);
+                  pAlgo->addCondition(std::bind(trgfw::tripletFilter_vbfLike<ic::L1TJet>,_1,"l1t_jet",jetPt1,jetPt2,jetPt3,jetAvgPt,jetVecPt,jetDEta,jetMjj,name_dijetCol));
+                  pAlgo->addCondition(std::bind(trgfw::pairTest_size,                        _1,name_dijetCol,1));
+                  pAlgo->results->tag_l1tJetPair = name_dijetCol;
+                  m_algos.push_back(pAlgo);
+                }
+              } 
+            }
+          }
+        }
+      }
+    }
+  }*/
   
   
   // ##################################################
@@ -447,6 +486,10 @@ void L1TAlgoAnalysis::endJob(){
   myTree->Branch("L1TJet2_Et"         ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
   myTree->Branch("L1TJet2_Eta"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
   myTree->Branch("L1TJet2_Phi"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  
+  myTree->Branch("L1TJet3_Et"         ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet3_Eta"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
+  myTree->Branch("L1TJet3_Phi"        ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
   
   myTree->Branch("L1TJet_maxMjj"      ,"trgfw::L1TVariableScanDataFormat",0,32000,3);
   myTree->Branch("L1TJet_maxDEta"     ,"trgfw::L1TVariableScanDataFormat",0,32000,3);

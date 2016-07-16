@@ -89,6 +89,10 @@ private:
   TH1D *m_L1TJet2_Eta;
   TH1D *m_L1TJet2_Phi;
   
+  TH1D *m_L1TJet3_Et;
+  TH1D *m_L1TJet3_Eta;
+  TH1D *m_L1TJet3_Phi;
+  
   TH1D *m_L1TJet_maxMjj;
   TH1D *m_L1TJet_maxDEta;
   

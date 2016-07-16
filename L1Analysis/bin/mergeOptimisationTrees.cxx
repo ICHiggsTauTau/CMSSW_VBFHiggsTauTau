@@ -229,6 +229,7 @@ int main(int argc, char *argv[]){
   branchesToProcess.push_back("L1TJet2_Et");
   //branchesToProcess.push_back("L1TJet2_Eta");
   //branchesToProcess.push_back("L1TJet2_Phi");
+  branchesToProcess.push_back("L1TJet3_Et");
   branchesToProcess.push_back("L1TJet_maxMjj");
   branchesToProcess.push_back("L1TJet_maxDEta");
   //branchesToProcess.push_back("L1TTau1_minDRL1TJet");

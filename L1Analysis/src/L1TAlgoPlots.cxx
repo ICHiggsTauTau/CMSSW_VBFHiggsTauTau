@@ -76,6 +76,10 @@ L1TAlgoPlots::L1TAlgoPlots(string name, TDirectory* baseBirectory){
   m_L1TJet2_Eta = new TH1D("L1TJet2_Eta","L1T Jet2 Eta",100,          -5,          5); m_L1TJet2_Eta->SetDirectory(m_plotsDirectory);
   m_L1TJet2_Phi = new TH1D("L1TJet2_Phi","L1T Jet2 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TJet2_Phi->SetDirectory(m_plotsDirectory);
   
+ // m_L1TJet3_Et  = new TH1D("L1TJet3_Pt", "L1T Jet3 Pt", 125,           0,        250); m_L1TJet3_Et ->SetDirectory(m_plotsDirectory);
+  //m_L1TJet3_Eta = new TH1D("L1TJet3_Eta","L1T Jet3 Eta",100,          -5,          5); m_L1TJet3_Eta->SetDirectory(m_plotsDirectory);
+ // m_L1TJet3_Phi = new TH1D("L1TJet3_Phi","L1T Jet3 Phi",100,-TMath::Pi(),TMath::Pi()); m_L1TJet3_Phi->SetDirectory(m_plotsDirectory);
+  
   m_L1TJet_maxMjj  = new TH1D("L1TJet_maxMjj", "L1TJet maxMjj",  100,   0,1000); m_L1TJet_maxMjj ->SetDirectory(m_plotsDirectory);
   m_L1TJet_maxDEta = new TH1D("L1TJet_maxDEta","L1TJet maxDEta", 150,   0,  15); m_L1TJet_maxDEta->SetDirectory(m_plotsDirectory);
   
@@ -96,13 +100,17 @@ L1TAlgoPlots::~L1TAlgoPlots(){
   if(m_L1TTau2_Eta){delete m_L1TTau2_Eta;}
   if(m_L1TTau2_Phi){delete m_L1TTau2_Phi;}
   
-  if(m_L1TJet1_Et ){delete m_L1TTau1_Et;}
-  if(m_L1TJet1_Eta){delete m_L1TTau1_Eta;}
-  if(m_L1TJet1_Phi){delete m_L1TTau1_Phi;}
+  if(m_L1TJet1_Et ){delete m_L1TJet1_Et;}
+  if(m_L1TJet1_Eta){delete m_L1TJet1_Eta;}
+  if(m_L1TJet1_Phi){delete m_L1TJet1_Phi;}
   
-  if(m_L1TJet2_Et ){delete m_L1TTau2_Et;}
-  if(m_L1TJet2_Eta){delete m_L1TTau2_Eta;}
-  if(m_L1TJet2_Phi){delete m_L1TTau2_Phi;}
+  if(m_L1TJet2_Et ){delete m_L1TJet2_Et;}
+  if(m_L1TJet2_Eta){delete m_L1TJet2_Eta;}
+  if(m_L1TJet2_Phi){delete m_L1TJet2_Phi;}
+  
+  //if(m_L1TJet3_Et ){delete m_L1TJet3_Et;}
+  //if(m_L1TJet3_Eta){delete m_L1TJet3_Eta;}
+  //if(m_L1TJet3_Phi){delete m_L1TJet3_Phi;}
   
   if(m_L1TJet_maxMjj) {delete m_L1TJet_maxMjj;}
   if(m_L1TJet_maxDEta){delete m_L1TJet_maxDEta;}
@@ -200,6 +208,11 @@ void L1TAlgoPlots::fill(trgfw::Event &iEvent){
       m_L1TJet2_Phi->Fill(myJets->at(1)->phi());
       m_L1TJet2_Eta->Fill(myJets->at(1)->eta());
     }
+    //if(myJets->size()>2){
+     // m_L1TJet3_Et ->Fill(myJets->at(2)->pt());
+      //m_L1TJet3_Phi->Fill(myJets->at(2)->phi());
+      //m_L1TJet3_Eta->Fill(myJets->at(2)->eta());
+    //}
   }
   else{
       
@@ -252,6 +265,11 @@ void L1TAlgoPlots::fill(trgfw::Event &iEvent){
     m_L1TJet_maxMjj ->Fill(maxMjj);
     
     m_METvsMjj      ->Fill(myMET->vector().Et(),maxMjj);
+    //if(myJets->size()>2){
+      //m_L1TJet3_Et ->Fill(myJets->at(1)->pt());
+      //m_L1TJet3_Phi->Fill(myJets->at(1)->phi());
+      //m_L1TJet3_Eta->Fill(myJets->at(1)->eta());
+    //}
   }
   
   // Separation tau-jet

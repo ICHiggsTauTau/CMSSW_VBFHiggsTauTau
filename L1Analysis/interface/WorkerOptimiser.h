@@ -401,7 +401,7 @@ namespace trgfw{
     
     
     void join(){
-      
+      //m_numberEventsProcessed = std::max(m_numberEventsProcessed,(unsigned)1);
       double faction_time_histogram_retrieve         = 100.*m_time_histogram_retrieve.count()        /m_time_total.count();
 //       double faction_time_histogram_clone            = 100.*m_time_histogram_clone.count()           /m_time_total.count();
       double faction_time_histogram_integration      = 100.*m_time_histogram_integration.count()     /m_time_total.count();

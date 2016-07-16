@@ -94,6 +94,10 @@ namespace trgfw{
     trgfw::L1TVariableScanDataFormat *m_L1TJet2_Eta;
     trgfw::L1TVariableScanDataFormat *m_L1TJet2_Phi;
     
+    trgfw::L1TVariableScanDataFormat *m_L1TJet3_Et;
+    trgfw::L1TVariableScanDataFormat *m_L1TJet3_Eta;
+    trgfw::L1TVariableScanDataFormat *m_L1TJet3_Phi;
+    
     trgfw::L1TVariableScanDataFormat *m_L1TJet_maxMjj;
     trgfw::L1TVariableScanDataFormat *m_L1TJet_maxDEta;
     

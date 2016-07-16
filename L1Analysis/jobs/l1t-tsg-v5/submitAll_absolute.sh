@@ -1,9 +1,9 @@
 #!/bin/sh
 
 
-cd task_VBFHToInvisible
-./submit.sh
-cd ../
+#cd task_VBFHToInvisible
+#./submit.sh
+#cd ../
 
 cd task_VBFHToTauTau_EleHad
 ./submit.sh
@@ -22,6 +22,6 @@ cd task_VBFHToTauTau_MuoHad
 cd ../
 
 
-cd task_ZeroBias
-./submit.sh
-cd ../
+#cd task_ZeroBias
+#./submit.sh
+#cd ../

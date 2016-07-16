@@ -347,6 +347,93 @@ namespace trgfw {
     return true;
   }
   
+  //
+  
+  template <class Product>
+  inline bool tripletFilter_vbfLike(trgfw::Event &iEvent,std::string input,double pt_1, double pt_2, double pt_3, double pt_avg, double pt_vec, double dEta,double mjj,std::string output){
+    
+    // If this collection was already made return true
+    if(iEvent.containsProduct(output)){return true;}
+    
+    // Get the input collection from the event
+    vector<Product*>* colIn = iEvent.getByName< vector<Product*> >(input);
+    if(colIn==0){
+      cout << "[tripletFilter_vbfLike] Failed to found input collection: " << input << endl;
+      return false;
+    }
+    
+    L1TObjectPairCollection colOut;
+    
+    // If we do not have at least 2 jets we stop here
+    // NOTE: Protecting going into the cycle with less that 2 elements
+    //       this will give trouble with the unsigned vs. signed int
+    if(colIn->size()<3){return false;}
+    
+    for(unsigned a=0; a<colIn->size()-2; a++){
+      Product *objA = colIn->at(a);
+      for(unsigned b=a+1; b<colIn->size()-1; b++){
+        Product *objB = colIn->at(b);
+        for(unsigned c=b+1; c<colIn->size(); c++){
+          Product *objC = colIn->at(c);
+          
+          if(pt_1>0){
+            double valPt1 = objA->pt();
+            if(pt_1>valPt1){continue;}
+          }
+          
+          if(pt_2>0){
+            double valPt2 = objB->pt();
+            if(pt_2>valPt2){continue;}
+          }
+          
+          if(pt_3>0){
+            double valPt3 = objC->pt();
+            if(pt_3>valPt3){continue;}
+          }
+          
+          if(pt_avg>0){
+            double valAvgPt1 = (objA->pt()+objB->pt())/2;
+            double valAvgPt2 = (objA->pt()+objC->pt())/2;
+            double valAvgPt3 = (objB->pt()+objC->pt())/2;
+            
+            if(pt_avg>valAvgPt1 && pt_avg>valAvgPt2 && pt_avg>valAvgPt3){continue;}
+          }
+          
+          if(pt_vec>0){
+            double valVecPt1 = (objA->vector()+objB->vector()).pt();
+            double valVecPt2 = (objA->vector()+objC->vector()).pt();
+            double valVecPt3 = (objB->vector()+objC->vector()).pt();
+            if(pt_vec>valVecPt1 && pt_vec>valVecPt2 && pt_vec>valVecPt3){continue;}
+          }
+          
+          if(dEta>0){
+            double valDEta1 = fabs(objA->eta()-objB->eta());
+            double valDEta2 = fabs(objA->eta()-objC->eta());
+            double valDEta3 = fabs(objB->eta()-objC->eta());
+            if(dEta>valDEta1 && dEta>valDEta2 && dEta>valDEta3){continue;}
+          }
+          
+          if(mjj>0){
+            ROOT::Math::PtEtaPhiEVector vec1 = objA->vector() + objB->vector();
+            ROOT::Math::PtEtaPhiEVector vec2 = objA->vector() + objC->vector();
+            ROOT::Math::PtEtaPhiEVector vec3 = objB->vector() + objC->vector();
+            if(mjj>vec1.mass() && mjj>vec2.mass() && mjj>vec3.mass()){continue;}
+          }
+          
+          L1TObjectPair thisPair1(objA,objB);
+          L1TObjectPair thisPair2(objA,objC);
+          L1TObjectPair thisPair3(objB,objC);
+          colOut.push_back(thisPair1);
+          colOut.push_back(thisPair2);
+          colOut.push_back(thisPair3);
+        }
+      }
+    }
+    
+    iEvent.addProduct<L1TObjectPairCollection>(output,colOut);
+    return true;
+  }
+  
   
   //##############################################
   // Test collections

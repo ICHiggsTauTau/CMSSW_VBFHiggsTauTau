@@ -78,6 +78,10 @@ trgfw::L1TAlgoResults::L1TAlgoResults(string path,string name) :
   m_L1TJet2_Eta         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet2_Eta",        100,          -5,          5);
   m_L1TJet2_Phi         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet2_Phi",        100,-TMath::Pi(),TMath::Pi());
   
+  //m_L1TJet3_Et          = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet3_Pt",         100,           0,        100);
+  //m_L1TJet3_Eta         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet3_Eta",        100,          -5,          5);
+  //m_L1TJet3_Phi         = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet3_Phi",        100,-TMath::Pi(),TMath::Pi());
+  
   m_L1TJet_maxMjj       = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet_maxMjj",      100,           0,       1000);
   m_L1TJet_maxDEta      = new trgfw::L1TVariableScanDataFormat(m_path,"L1TJet_maxDEta",     150,           0,         15);
   
@@ -136,6 +140,10 @@ trgfw::L1TAlgoResults::~L1TAlgoResults(){
   delete m_L1TJet2_Eta;
   delete m_L1TJet2_Phi;
   
+  //delete m_L1TJet3_Et;
+  //delete m_L1TJet3_Eta;
+  //delete m_L1TJet3_Phi;
+  
   delete m_L1TJet_maxMjj;
   delete m_L1TJet_maxDEta;
   
@@ -191,6 +199,10 @@ void trgfw::L1TAlgoResults::updateAdress(TTree* tree){
   tree->SetBranchAddress("L1TJet2_Et"         ,&m_L1TJet2_Et         );
   tree->SetBranchAddress("L1TJet2_Eta"        ,&m_L1TJet2_Eta        );
   tree->SetBranchAddress("L1TJet2_Phi"        ,&m_L1TJet2_Phi        );
+  
+  //tree->SetBranchAddress("L1TJet3_Et"         ,&m_L1TJet3_Et         );
+  //tree->SetBranchAddress("L1TJet3_Eta"        ,&m_L1TJet3_Eta        );
+  //tree->SetBranchAddress("L1TJet3_Phi"        ,&m_L1TJet3_Phi        );
 
   tree->SetBranchAddress("L1TJet_maxMjj"      ,&m_L1TJet_maxMjj      );
   tree->SetBranchAddress("L1TJet_maxDEta"     ,&m_L1TJet_maxDEta     );
@@ -290,6 +302,12 @@ void trgfw::L1TAlgoResults::fill(trgfw::Event &iEvent){
       m_L1TJet2_Phi->fill(myJets->at(1)->phi());
       m_L1TJet2_Eta->fill(myJets->at(1)->eta());
     }
+    /*if(myJets->size()>2){
+      m_L1TJet3_Et ->fill(myJets->at(2)->pt());
+      m_L1TJet3_Phi->fill(myJets->at(2)->phi());
+      m_L1TJet3_Eta->fill(myJets->at(2)->eta());
+    }*/
+
   }
   else{
     
@@ -340,6 +358,23 @@ void trgfw::L1TAlgoResults::fill(trgfw::Event &iEvent){
     m_L1TJet_VecPt  ->fill(maxVecPt);
     m_L1TJet_maxDEta->fill(maxDEta);
     m_L1TJet_maxMjj ->fill(maxMjj);
+    
+    /*if(myJets->size()>2){
+      for(unsigned i=0; i<myJets->size(); ++i){
+        if(myJets->at(i)->pt() < maxObj2Pt){  
+          m_L1TJet3_Et ->fill(myJets->at(i)->pt());
+          m_L1TJet3_Phi->fill(myJets->at(i)->phi());
+          m_L1TJet3_Eta->fill(myJets->at(i)->eta());
+          break;
+        }
+      }
+    }*/
+    
+    /*if(myJets->size()>2){
+      m_L1TJet3_Et ->fill(myJets->at(2)->pt());
+      m_L1TJet3_Phi->fill(myJets->at(2)->phi());
+      m_L1TJet3_Eta->fill(myJets->at(2)->eta());
+    }*/
     
   }
   
